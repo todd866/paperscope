@@ -1,0 +1,39 @@
+# Paperscope Configuration
+# Copy this to config.yaml and customize for your research program.
+
+paths:
+  output_dir: ~/Papers/harvester
+
+discovery:
+  interval_hours: 12
+  max_papers_per_run: 50
+  lookback_days: 30
+
+library:
+  # If your institution provides EZProxy access, set the host here
+  ezproxy_host: ezproxy.library.example.edu
+  browser: chrome
+
+research_profile:
+  keywords:
+    # Add keywords matching your research program
+    - "intrinsic dimensionality"
+    - "information geometry"
+    - "neural state space"
+    - "participation ratio"
+
+  authors:
+    # Track specific authors whose work you follow
+    - "Karl Friston"
+    - "Giulio Tononi"
+
+  arxiv_categories:
+    - "q-bio.NC"
+    - "cond-mat.stat-mech"
+    - "cs.IT"
+
+  semantic_scholar_fields:
+    - "Biology"
+    - "Computer Science"
+    - "Physics"
+    - "Mathematics"

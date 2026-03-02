@@ -1,0 +1,206 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    citecolor=blue!60!black,
+    urlcolor=blue!60!black,
+}
+
+\title{Paperscope: Embedding-Powered Analysis Tools\\for Academic Papers}
+\author{Ian Todd\\
+Sydney Medical School\\
+University of Sydney\\
+Sydney, NSW, Australia\\
+\texttt{itod2305@uni.sydney.edu.au}\\
+ORCID: 0009-0002-6994-0917}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Paperscope is a Python toolkit that applies sentence-level embedding analysis to academic papers during the writing process. Given a LaTeX manuscript and a corpus of reference texts, it embeds both into a shared vector space and measures distances to answer questions that previously required manual reading: do citations actually support the claims they are attached to? Which claims are most novel? What would a reviewer likely object to? Is the abstract covering all sections? Which journals are the best semantic fit? The toolkit includes 12 analysis tools, a bibliography management pipeline, and a literature discovery system, all designed to integrate with AI coding assistants such as Claude Code and Codex. Paperscope is open-source under the MIT license and available at \url{https://github.com/todd866/paperscope}.
+\end{abstract}
+
+\section{Introduction}
+
+AI-assisted academic writing is accelerating. Large language models can draft manuscripts, suggest framings, and identify relevant literature faster than manual processes. But this acceleration creates a quality-control bottleneck: the speed at which text is produced outpaces the speed at which its scholarly integrity can be verified.
+
+Three specific failure modes arise in AI-assisted research writing:
+
+\begin{enumerate}
+    \item \textbf{Citation misalignment.} A sentence cites a reference for a claim that the reference does not actually support. This is the most common failure mode of LLM-assisted drafting --- the model generates plausible-sounding citations that are semantically adjacent to, but not actually about, the claim being made.
+
+    \item \textbf{Undetected novelty.} The author cannot easily tell which claims in their paper are genuinely new (requiring careful justification) and which are well-supported by existing literature (requiring only a citation). This distinction determines how reviewers will respond.
+
+    \item \textbf{Blind spots in coverage.} The bibliography may be missing highly relevant work, or the abstract may fail to represent major sections of the paper. These gaps are invisible to the author during writing but immediately apparent to reviewers.
+\end{enumerate}
+
+Paperscope addresses these problems by embedding the paper and its literature into a shared vector space and measuring distances. The approach is simple --- cosine similarity over sentence-transformer embeddings --- but it enables analyses that are otherwise prohibitively tedious.
+
+\section{Architecture}
+
+Paperscope has three layers, each usable independently (Figure~\ref{fig:arch}).
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{
+\texttt{%
+\footnotesize
+LaTeX project $\rightarrow$ bib/ $\rightarrow$ bibliography.json $\rightarrow$ DOI resolution\\[2pt]
+OpenAlex/arXiv $\rightarrow$ harvest/ $\rightarrow$ PDF download $\rightarrow$ text extraction\\[2pt]
+Paper + literature $\rightarrow$ text/ $\rightarrow$ embed/ $\rightarrow$ analysis/ $\rightarrow$ results
+}}}
+\caption{Three-layer architecture. Each layer feeds the next but can be used standalone.}
+\label{fig:arch}
+\end{figure}
+
+\textbf{Layer 1: Bibliography management} (\texttt{bib/}). Extracts citations from \texttt{.tex} and \texttt{.bib} files, resolves missing DOIs via the CrossRef API \citep{crossref2024}, and verifies resolved DOIs against metadata. This catches a common AI-assisted writing failure: hallucinated or misattributed references.
+
+\textbf{Layer 2: Literature ingestion} (\texttt{harvest/}, \texttt{ingest/}). Discovers new papers from OpenAlex \citep{priem2022openalex}, arXiv, and bioRxiv matching a configurable research profile. Downloads open-access PDFs via Unpaywall, extracts text using PyMuPDF, and stores extracted text in the repository alongside the manuscript.
+
+\textbf{Layer 3: Embedding analysis} (\texttt{text/}, \texttt{embed/}, \texttt{analysis/}). The core contribution. LaTeX is cleaned to plain text, split into overlapping chunks ($\sim$200 words, 50-word overlap), and encoded using sentence-transformers \citep{reimers2019sentence} with the \texttt{all-MiniLM-L6-v2} model (384 dimensions). Reference texts are chunked and embedded identically. All analysis tools operate on the resulting cosine similarity matrices.
+
+\subsection{Text Processing}
+
+The \texttt{text/} module provides three shared utilities. \texttt{clean\_latex()} strips LaTeX commands, math environments, URLs, and special characters via iterative regex unwrapping (up to 6 nesting levels). \texttt{chunk\_text()} splits text into overlapping word-level chunks using a step-based approach: each chunk starts \texttt{step = target $-$ overlap} words after the previous one. \texttt{extract\_citation\_contexts()} finds sentences containing \texttt{\textbackslash cite\{\}} commands, returning the cleaned text, cited keys, and line numbers for traceability.
+
+\subsection{Embedding with Fallback}
+
+The \texttt{embed/} module wraps sentence-transformers with a TF-IDF fallback:
+
+\begin{verbatim}
+try:
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    embeddings = model.encode(texts)
+except Exception:
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+    embeddings = vectorizer.fit_transform(texts).toarray()
+\end{verbatim}
+
+This ensures the tools run in any environment. The TF-IDF fallback produces lower-quality embeddings but is sufficient for coarse alignment checking.
+
+\section{Analysis Tools}
+
+Paperscope includes 12 analysis tools organized into two groups: 6 consolidated from per-paper analysis scripts developed during the Coherence Dynamics research program, and 6 new tools built on the same infrastructure.
+
+\subsection{Citation Alignment}
+
+For each sentence containing a \texttt{\textbackslash cite\{\}} command, citation alignment computes cosine similarity between the sentence embedding and all literature chunks, then checks whether the cited references appear among the top-$k$ matches. The key metric is the \textbf{top-3 citation alignment rate}: the fraction of citation contexts where at least one cited reference appears in the three most similar literature chunks.
+
+Formally, let $\mathbf{c}_i$ be the embedding of citation context $i$, and let $\mathbf{r}_{j,k}$ be the embedding of chunk $k$ from reference $j$. For each context $i$ citing references $\mathcal{K}_i$:
+
+\begin{equation}
+    \text{aligned}_i = \mathbb{1}\left[\exists\, k \in \mathcal{K}_i : k \in \text{top-3}\left(\max_j \frac{\mathbf{c}_i \cdot \mathbf{r}_{k,j}}{|\mathbf{c}_i||\mathbf{r}_{k,j}|}\right)\right]
+\end{equation}
+
+In practice, alignment rates of 60--80\% are typical for well-cited papers. Contexts with low alignment are flagged for review --- the citation may be correct but semantically indirect, or it may be misattributed.
+
+\subsection{Novelty Detection}
+
+Each claim extracted from the paper (bold assertions, numbered predictions) is embedded and compared against the full literature corpus. Claims whose maximum similarity to any literature chunk falls below a threshold (default $\tau = 0.4$) are flagged as \textbf{novel}. These are the claims reviewers will scrutinize most heavily, and where the author should ensure the strongest justification.
+
+\subsection{Reviewer Probes and Response Preparation}
+
+Two tools address reviewer preparation. \textbf{Reviewer probes} embed hypothetical reviewer questions and find the nearest literature chunks, revealing whether the bibliography contains material to respond to likely objections. \textbf{Reviewer response preparation} goes further: for each anticipated objection, it finds both (a) passages in the paper that address the objection and (b) literature that supports the response, creating a structured evidence map.
+
+\subsection{Self-Overlap and Cross-Paper Consistency}
+
+For authors with multiple publications, \textbf{self-overlap} detects high-similarity passages between the current paper and the author's other papers (threshold: cosine similarity $> 0.75$). This catches inadvertent self-plagiarism before reviewers do. \textbf{Cross-paper consistency} performs the inverse: it finds semantically similar passages across papers and flags them for manual review, since similar topics discussed differently may indicate contradictions.
+
+\subsection{Argument Flow}
+
+Argument flow tracks the paper's trajectory through embedding space paragraph by paragraph. Using PCA of paragraph embeddings, it computes cosine distance between consecutive paragraphs and flags \textbf{topic jumps} (distance $> \mu + 1.5\sigma$) and \textbf{semantic loops} (distant paragraphs with similarity $> 0.85$). This reveals structural issues: abrupt topic changes that need transitions, and repetitive passages that could be consolidated.
+
+\subsection{New Tools}
+
+Six additional tools extend the framework:
+
+\begin{description}
+    \item[Abstract alignment] embeds each section and the abstract, computing a coverage matrix. Sections with below-median similarity to the abstract are flagged as underrepresented.
+
+    \item[Strength heatmap] computes per-paragraph scores for citation support (max similarity to any literature chunk) and argument continuity (similarity to the preceding paragraph). Paragraphs with citation support $< 0.3$ are flagged as weak.
+
+    \item[Journal targeting] fetches recent abstracts from candidate journals via OpenAlex, embeds them, and ranks journals by centroid similarity to the paper. This replaces intuition-based journal selection with a semantic measure.
+
+    \item[Revision diff] embeds two versions of a paper, matches sections by title similarity, and measures the semantic shift per section. Optionally compares against a literature corpus to determine whether the revision moved the paper toward or away from the literature.
+
+    \item[Related radar] extracts keywords from the paper, searches OpenAlex, filters out papers already in the bibliography, embeds the remaining abstracts, and ranks by relevance. This finds missing related work before reviewers do.
+
+    \item[Argument graph] scans a directory of papers, extracts conclusions and premises from each, embeds them, and builds a directed dependency graph. An edge from paper A to paper B means A's conclusions support B's premises. This reveals the logical structure of a multi-paper research program.
+\end{description}
+
+\section{Implementation}
+
+Paperscope is implemented in Python (3.8+) with minimal dependencies: \texttt{numpy} for array operations, \texttt{requests} for API calls, \texttt{sentence-transformers} for encoding (optional), and \texttt{PyMuPDF} for PDF text extraction. Visualization tools optionally use \texttt{matplotlib}, \texttt{scikit-learn}, and \texttt{networkx}.
+
+All 15 commands are accessible via a single CLI entry point:
+
+\begin{verbatim}
+python3 -m paperscope analyze paper.tex --literature text/
+python3 -m paperscope abstract-check paper.tex
+python3 -m paperscope journal-fit paper.tex -j "BioSystems"
+python3 -m paperscope revision-diff old.tex new.tex
+python3 -m paperscope related paper.tex
+\end{verbatim}
+
+Analysis commands produce both structured JSON output and human-readable console summaries. The JSON output is designed for consumption by AI coding assistants: Claude Code or Codex can read the results, identify issues, and suggest fixes within the same conversation.
+
+External APIs (CrossRef, OpenAlex, Unpaywall) are used in their free tiers with polite rate limiting. No API keys are required; only an email address for courtesy identification.
+
+\section{Usage Context}
+
+Paperscope was developed for the Coherence Dynamics research program (\url{https://coherencedynamics.com}), which has produced 30+ papers across neuroscience, biology, physics, and mathematics. The toolkit manages $\sim$1,500 references across 175 \texttt{.tex} files.
+
+The typical workflow integrates Paperscope with an AI coding assistant:
+
+\begin{enumerate}
+    \item Write the paper (with AI assistance for drafting, derivations, and literature search).
+    \item Run \texttt{analyze} to check citation alignment, novelty, and argument strength.
+    \item The AI assistant reads the JSON output, identifies weak citations or unsupported claims, and suggests specific fixes.
+    \item Run \texttt{abstract-check} before submission to verify coverage.
+    \item Run \texttt{journal-fit} to select the target venue.
+    \item After revision, run \texttt{revision-diff} to verify that changes addressed reviewer concerns and measure the direction of semantic shift.
+\end{enumerate}
+
+This workflow treats the AI assistant as a collaborator that can read structured analysis output and act on it, rather than as a black box that generates text.
+
+\section{AI Workflow Disclosure}
+
+This paper and the Paperscope software were developed with extensive use of AI tools:
+
+\begin{itemize}
+    \item \textbf{Claude Opus 4} (Anthropic, via Claude Code): Primary development environment. Used for code generation, refactoring, architecture design, and drafting this paper. All code was reviewed and validated by the human author.
+    \item \textbf{GPT-4.5 / Codex} (OpenAI): Used for cross-validation of code logic and fact-checking of API integration details.
+\end{itemize}
+
+The human contribution consists of: problem identification (recognizing the need for embedding-based citation analysis), architectural decisions (three-layer design, TF-IDF fallback, CLI-first interface), tool selection (which analyses are actually useful during paper writing), and validation against real manuscripts.
+
+\section{Related Work}
+
+Several tools address parts of the academic writing pipeline:
+
+\textbf{Semantic Scholar} \citep{kinney2023semantic} provides a citation graph and paper recommendations but does not operate at the intra-paper level (individual sentences and claims). \textbf{scite.ai} classifies citations as supporting, contrasting, or mentioning, but requires their proprietary database and does not support custom literature corpora. \textbf{Connected Papers} visualizes citation networks but does not analyse the content of citing sentences. \textbf{citation.js} \citep{willighagen2019citationjs} manages bibliography formatting but does not perform semantic analysis.
+
+Paperscope differs in operating at the sentence-chunk level rather than the paper level, working with the author's own literature corpus rather than a proprietary database, and producing structured output designed for AI assistant consumption.
+
+\section{Availability}
+
+Paperscope is available at \url{https://github.com/todd866/paperscope} under the MIT license. Requirements: Python 3.8+, \texttt{numpy}, \texttt{requests}, and optionally \texttt{sentence-transformers} for neural embeddings. Installation: \texttt{pip install -r requirements.txt}.
+
+\bibliography{references}
+
+\end{document}
