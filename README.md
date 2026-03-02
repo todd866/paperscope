@@ -1,6 +1,6 @@
 # Paperscope
 
-**A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin for academic paper analysis.**
+**A plugin for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Codex](https://developers.openai.com/codex/cli/) that analyzes academic papers.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -9,9 +9,9 @@
 
 ## What This Does
 
-Paperscope gives Claude the ability to analyze your LaTeX papers. It embeds your paper and its literature into a shared vector space, then measures distances to catch problems that normally require manual reading.
+Paperscope gives your AI coding assistant the ability to analyze LaTeX papers. It embeds your paper and its literature into a shared vector space, then measures distances to catch problems that normally require manual reading.
 
-Claude will automatically use these skills when relevant -- you don't need to remember commands.
+Works with Claude Code (plugin with auto-invocation) and Codex (via AGENTS.md).
 
 ### Skills
 
@@ -36,18 +36,28 @@ Claude will automatically use these skills when relevant -- you don't need to re
 ## Install
 
 ```bash
-# Clone the plugin
+# Clone
 git clone https://github.com/todd866/paperscope.git ~/.paperscope
-
-# Install Python dependencies
 pip install -r ~/.paperscope/requirements.txt
-
-# Set your email for API polite pools (CrossRef, OpenAlex)
 export PAPERSCOPE_EMAIL="you@university.edu"
+```
 
-# Launch Claude Code with the plugin
+### Claude Code
+
+```bash
 claude --plugin-dir ~/.paperscope
 ```
+
+Claude auto-invokes paperscope skills when working on LaTeX papers.
+
+### Codex
+
+```bash
+# Copy AGENTS.md into your paper project
+cp ~/.paperscope/AGENTS.md /path/to/your/paper/AGENTS.md
+```
+
+Codex reads AGENTS.md and uses the paperscope CLI when working on your manuscript.
 
 ## Example
 
