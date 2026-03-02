@@ -185,10 +185,6 @@ Optional:
 - `scikit-learn` -- PCA for visualizations, TF-IDF fallback
 - `networkx` -- argument graph visualization
 
-## Origin
-
-This toolchain was built for [Coherence Dynamics](https://coherencedynamics.com), a research program producing 30+ papers across neuroscience, biology, physics, and mathematics. It manages ~1,500 references across 175 .tex files.
-
 ## Citation
 
 ```bibtex
