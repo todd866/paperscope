@@ -35,24 +35,36 @@ Works with Claude Code (plugin with auto-invocation) and Codex (via AGENTS.md).
 
 ## Install
 
+### Claude Code
+
+In any Claude Code session:
+
+```
+/plugin marketplace add todd866/paperscope
+/plugin install paperscope@todd866-paperscope
+```
+
+Then install the Python dependencies:
+
 ```bash
-# Clone
-git clone https://github.com/todd866/paperscope.git ~/.paperscope
-pip install -r ~/.paperscope/requirements.txt
+pip install numpy requests sentence-transformers PyMuPDF
 export PAPERSCOPE_EMAIL="you@university.edu"
 ```
 
-### Claude Code
+Claude auto-invokes paperscope skills when working on LaTeX papers. You can also test with `--plugin-dir`:
 
 ```bash
+git clone https://github.com/todd866/paperscope.git ~/.paperscope
+pip install -r ~/.paperscope/requirements.txt
 claude --plugin-dir ~/.paperscope
 ```
-
-Claude auto-invokes paperscope skills when working on LaTeX papers.
 
 ### Codex
 
 ```bash
+git clone https://github.com/todd866/paperscope.git ~/.paperscope
+pip install -r ~/.paperscope/requirements.txt
+
 # Copy AGENTS.md into your paper project
 cp ~/.paperscope/AGENTS.md /path/to/your/paper/AGENTS.md
 ```

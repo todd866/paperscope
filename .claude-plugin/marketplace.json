@@ -1,0 +1,16 @@
+{
+  "name": "Paperscope",
+  "plugins": [
+    {
+      "id": "paperscope",
+      "name": "Paperscope",
+      "description": "Embedding-powered analysis tools for academic papers. Citation alignment, novelty detection, abstract coverage, journal targeting, and reviewer preparation.",
+      "version": "1.0.0",
+      "source": {
+        "type": "github",
+        "repo": "todd866/paperscope",
+        "path": "."
+      }
+    }
+  ]
+}
