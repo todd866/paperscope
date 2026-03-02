@@ -1,0 +1,14 @@
+{
+  "name": "paperscope",
+  "version": "1.0.0",
+  "description": "Embedding-powered analysis tools for academic papers. Citation alignment, novelty detection, abstract coverage, journal targeting, and reviewer preparation.",
+  "author": {
+    "name": "Ian Todd",
+    "email": "ian@coherencedynamics.com"
+  },
+  "homepage": "https://github.com/todd866/paperscope",
+  "repository": "https://github.com/todd866/paperscope",
+  "license": "MIT",
+  "keywords": ["academic", "papers", "citations", "latex", "embedding", "analysis"],
+  "skills": "./skills/"
+}
