@@ -301,6 +301,45 @@ def main() -> int:
         help="Number of candidate papers to return (default: 50)",
     )
 
+    # critical-read command
+    cr_parser = subparsers.add_parser(
+        "critical-read", help="Critical read of an external paper (PDF or text)"
+    )
+    cr_parser.add_argument(
+        "paper",
+        type=Path,
+        help="Path to paper (PDF or .txt extracted text)",
+    )
+    cr_parser.add_argument(
+        "--authors",
+        nargs="+",
+        default=None,
+        help="Author names (auto-extracted from text if not provided)",
+    )
+    cr_parser.add_argument(
+        "--methods",
+        nargs="+",
+        default=None,
+        help="Method names used in the paper (auto-detected if not provided)",
+    )
+    cr_parser.add_argument(
+        "--question-resolution",
+        nargs="+",
+        default=None,
+        help="Resolution levels the paper's question requires (e.g., site_specific individual)",
+    )
+    cr_parser.add_argument(
+        "--output", "-o",
+        type=Path,
+        default=None,
+        help="Output directory (default: alongside paper file)",
+    )
+    cr_parser.add_argument(
+        "--skip-author-lookup",
+        action="store_true",
+        help="Skip OpenAlex author lookup (offline mode)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "extract":
@@ -383,6 +422,9 @@ def main() -> int:
 
     elif args.command == "related":
         return _run_related(args)
+
+    elif args.command == "critical-read":
+        return _run_critical_read(args)
 
     else:
         parser.print_help()
@@ -699,6 +741,51 @@ def _run_related(args) -> int:
     out_path = args.tex_file.resolve().parent / "related_radar.json"
     out_path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"Details: {out_path}")
+    return 0
+
+
+def _run_critical_read(args) -> int:
+    """Run critical read analysis on an external paper."""
+    from .analysis.critical_read import critical_read, extract_author_names
+
+    paper_path = args.paper.resolve()
+
+    # Extract text from PDF or read text file
+    if paper_path.suffix.lower() == ".pdf":
+        try:
+            from .ingest.extract_text import extract_text
+            print(f"Extracting text from: {paper_path.name}")
+            paper_text = extract_text(paper_path)
+        except ImportError:
+            print("Error: PyMuPDF (fitz) required for PDF extraction.")
+            print("Install with: pip install PyMuPDF")
+            return 1
+    else:
+        paper_text = paper_path.read_text(encoding="utf-8", errors="replace")
+
+    if not paper_text.strip():
+        print("Error: no text extracted from paper")
+        return 1
+
+    print(f"Extracted {len(paper_text)} chars from {paper_path.name}")
+
+    # Author names
+    author_names = args.authors
+    if author_names is None:
+        author_names = extract_author_names(paper_text)
+        if author_names:
+            print(f"Auto-detected authors: {', '.join(author_names)}")
+
+    output_dir = args.output or paper_path.parent
+    result = critical_read(
+        paper_text=paper_text,
+        author_names=author_names,
+        methods_used=args.methods,
+        question_resolution=args.question_resolution,
+        output_dir=output_dir,
+        skip_author_lookup=args.skip_author_lookup,
+    )
+
     return 0
 
 

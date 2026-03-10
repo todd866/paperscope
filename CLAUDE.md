@@ -28,6 +28,24 @@ python3 -m paperscope related paper.tex
 python3 -m paperscope argument-graph /path/to/research/program/
 ```
 
+### Critical read (external papers)
+
+```bash
+# Critical read of an external paper (PDF)
+python3 -m paperscope critical-read paper.pdf
+
+# With explicit method and resolution hints
+python3 -m paperscope critical-read paper.pdf --methods RELAX --question-resolution site_specific
+
+# With author names (skips auto-extraction)
+python3 -m paperscope critical-read paper.pdf --authors "Alice Smith" "Bob Jones"
+
+# Offline mode (skip OpenAlex author lookup)
+python3 -m paperscope critical-read paper.pdf --skip-author-lookup
+```
+
+Runs four analyses: author/COI profiling, method-resolution mismatch detection, missing complementary methods, and overclaiming detection. Outputs structured JSON + console summary.
+
 ### Bibliography pipeline
 
 ```bash
@@ -59,7 +77,7 @@ python3 -m paperscope depth2 /path/to/literature/
 paperscope/
 ├── text/       # Shared text processing (LaTeX cleaning, chunking, parsing)
 ├── embed/      # Embedding infrastructure (sentence-transformers + TF-IDF fallback)
-├── analysis/   # 12 analysis tools
+├── analysis/   # 16 analysis tools
 │   ├── citation_alignment.py    # Do citations match the citing sentence?
 │   ├── novelty.py               # Which claims are furthest from literature?
 │   ├── reviewer_probes.py       # Anticipate reviewer objections
@@ -71,7 +89,12 @@ paperscope/
 │   ├── strength_heatmap.py      # Per-paragraph citation support strength
 │   ├── revision_diff.py         # Semantic diff between revisions
 │   ├── argument_graph.py        # Cross-paper dependency graph
-│   └── related_radar.py         # Find missing related work (via OpenAlex)
+│   ├── related_radar.py         # Find missing related work (via OpenAlex)
+│   ├── critical_read.py         # Orchestrator for external paper critique
+│   ├── author_profile.py       # Author COI and self-validation detection
+│   ├── method_resolution.py    # Method-conclusion resolution mismatch
+│   ├── missing_methods.py      # Complementary methods from same ecosystem
+│   └── overclaiming.py         # Hedge erosion and scope expansion
 ├── bib/        # Bibliography management (extract, resolve, verify)
 ├── harvest/    # Paper discovery (OpenAlex, arXiv, bioRxiv)
 ├── ingest/     # PDF acquisition + text extraction
@@ -102,6 +125,10 @@ python3 -m paperscope <command> [args]
 ```
 
 The `text/` and `embed/` modules are the shared library. The `analysis/` module contains all 12 tools. Each tool is a standalone module with a main function that takes embeddings and returns structured results.
+
+### Bug fix workflow
+
+When a bug is reported, don't start by trying to fix it. Write a test that reproduces the bug first. Then fix the bug and prove it with a passing test. Use subagents for the fix attempt when the bug is non-trivial.
 
 ## API Dependencies
 
