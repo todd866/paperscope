@@ -87,7 +87,9 @@ Output: Structured analysis (citation alignment, novelty, reviewer prep, etc.)
 
 2. **Embed** (`embed/`): Encodes text as vectors using sentence-transformers (all-MiniLM-L6-v2, 384-dim). Falls back to TF-IDF if model unavailable. Includes cosine similarity, batch encoding, and caching.
 
-3. **Analysis** (`analysis/`): 12 embedding-powered tools:
+3. **Analysis** (`analysis/`): 18 modules in three groups:
+
+   *Embedding-powered (your own papers):*
    - `citation_alignment` — Do cited references match the citing sentence?
    - `novelty` — Which claims are furthest from existing literature?
    - `reviewer_probes` — Anticipate objections, map to evidence
@@ -100,6 +102,16 @@ Output: Structured analysis (citation alignment, novelty, reviewer prep, etc.)
    - `revision_diff` — Semantic diff between paper revisions
    - `argument_graph` — Cross-paper dependency graph
    - `related_radar` — Find missing related work (via OpenAlex)
+
+   *Critical read (external papers):*
+   - `critical_read` — Orchestrator combining the four checks below
+   - `author_profile` — Author COI and self-validation detection
+   - `method_resolution` — Method-conclusion resolution mismatch
+   - `missing_methods` — Complementary methods from same ecosystem
+   - `overclaiming` — Hedge erosion and scope expansion
+
+   *Forensic statistics (data integrity):*
+   - `forensic_stats` — 19 checks based on Heathers (2025): GRIM, GRIMMER, DEBIT, SPRITE, correlation bounds, t-test/ANOVA/chi-squared recalculation, Carlisle-Stouffer-Fisher, SD/SE confusion, Benford's law, variance ratios, effect size consistency, and more
 
 4. **Read** (`read/`): Structured reading prompt generation for LLM-based paper analysis.
 

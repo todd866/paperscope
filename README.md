@@ -9,7 +9,11 @@
 
 ## What This Does
 
-Paperscope gives your AI coding assistant the ability to analyze LaTeX papers. It embeds your paper and its literature into a shared vector space, then measures distances to catch problems that normally require manual reading.
+Paperscope is a toolkit for writing and reviewing academic papers. Every tool works on both sides of peer review — check your own work before submission, or audit someone else's manuscript.
+
+- **Semantic analysis** — embeds a manuscript and its literature into a shared vector space to catch citation misalignment, unsupported claims, abstract gaps, and missing related work
+- **Forensic statistics** — 19 data-integrity checks (GRIM, GRIMMER, SPRITE, correlation bounds, p-value recalculation, Carlisle test, and more) based on Heathers (2025) [*An Introduction to Forensic Metascience*](https://jamesheathers.curve.space/)
+- **Critical read** — author profiling, method-resolution mismatch detection, overclaiming analysis
 
 Works with Claude Code (plugin with auto-invocation) and Codex (via AGENTS.md).
 
@@ -164,7 +168,7 @@ Based on techniques from Heathers (2025) [*An Introduction to Forensic Metascien
 ## Requirements
 
 - Python 3.8+
-- `numpy`, `requests`
+- `numpy`, `scipy`, `requests`
 - `sentence-transformers` (optional -- falls back to TF-IDF)
 - `PyMuPDF` for PDF text extraction
 

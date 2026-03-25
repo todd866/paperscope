@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Paperscope is a Python toolkit for embedding-powered analysis of academic papers. It manages citations, discovers literature, and runs semantic analysis to catch citation issues, detect novelty, and prepare for peer review.
+Paperscope is a Python toolkit for writing and reviewing academic papers. Every tool works on both sides of peer review: semantic analysis, forensic statistics, citation management, and literature discovery.
 
 ## Quick Commands
 
@@ -46,6 +46,20 @@ python3 -m paperscope critical-read paper.pdf --skip-author-lookup
 
 Runs four analyses: author/COI profiling, method-resolution mismatch detection, missing complementary methods, and overclaiming detection. Outputs structured JSON + console summary.
 
+### Forensic statistics (data integrity)
+
+```bash
+# Run the built-in demo audit (Rajizadeh et al. 2017)
+python3 -m paperscope.analysis.forensic_stats
+
+# Or import individual checks
+from paperscope.analysis.forensic_stats import grim, grimmer, debit, sprite
+from paperscope.analysis.forensic_stats import correlation_bound, check_ttest_paired
+from paperscope.analysis.forensic_stats import carlisle_stouffer_fisher, check_chi_squared
+```
+
+19 checks based on Heathers (2025) *An Introduction to Forensic Metascience*: GRIM, GRIMMER, DEBIT, SPRITE, correlation bounds, t-test/ANOVA/chi-squared recalculation, Carlisle-Stouffer-Fisher, SD/SE confusion, Benford's law, variance ratios, effect size consistency, and more. See `FORENSIC_METASCIENCE_REFERENCE.md` in the parent `peer_review/` directory for the full technique inventory.
+
 ### Bibliography pipeline
 
 ```bash
@@ -77,7 +91,9 @@ python3 -m paperscope depth2 /path/to/literature/
 paperscope/
 ├── text/       # Shared text processing (LaTeX cleaning, chunking, parsing)
 ├── embed/      # Embedding infrastructure (sentence-transformers + TF-IDF fallback)
-├── analysis/   # 17 analysis tools
+├── analysis/   # 18 modules (embedding, critical read, forensic)
+│   │
+│   │  # Embedding-powered (your papers)
 │   ├── citation_alignment.py    # Do citations match the citing sentence?
 │   ├── novelty.py               # Which claims are furthest from literature?
 │   ├── reviewer_probes.py       # Anticipate reviewer objections
@@ -90,13 +106,18 @@ paperscope/
 │   ├── revision_diff.py         # Semantic diff between revisions
 │   ├── argument_graph.py        # Cross-paper dependency graph
 │   ├── related_radar.py         # Find missing related work (via OpenAlex)
+│   │
+│   │  # Critical read (external papers)
 │   ├── critical_read.py         # Orchestrator for external paper critique
 │   ├── author_profile.py       # Author COI and self-validation detection
 │   ├── method_resolution.py    # Method-conclusion resolution mismatch
 │   ├── missing_methods.py      # Complementary methods from same ecosystem
 │   ├── overclaiming.py         # Hedge erosion and scope expansion
-│   └── forensic_stats.py       # GRIM, DEBIT, SPRITE, correlation bounds,
-│                                # p-value recalc, Benford's, variance ratios
+│   │
+│   │  # Forensic statistics (data integrity, 19 checks)
+│   └── forensic_stats.py       # GRIM, GRIMMER, DEBIT, SPRITE, correlation
+│                                # bounds, t-test/ANOVA/chi2 recalc, Carlisle,
+│                                # SD/SE confusion, Benford's, variance ratios
 ├── bib/        # Bibliography management (extract, resolve, verify)
 ├── harvest/    # Paper discovery (OpenAlex, arXiv, bioRxiv)
 ├── ingest/     # PDF acquisition + text extraction
@@ -126,7 +147,7 @@ pip install -r requirements.txt
 python3 -m paperscope <command> [args]
 ```
 
-The `text/` and `embed/` modules are the shared library. The `analysis/` module contains all 12 tools. Each tool is a standalone module with a main function that takes embeddings and returns structured results.
+The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 18 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity). Each tool is a standalone module with a main function that returns structured results.
 
 ### Bug fix workflow
 
