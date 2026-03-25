@@ -116,6 +116,14 @@ def related_radar(
         Dict with ``candidates`` (ranked missing references),
         ``keywords_used``, and ``stats``.
     """
+    def _normalize_doi(doi: str) -> str:
+        """Normalize DOI to bare form (no URL prefix)."""
+        d = doi.lower().strip()
+        for prefix in ("https://doi.org/", "http://doi.org/", "doi:"):
+            if d.startswith(prefix):
+                d = d[len(prefix):]
+        return d
+
     # Get existing bibliography keys
     existing_keys: Set[str] = set(extract_cite_keys(tex_text))
 
@@ -137,7 +145,7 @@ def related_radar(
                 refs = bib_data.get("references", bib_data) if isinstance(bib_data, dict) else bib_data
                 for ref in refs:
                     if ref.get("doi"):
-                        known_dois.add(ref["doi"].lower().strip())
+                        known_dois.add(_normalize_doi(ref["doi"]))
                     if ref.get("title"):
                         known_titles.add(ref["title"].lower().strip()[:80])
             except (json.JSONDecodeError, KeyError):
@@ -176,8 +184,8 @@ def related_radar(
         title = work.get("title", "")
         year = work.get("publication_year")
 
-        # Check if already known by DOI
-        if doi.lower().strip() in known_dois:
+        # Check if already known by DOI (normalize to handle URL-form OpenAlex DOIs)
+        if _normalize_doi(doi) in known_dois:
             continue
 
         # Check if already known by title

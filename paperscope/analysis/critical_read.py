@@ -135,26 +135,43 @@ def extract_author_names(text: str) -> List[str]:
     """
     lines = text.split("\n")[:50]
     candidates = []
+
+    # Keywords that indicate non-author lines
+    skip_keywords = [
+        "abstract", "introduction", "university", "department", "institute",
+        "keywords", "correspondence", "email", "faculty", "school of",
+        "college of", "center for", "centre for", "hospital", "clinic",
+        "received", "accepted", "published", "doi:", "http", "orcid", "@",
+        "sydney", "melbourne", "london", "new york", "berlin", "tokyo",
+        "australia", "usa", "united states", "united kingdom",
+        "nsw", "vic", "qld",  # state abbreviations
+    ]
+
     for line in lines:
         line = line.strip()
         # Skip very short or very long lines
         if len(line) < 5 or len(line) > 500:
             continue
+        # Skip lines with LaTeX commands (likely affiliations)
+        if "\\\\" in line or "\\texttt" in line or "\\href" in line:
+            continue
         # Skip lines that look like titles, abstracts, affiliations, or addresses
-        if any(kw in line.lower() for kw in ["abstract", "introduction", "university",
-                                               "department", "institute", "keywords",
-                                               "correspondence", "email", "faculty",
-                                               "school of", "college of", "center for",
-                                               "centre for", "hospital", "clinic",
-                                               "received", "accepted", "published",
-                                               "doi:", "http", "orcid", "@"]):
+        if any(kw in line.lower() for kw in skip_keywords):
+            continue
+        # Skip lines that are mostly numbers/punctuation (addresses, phone numbers)
+        alpha_ratio = sum(1 for c in line if c.isalpha()) / max(len(line), 1)
+        if alpha_ratio < 0.6:
             continue
         # Look for lines with multiple names (commas or "and")
         if ("," in line or " and " in line) and not line.endswith("."):
             # Check if words are mostly capitalized (name-like)
-            words = line.split()
-            cap_ratio = sum(1 for w in words if w[0].isupper()) / max(len(words), 1)
-            if cap_ratio > 0.5 and len(words) < 40:
+            words = [w for w in line.split() if len(w) > 1]
+            if not words:
+                continue
+            cap_ratio = sum(1 for w in words if w[0].isupper()) / len(words)
+            # Names should be 2-6 words per person, so total < 40 words
+            # and at least 2 words (first + last name)
+            if cap_ratio > 0.5 and 2 <= len(words) < 40:
                 candidates.append(line)
 
     if not candidates:
