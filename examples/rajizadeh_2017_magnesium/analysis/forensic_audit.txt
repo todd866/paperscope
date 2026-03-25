@@ -1,0 +1,129 @@
+========================================================================
+FORENSIC AUDIT: Rajizadeh et al., Nutrition 35 (2017) 56-60
+Magnesium supplementation and depression
+========================================================================
+
+--- 1. GRIM TEST: Beck Depression Inventory means ---
+(BDI is integer-valued: 21 items scored 0-3, total 0-63)
+
+  [PASS] Mg baseline: mean=26.9, n=26
+  [FAIL] Mg end: mean=11.26, n=26
+         n*mean = 292.76, nearest: [11.2308, 11.2692]
+  [PASS] Placebo baseline: mean=25.6, n=27
+  [PASS] Placebo end: mean=15.2, n=27
+
+--- 2. DEBIT TEST: Reported percentages ---
+(counts must be integers)
+
+  [PASS] Mg group Mg normalization: 88.5% of n=26 = 23.01
+  [PASS] Placebo group Mg normalization: 48.1% of n=27 = 12.99
+  [PASS] Mg group female: 73.1% of n=26 = 19.01
+  [PASS] Placebo group female: 74.1% of n=27 = 20.01
+
+--- 3. SPRITE: Can any valid dataset produce these BDI stats? ---
+(BDI range: 0-63, integer scores)
+
+  [FLAG] Mg baseline: mean=26.9, SD=7.1, n=26
+         no valid dataset found
+  [FLAG] Mg end: mean=11.26, SD=6.9, n=26
+         no valid dataset found
+  [FLAG] Placebo baseline: mean=25.6, SD=6.1, n=27
+         no valid dataset found
+  [PASS] Placebo end: mean=15.2, SD=9.3, n=27
+         reconstructed: mean=15.4444, SD=9.2998
+
+--- 4. CORRELATION BOUND: Serum magnesium change SDs ---
+
+  Placebo: Pre SD=0.13, Post SD=0.27, Change SD=0.03
+  FAIL: implied r = 1.2664 — IMPOSSIBLE (outside [-1, 1]). Reported SD(change) = 0.03, but valid range is [0.1400, 0.4000]
+
+  Mg group: Pre SD=0.19, Post SD=0.19, Change SD=0.29
+  PASS: implied r = -0.1648 (within [-1, 1]). Plausible SD(change) range: [0.0000, 0.3800]
+
+--- 5. P-VALUE RECALCULATION ---
+
+  FLAG: t(26) = 15.5885, calculated p = 1.04e-14, reported p = 0.11. Ratio = 0.0x
+         (Placebo serum Mg change (paired))
+  FLAG: t(25) = 5.4507, calculated p = 1.17e-05, reported p = 0.001. Ratio = 0.0x
+         (Mg group serum Mg change (paired))
+  FLAG: t(25) = -8.9461, calculated p = 2.89e-09, reported p = 0.001. Ratio = 0.0x
+         (Mg group BDI change (paired))
+  FLAG: t(26) = -6.8405, calculated p = 2.92e-07, reported p = 0.001. Ratio = 0.0x
+         (Placebo BDI change (paired))
+
+  Between-group t-tests:
+  PASS: t(49.2) = 0.7138, calculated p = 4.79e-01, reported p = 0.49. Ratio = 1.0x
+         (BDI baseline)
+  PASS: t(47.9) = -1.7560, calculated p = 8.55e-02, reported p = 0.08. Ratio = 1.1x
+         (BDI end)
+  PASS: t(49.7) = -2.2652, calculated p = 2.79e-02, reported p = 0.02. Ratio = 1.4x
+         (BDI change)
+  PASS: t(44.0) = -1.1140, calculated p = 2.71e-01, reported p = 0.27. Ratio = 1.0x
+         (Serum Mg baseline)
+
+--- 6. ARITHMETIC CONSISTENCY: Table 2 ---
+
+  FAIL: Protein, Mg: End (71.51) - Baseline (63.33) = 8.18, reported as 44.31 [discrepancy: 36.1300]
+  FAIL: Protein, Placebo: End (69.67) - Baseline (75.08) = -5.41, reported as 23.45 [discrepancy: 28.8600]
+  FAIL: Carbohydrate, Mg: End (307.49) - Baseline (305.1) = 2.39, reported as 87.21 [discrepancy: 84.8200]
+  FAIL: Carbohydrate, Placebo: End (308.19) - Baseline (364.08) = -55.89, reported as 113.34 [discrepancy: 169.2300]
+  PASS: Fat, Mg: End (75.53) - Baseline (81.88) = -6.35, reported as -6.35
+  FAIL: Fat, Placebo: End (81.6) - Baseline (87.17) = -5.57, reported as 32.15 [discrepancy: 37.7200]
+  FAIL: Dietary Mg, Mg: End (170.83) - Baseline (153.47) = 17.36, reported as 81.5 [discrepancy: 64.1400]
+  FAIL: Dietary Mg, Placebo: End (193.1) - Baseline (162.96) = 30.14, reported as 90.29 [discrepancy: 60.1500]
+
+--- 7. SD SIGN CHECK ---
+
+  FAIL: Protein change SD, Placebo: SD = -5.4 — IMPOSSIBLE: standard deviation cannot be negative
+  FAIL: Carbohydrate change SD, Placebo: SD = -55.89 — IMPOSSIBLE: standard deviation cannot be negative
+  FAIL: Fat change SD, Placebo: SD = -5.56 — IMPOSSIBLE: standard deviation cannot be negative
+
+--- 8. VARIANCE RATIO: Are group SDs suspiciously similar? ---
+
+  PASS: variance ratio F=1.35 between Mg and Placebo (p=0.4467)  (BDI baseline)
+  PASS: variance ratio F=1.82 between Placebo and Mg (p=0.1399)  (BDI end)
+  PASS: variance ratio F=2.14 between Mg and Placebo (p=0.0598)  (Serum Mg baseline)
+
+--- 9. EFFECT SIZE CONSISTENCY: BDI change ---
+
+  PASS: effect sizes internally consistent. d=-0.624, p=2.79e-02, 95% CI [-9.91, -0.59]
+  Calculated: d=-0.624, p=0.0279, 95% CI [-9.9058, -0.5942]
+
+--- 10. GRIMMER: Are BDI SDs possible for integer data? ---
+
+  [PASS] Mg baseline: mean=26.9, SD=7.1, n=26
+  [FAIL] Mg end: mean=11.26, SD=6.9, n=26
+         FAIL: GRIM fails first — mean 11.26 is impossible for n=26
+  [PASS] Placebo baseline: mean=25.6, SD=6.1, n=27
+  [PASS] Placebo end: mean=15.2, SD=9.3, n=27
+
+--- 11. CHI-SQUARED RECALCULATION: Table 1 ---
+
+  PASS: Sex: chi2(1) = 0.007, p = 9.34e-01
+  PASS: Marital: chi2(1) = 1.128, p = 2.88e-01
+
+--- 12. CARLISLE TEST: Are Table 1 p-values too well-balanced? ---
+
+  PASS: Table 1 + BMI: Table 1 p-values appear consistent with randomization (Stouffer Z = -1.521, p = 0.1283; mean p = 0.714)
+
+--- 13. SD/SE CONFUSION CHECK ---
+
+  FLAG: Placebo serum Mg change: reported SD (0.03) is very small relative to range (3) — might be SE. If SE, true SD ~ 0.16
+  PASS: Mg group serum Mg change: SD=0.29 (implies SE=0.0569 for n=26)
+
+--- 14. QUICK SD CHECK: BDI range [0, 63] ---
+
+  [PASS] Mg baseline: SD=7.1
+  [PASS] Mg end: SD=6.9
+  [PASS] Placebo baseline: SD=6.1
+  [PASS] Placebo end: SD=9.3
+
+========================================================================
+AUDIT COMPLETE
+  FAILURES (impossible):  14
+  FLAGS (suspicious):     7
+  PASSES:                 29
+
+  VERDICT: SEVERE data integrity concerns (21 issues).
+  Raw data investigation warranted.
+========================================================================

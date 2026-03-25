@@ -1,0 +1,952 @@
+{
+  "sections_found": [
+    "preamble",
+    "introduction",
+    "methods",
+    "results",
+    "discussion",
+    "conclusions",
+    "references"
+  ],
+  "methods_detected": [],
+  "author_profile": {
+    "skipped": true,
+    "authors_provided": [
+      "Afsaneh Rajizadeh M.Sc. a",
+      "Hassan Mozaffari-Khosravi Ph.D. a"
+    ]
+  },
+  "resolution_analysis": {
+    "method_resolution": {
+      "aggregate_score": 1.0,
+      "specific_score": 0.4,
+      "detected_level": "aggregate",
+      "key_phrases": [
+        "frequency",
+        "macro",
+        "individual",
+        "distribution",
+        "designed",
+        "mean",
+        "Kolmogorov",
+        "era",
+        "index"
+      ]
+    },
+    "conclusion_resolution": {
+      "aggregate_score": 0.6,
+      "specific_score": 0.2,
+      "detected_level": "aggregate",
+      "key_phrases": [
+        "era",
+        "mean",
+        "index",
+        "individual"
+      ]
+    },
+    "mismatch": {
+      "detected": false,
+      "severity": "none",
+      "explanation": "Method resolution appears adequate for the conclusions drawn.",
+      "method_blind_spots": []
+    },
+    "grounding_check": [
+      {
+        "conclusion": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+        "nearest_method": "The MG\nreceived two 250-mg magnesium oxide tablets on a daily basis (21st Century\u0003\nHealthcare, Inc., Arizona, USA).",
+        "similarity": 0.13,
+        "grounded": false
+      },
+      {
+        "conclusion": "There-\nfore, when evaluating patients with depression, evaluation of the\nserum magnesium status and resolving this deﬁciency, if present,\ncontribute\nto\nbetter\ntreatment\noutcomes\nand\nthus\nare\nrecommend",
+        "nearest_method": "After determining\nthe state of each participant’s depression, the magnesium status was evaluated.",
+        "similarity": 0.1,
+        "grounded": false
+      },
+      {
+        "conclusion": "Acknowledgments\nThe authors acknowledge Shahid Sadoughi University of\nMedical Sciences for its continued attention and ﬁnancial sup-\nport of this research.",
+        "nearest_method": "On the other hand, the PG received two similar\ntablets in terms of shape, color, and size containing starch powder (developed\nby Pharmacy Faculty of Shahid Sadoughi University of Medical Sciences in\nY",
+        "similarity": 0.212,
+        "grounded": false
+      },
+      {
+        "conclusion": "They also acknowledge the ofﬁcials and\nemployees of Khatam-ol-Anbiya Clinic, the central laboratory of\nShahid Sadoughi University of Medical Sciences in Yazd, and all\nthe participants whose cooperatio",
+        "nearest_method": "They were\nselected from patients referred to Khatam-ol-Anbiya Clinic in Yazd under the\nsupervision of a psychiatrist and through using the Beck Depression Inventory-II\nquestionnaire.",
+        "similarity": 0.186,
+        "grounded": false
+      },
+      {
+        "conclusion": "Although to\nour knowledge, few clinical studies have been conducted in this\nregard, Barrag\u0002an-Rodr\u0002ıguez et al. [29] conducted a similar study\nin which they investigated daily consumption of 450 mg ma",
+        "nearest_method": "The ﬁrst was the\nmagnesium group (MG), and the second was the placebo group (PG).",
+        "similarity": 0.099,
+        "grounded": false
+      },
+      {
+        "conclusion": "Following 12 wk of treatment,\nserum magnesium increased signiﬁcantly in both groups, but the\nFig. 1.",
+        "nearest_method": "As\nTable 3 shows, the mean serum magnesium at the end of the\nstudy increased signiﬁcantly only in MG compared with the\nbeginning of the study.",
+        "similarity": 0.184,
+        "grounded": false
+      },
+      {
+        "conclusion": "Participant ﬂow diagram throughout the study.",
+        "nearest_method": "After determining\nthe state of each participant’s depression, the magnesium status was evaluated.",
+        "similarity": 0.108,
+        "grounded": false
+      },
+      {
+        "conclusion": "Table 1\nComparison of qualitative characteristics between the two groups at baseline\nVariables\nMagnesium group\nn (%)\nPlacebo group\nn (%)\nP value*\nSex\n0.93\nFemale\n19 (73.1)\n20 (74.1)\nMale\n7 (26.9)\n7 (2",
+        "nearest_method": "As can be observed, of the 26 people in the MG, 19 were\nwomen and 7 were men (73.1% and 26.9%, respectively).",
+        "similarity": 0.173,
+        "grounded": false
+      },
+      {
+        "conclusion": "Rajizadeh et al. / Nutrition 35 (2017) 56–60\n58\n\n\n--- Page 4 ---\ndifference of depression status between the two groups was not\nsigniﬁcant [29].",
+        "nearest_method": "Rajizadeh et al. / Nutrition 35 (2017) 56–60\n57\n\n\n--- Page 3 ---\nparticipants were excluded due to nonattendance, pregnancy,\nimmigration, or complications caused by consumption of the\ntablets.",
+        "similarity": 0.422,
+        "grounded": true
+      },
+      {
+        "conclusion": "Eby et al. also investigated the effect of magne-\nsium supplement (125–300 mg in the form of turinate or glici-\nnate)\non\nthree\ndepressed\nindividuals,\nobserving\nrapid\nimprovement of major depression in",
+        "nearest_method": "This study was designed in two phases; initially, the status of\nmagnesium in depressed patients was investigated.",
+        "similarity": 0.06,
+        "grounded": false
+      },
+      {
+        "conclusion": "Although in the\nmentioned study the status of serum magnesium was not\nexamined in individuals at the prescribed dosage, the results\nwere in line with those of the present study.",
+        "nearest_method": "As\nTable 3 shows, the mean serum magnesium at the end of the\nstudy increased signiﬁcantly only in MG compared with the\nbeginning of the study.",
+        "similarity": 0.11,
+        "grounded": false
+      },
+      {
+        "conclusion": "Evaluation of the serum magnesium levels of the participants\nindicated that more patients in the MG responded to the mag-\nnesium supplement treatment (88.5% versus 48.1%), and reached\nthe normal state",
+        "nearest_method": "Although all of the participants had\nhypomagnesemia, at the end of the trial 88.5% of the MG\nreturned to a normal state of magnesium; this was 48.1% for\nindividuals in the PG (P ¼ 0.002).",
+        "similarity": 0.188,
+        "grounded": false
+      },
+      {
+        "conclusion": "Nevertheless, after the intervention w11.5% of\nthe individuals in the MG were still below the normal level of\nserum magnesium.",
+        "nearest_method": "The level of serum magnesium\nwas measured by photometric method using blue Xylidyl (the magnesium\nassessment kit, Pars Azmoon Co., Iran, Tehran) with a sensitivity of 0.2 mg/dL.",
+        "similarity": 0.145,
+        "grounded": false
+      },
+      {
+        "conclusion": "This might be due to insufﬁcient magnesium\ndose, insufﬁcient duration of the treatment, insufﬁcient intake of\nmagnesium from the diet, and so on.",
+        "nearest_method": "To\ninvestigate the intake of food, macronutrients, magnesium, and energy at the\nbeginning and end of the study, a 24-h dietary recall questionnaire was applied.",
+        "similarity": 0.043,
+        "grounded": false
+      },
+      {
+        "conclusion": "Abbasi et al. [30] examined\nthe effect of 8 wk of daily consumption of 500 mg magnesium\noxide tablet on the sleep status of the elderly.",
+        "nearest_method": "The MG\nreceived two 250-mg magnesium oxide tablets on a daily basis (21st Century\u0003\nHealthcare, Inc., Arizona, USA).",
+        "similarity": 0.133,
+        "grounded": false
+      },
+      {
+        "conclusion": "They observed that\nat the end of the 8-wk period, the serum magnesium level was\nnot signiﬁcantly different between the magnesium group and\nthe placebo group [30].",
+        "nearest_method": "The ﬁrst was the\nmagnesium group (MG), and the second was the placebo group (PG).",
+        "similarity": 0.265,
+        "grounded": false
+      },
+      {
+        "conclusion": "Reasons for the insigniﬁcant change vary.",
+        "nearest_method": "Type of study and participants\nThis was a randomized, double-blind, placebo-controlled trial with 60 in-\ndividuals suffering from depression and magnesium deﬁciency.",
+        "similarity": 0.0,
+        "grounded": false
+      },
+      {
+        "conclusion": "One factor could be the sensitivity of serum magnesium as an\nindex for evaluation of magnesium status (i.e., it appears that it\ndid not have the necessary sensitivity) [31].",
+        "nearest_method": "The level of serum magnesium\nwas measured by photometric method using blue Xylidyl (the magnesium\nassessment kit, Pars Azmoon Co., Iran, Tehran) with a sensitivity of 0.2 mg/dL.",
+        "similarity": 0.112,
+        "grounded": false
+      },
+      {
+        "conclusion": "According to these\nstudies, there is equilibrium between the concentration of serum\nmagnesium and bone, thus when magnesium is deﬁcient, this\nelement is released into the blood from the degradable par",
+        "nearest_method": "To measure the serum magnesium, 5 mL venous blood was taken from each\nindividual.",
+        "similarity": 0.093,
+        "grounded": false
+      },
+      {
+        "conclusion": "This can then falsely show the serum magnesium levels\nto be high [32].",
+        "nearest_method": "The age mean of the MG and PG were 32.20 \u0002 9.54 and\n32.07 \u0002 7.69, respectively (P ¼ 0.64).",
+        "similarity": 0.117,
+        "grounded": false
+      },
+      {
+        "conclusion": "Additionally, because the equilibrium of mag-\nnesium changes slowly in the body, consumption of oral sup-\nplements of magnesium might not affect the serum magnesium\neven within several weeks or months",
+        "nearest_method": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+        "similarity": 0.069,
+        "grounded": false
+      },
+      {
+        "conclusion": "However, despite all of\nthese problems, serum magnesium is still one of the widely used\nindices when measuring the status of magnesium in the body.",
+        "nearest_method": "This study was designed in two phases; initially, the status of\nmagnesium in depressed patients was investigated.",
+        "similarity": 0.094,
+        "grounded": false
+      },
+      {
+        "conclusion": "Because indices like magnesium erythrocyte and urine magne-\nsium are not very accurate, determination of an accurate method\nremains a challenge [33].",
+        "nearest_method": "The level of serum magnesium\nwas measured by photometric method using blue Xylidyl (the magnesium\nassessment kit, Pars Azmoon Co., Iran, Tehran) with a sensitivity of 0.2 mg/dL.",
+        "similarity": 0.04,
+        "grounded": false
+      },
+      {
+        "conclusion": "In addition to what has been mentioned here, determination of\nthe magnesium dose and the duration of treatment for individuals\nsuffering from hypomagnesemia also are important.",
+        "nearest_method": "Although all of the participants had\nhypomagnesemia, at the end of the trial 88.5% of the MG\nreturned to a normal state of magnesium; this was 48.1% for\nindividuals in the PG (P ¼ 0.002).",
+        "similarity": 0.062,
+        "grounded": false
+      },
+      {
+        "conclusion": "Based on\nprevious studies, the dose prescribed for treating depression has\nranged from 125 to 450 mg [11,29,34].",
+        "nearest_method": "To determine the sample size, we considered a ¼ 0.05 and the test power\nof 90% for reaching a signiﬁcant difference of 2 units of the mean of the total\nBeck score in two groups of previous studies; a ",
+        "similarity": 0.073,
+        "grounded": false
+      },
+      {
+        "conclusion": "Furthermore, the course of\ntherapeutic supplement also has varied from 7 to 20 mo [11,29,35].",
+        "nearest_method": "The supplement and placebo were administered in two 1-mo courses.",
+        "similarity": 0.116,
+        "grounded": false
+      },
+      {
+        "conclusion": "One reviewstudy recommended dailyconsumption ofmagnesium\noxide for treating hypomagnesemia to be 800 mg/d.",
+        "nearest_method": "The MG\nreceived two 250-mg magnesium oxide tablets on a daily basis (21st Century\u0003\nHealthcare, Inc., Arizona, USA).",
+        "similarity": 0.062,
+        "grounded": false
+      },
+      {
+        "conclusion": "Side effects\nassociated with this tablet include gastrointestinal disorders and\ndiarrhea, thus it is difﬁcult to prescribe an amount of the supple-\nment that will not result in undesirable complicatio",
+        "nearest_method": "Patients did not pay for the experiments or the supple-\nment.",
+        "similarity": 0.15,
+        "grounded": false
+      },
+      {
+        "conclusion": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+        "nearest_method": "Those results were published\npreviously [22].",
+        "similarity": 0.077,
+        "grounded": false
+      },
+      {
+        "conclusion": "Considering the mechanism of the effect of magnesium in\nbrain and mental functions, various speculations have been\npresented.",
+        "nearest_method": "The level of serum magnesium\nwas measured by photometric method using blue Xylidyl (the magnesium\nassessment kit, Pars Azmoon Co., Iran, Tehran) with a sensitivity of 0.2 mg/dL.",
+        "similarity": 0.013,
+        "grounded": false
+      },
+      {
+        "conclusion": "According to these studies, magnesium has a pivotal\nrole in synaptic function, especially in the brain’s hippocampus\nneurons [24].",
+        "nearest_method": "To\ninvestigate the intake of food, macronutrients, magnesium, and energy at the\nbeginning and end of the study, a 24-h dietary recall questionnaire was applied.",
+        "similarity": 0.038,
+        "grounded": false
+      },
+      {
+        "conclusion": "In addition to being an inhibitory regulator in\nNMDA channels, magnesium has also an excitatory effect on\nproduction of brain-derived neurotrophic factor (BDNF) and cy-\nclic adenosine monophosphate re",
+        "nearest_method": "The level of serum magnesium\nwas measured by photometric method using blue Xylidyl (the magnesium\nassessment kit, Pars Azmoon Co., Iran, Tehran) with a sensitivity of 0.2 mg/dL.",
+        "similarity": 0.008,
+        "grounded": false
+      },
+      {
+        "conclusion": "Cyclic adenosine monophosphate response\nelement-binding protein is a protein that regulates the activity\nof the genes affecting the function of human brain, especially the\ngenes involved in the produc",
+        "nearest_method": "Type of study and participants\nThis was a randomized, double-blind, placebo-controlled trial with 60 in-\ndividuals suffering from depression and magnesium deﬁciency.",
+        "similarity": 0.0,
+        "grounded": false
+      },
+      {
+        "conclusion": "BDNF is a\nneurotropic factor widely expressed in the central nervous sys-\ntem, playing an important role in the evolution of brain, survival,\nand maintenance of neurons.",
+        "nearest_method": "Type of study and participants\nThis was a randomized, double-blind, placebo-controlled trial with 60 in-\ndividuals suffering from depression and magnesium deﬁciency.",
+        "similarity": 0.0,
+        "grounded": false
+      },
+      {
+        "conclusion": "Furthermore, BDNF also has a role\nTable 2\nComparison of mean of anthropometric and dietary intake data between the two groups at baseline and study endpoint\nVariables\nn\nBaseline\nEnd\nChanges\nP value*\nB",
+        "nearest_method": "The ﬁrst was the\nmagnesium group (MG), and the second was the placebo group (PG).",
+        "similarity": 0.232,
+        "grounded": false
+      },
+      {
+        "conclusion": "Table 3\nComparing the mean of Beck Depression Inventory-II score and serum magne-\nsium between and within the two groups\nVariables\nn\nBaseline\nEnd\nChanges\nP value*\nBeck score\nMagnesium group 26 26.9 \u0002 ",
+        "nearest_method": "The ﬁrst was the\nmagnesium group (MG), and the second was the placebo group (PG).",
+        "similarity": 0.192,
+        "grounded": false
+      },
+      {
+        "conclusion": "Rajizadeh et al. / Nutrition 35 (2017) 56–60\n59\n\n\n--- Page 5 ---\nin inhibition of NMDA channels.",
+        "nearest_method": "Rajizadeh et al. / Nutrition 35 (2017) 56–60\n57\n\n\n--- Page 3 ---\nparticipants were excluded due to nonattendance, pregnancy,\nimmigration, or complications caused by consumption of the\ntablets.",
+        "similarity": 0.455,
+        "grounded": true
+      },
+      {
+        "conclusion": "In some studies, increased\nexpression of the BDNF gene has been observed after treatment\nwith electric shock and some antidepressants [24,37].",
+        "nearest_method": "Having accounted for the rate of attrition, this number increased to\n30 individuals.",
+        "similarity": 0.041,
+        "grounded": false
+      },
+      {
+        "conclusion": "Therefore,\nmagnesium can be effective in improving depression.",
+        "nearest_method": "Measurements\nTo measure the depression status, the Beck Depression Inventory-II was used\n[27,28].",
+        "similarity": 0.065,
+        "grounded": false
+      },
+      {
+        "conclusion": "Among the limitations of this study is its relatively short\nduration of treatment.",
+        "nearest_method": "At the end of the study, seven\nA.",
+        "similarity": 0.06,
+        "grounded": false
+      },
+      {
+        "conclusion": "Not measuring and specifying the status\nof some other nutrients involved in the metabolism of magne-\nsium such as vitamin D and calcium and not using some other\nsensitive indices indicating the status",
+        "nearest_method": "This study was designed in two phases; initially, the status of\nmagnesium in depressed patients was investigated.",
+        "similarity": 0.078,
+        "grounded": false
+      },
+      {
+        "conclusion": "As a strong point of this trial, one can\nmention the high rate of patient compliance in consuming the\nsupplements and the consistency of follow-up in the treatment.",
+        "nearest_method": "This trial was registered in the registry of clinical trial of Health Ministry\nof Iran.",
+        "similarity": 0.061,
+        "grounded": false
+      },
+      {
+        "conclusion": "Based on the results obtained from this study, it is suggested\nthat in future investigations, different doses of magnesium\nsupplements or different courses of treatment be evaluated.",
+        "nearest_method": "The mean of the changes in different variables, except for\ndaily intake of carbohydrates, did not demonstrate a signiﬁcant\ndifference between the two groups.",
+        "similarity": 0.069,
+        "grounded": false
+      },
+      {
+        "conclusion": "Furthermore, because the status of vitamin D, parathormone,\nand calcium is associated with depression and serum magne-\nsium, measurement of these indices in future studies is sug-\ngested for\nbetter ev",
+        "nearest_method": "Measurements\nTo measure the depression status, the Beck Depression Inventory-II was used\n[27,28].",
+        "similarity": 0.066,
+        "grounded": false
+      }
+    ],
+    "overall_resolution_mismatch_score": 0.382,
+    "backend": {
+      "backend": "tfidf",
+      "vocabulary_size": 2008,
+      "n_items": 111,
+      "dim": 2008,
+      "fallback_reason": "Cannot send a request, as the client has been closed."
+    }
+  },
+  "missing_methods": {
+    "methods_identified": [],
+    "missing_complementary": [],
+    "resolution_coverage": {
+      "required": [],
+      "covered": [],
+      "gaps": []
+    }
+  },
+  "overclaiming": {
+    "hedge_analysis": {
+      "by_section": {
+        "results": {
+          "mean_strength": 0.4957894736842105,
+          "hedge_count": 0,
+          "amplifier_count": 1,
+          "causal_count": 0,
+          "sentence_count": 19
+        },
+        "discussion": {
+          "mean_strength": 0.44999999999999996,
+          "hedge_count": 3,
+          "amplifier_count": 0,
+          "causal_count": 1,
+          "sentence_count": 43
+        },
+        "conclusions": {
+          "mean_strength": 0.625,
+          "hedge_count": 0,
+          "amplifier_count": 0,
+          "causal_count": 1,
+          "sentence_count": 4
+        }
+      },
+      "escalation_flags": [
+        {
+          "result_sentence": "This might be due to insufﬁcient magnesium\ndose, insufﬁcient duration of the treatment, insufﬁcient intake of\nmagnesium from the diet, and so on.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.0,
+          "conclusion_strength": 1.0,
+          "strength_delta": 1.0,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "One factor could be the sensitivity of serum magnesium as an\nindex for evaluation of magnesium status (i.e., it appears that it\ndid not have the necessary sensitivity) [31].",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.0,
+          "conclusion_strength": 1.0,
+          "strength_delta": 1.0,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Additionally, because the equilibrium of mag-\nnesium changes slowly in the body, consumption of oral sup-\nplements of magnesium might not affect the serum magnesium\neven within several weeks or months",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.0,
+          "conclusion_strength": 1.0,
+          "strength_delta": 1.0,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "A.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.31,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.69,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "A.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.31,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.69,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "They\nwere followed for 8 wk.",
+          "conclusion_sentence": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "result_strength": 0.36,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.64,
+          "early_section": "results",
+          "late_section": "discussion",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "They\nwere followed for 8 wk.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.36,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.64,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Participant ﬂow diagram throughout the study.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.36,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.64,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Reasons for the insigniﬁcant change vary.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.36,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.64,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "At the end of the study, seven\nA.",
+          "conclusion_sentence": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "result_strength": 0.38,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.62,
+          "early_section": "results",
+          "late_section": "discussion",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "At the end of the study, seven\nA.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.38,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.62,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Therefore,\nmagnesium can be effective in improving depression.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.38,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.62,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Tablet count showed a\ncompliance of >87% in both groups.",
+          "conclusion_sentence": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "result_strength": 0.4,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.6,
+          "early_section": "results",
+          "late_section": "discussion",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Also, its mean changes were signiﬁcant\nacross the two groups.",
+          "conclusion_sentence": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "result_strength": 0.4,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.6,
+          "early_section": "results",
+          "late_section": "discussion",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Tablet count showed a\ncompliance of >87% in both groups.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.4,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.6,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Also, its mean changes were signiﬁcant\nacross the two groups.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.4,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.6,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "This can then falsely show the serum magnesium levels\nto be high [32].",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.43,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.57,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "One reviewstudy recommended dailyconsumption ofmagnesium\noxide for treating hypomagnesemia to be 800 mg/d.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.43,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.57,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Among the limitations of this study is its relatively short\nduration of treatment.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.43,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.57,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Furthermore, the course of\ntherapeutic supplement also has varied from 7 to 20 mo [11,29,35].",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.45,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.55,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Following 12 wk of treatment,\nserum magnesium increased signiﬁcantly in both groups, but the\nFig. 1.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.46,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.54,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Eventually, information from 26 patients in the MG and\n27 in the PG was analyzed (Fig. 1).",
+          "conclusion_sentence": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "result_strength": 0.47,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.53,
+          "early_section": "results",
+          "late_section": "discussion",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "The distribution of the\nfrequency of qualitative properties in the two groups is shown in\nTable 1.",
+          "conclusion_sentence": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "result_strength": 0.47,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.53,
+          "early_section": "results",
+          "late_section": "discussion",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "The frequency of the qualitative charac-\nteristics did not show a signiﬁcant difference between the two\ngroups.",
+          "conclusion_sentence": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "result_strength": 0.47,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.53,
+          "early_section": "results",
+          "late_section": "discussion",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Eventually, information from 26 patients in the MG and\n27 in the PG was analyzed (Fig. 1).",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.47,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.53,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "The distribution of the\nfrequency of qualitative properties in the two groups is shown in\nTable 1.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.47,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.53,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "The frequency of the qualitative charac-\nteristics did not show a signiﬁcant difference between the two\ngroups.",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.47,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.53,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Simi-\nlarly, of the 27 individuals in the PG, 20 were women (74.1%) and\n7 were male (25.9%).",
+          "conclusion_sentence": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "result_strength": 0.48,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.52,
+          "early_section": "results",
+          "late_section": "discussion",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Simi-\nlarly, of the 27 individuals in the PG, 20 were women (74.1%) and\n7 were male (25.9%).",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.48,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.52,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        },
+        {
+          "result_sentence": "Based on\nprevious studies, the dose prescribed for treating depression has\nranged from 125 to 450 mg [11,29,34].",
+          "conclusion_sentence": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "result_strength": 0.48,
+          "conclusion_strength": 1.0,
+          "strength_delta": 0.52,
+          "early_section": "results",
+          "late_section": "conclusions",
+          "flag": "hedge_dropped"
+        }
+      ]
+    },
+    "scope_analysis": {
+      "conclusion_result_gaps": [
+        {
+          "conclusion": "Acknowledgments\nThe authors acknowledge Shahid Sadoughi University of\nMedical Sciences for its continued attention and ﬁnancial sup-\nport of this research.",
+          "nearest_result": "Of 650 possible participants, 60 met the inclusion criteria and\nwere randomly assigned to one of two groups (MG or PG).",
+          "similarity": 0.0,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "A.",
+          "nearest_result": "Of 650 possible participants, 60 met the inclusion criteria and\nwere randomly assigned to one of two groups (MG or PG).",
+          "similarity": 0.0,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Reasons for the insigniﬁcant change vary.",
+          "nearest_result": "Of 650 possible participants, 60 met the inclusion criteria and\nwere randomly assigned to one of two groups (MG or PG).",
+          "similarity": 0.0,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Cyclic adenosine monophosphate response\nelement-binding protein is a protein that regulates the activity\nof the genes affecting the function of human brain, especially the\ngenes involved in the produc",
+          "nearest_result": "Of 650 possible participants, 60 met the inclusion criteria and\nwere randomly assigned to one of two groups (MG or PG).",
+          "similarity": 0.0,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "BDNF is a\nneurotropic factor widely expressed in the central nervous sys-\ntem, playing an important role in the evolution of brain, survival,\nand maintenance of neurons.",
+          "nearest_result": "Of 650 possible participants, 60 met the inclusion criteria and\nwere randomly assigned to one of two groups (MG or PG).",
+          "similarity": 0.0,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "A.",
+          "nearest_result": "Of 650 possible participants, 60 met the inclusion criteria and\nwere randomly assigned to one of two groups (MG or PG).",
+          "similarity": 0.0,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "In addition to being an inhibitory regulator in\nNMDA channels, magnesium has also an excitatory effect on\nproduction of brain-derived neurotrophic factor (BDNF) and cy-\nclic adenosine monophosphate re",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.006,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Because indices like magnesium erythrocyte and urine magne-\nsium are not very accurate, determination of an accurate method\nremains a challenge [33].",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.007,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "According to these studies, magnesium has a pivotal\nrole in synaptic function, especially in the brain’s hippocampus\nneurons [24].",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.008,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Considering the mechanism of the effect of magnesium in\nbrain and mental functions, various speculations have been\npresented.",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.009,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Based on\nprevious studies, the dose prescribed for treating depression has\nranged from 125 to 450 mg [11,29,34].",
+          "nearest_result": "This reduction, however, was greater in the\nMG compared with the PG. the mean scores of changes were\n\u000515.65 \u0002 8.92 for MG and \u000510.40 \u0002 7.90 for PG (P ¼ 0.02).",
+          "similarity": 0.021,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Not measuring and specifying the status\nof some other nutrients involved in the metabolism of magne-\nsium such as vitamin D and calcium and not using some other\nsensitive indices indicating the status",
+          "nearest_result": "Comparison of the within- and between-group means of\nbody mass index and daily dietary intakes are provided in\nTable 2.",
+          "similarity": 0.025,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "They also acknowledge the ofﬁcials and\nemployees of Khatam-ol-Anbiya Clinic, the central laboratory of\nShahid Sadoughi University of Medical Sciences in Yazd, and all\nthe participants whose cooperatio",
+          "nearest_result": "At the end of the study, seven\nA.",
+          "similarity": 0.031,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Furthermore, the course of\ntherapeutic supplement also has varied from 7 to 20 mo [11,29,35].",
+          "nearest_result": "Simi-\nlarly, of the 27 individuals in the PG, 20 were women (74.1%) and\n7 were male (25.9%).",
+          "similarity": 0.035,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "This might be due to insufﬁcient magnesium\ndose, insufﬁcient duration of the treatment, insufﬁcient intake of\nmagnesium from the diet, and so on.",
+          "nearest_result": "The mean of the changes in different variables, except for\ndaily intake of carbohydrates, did not demonstrate a signiﬁcant\ndifference between the two groups.",
+          "similarity": 0.036,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "However, it seems that an increase in daily con-\nsumption leads to better results.",
+          "nearest_result": "Comparison of the within- and between-group means of\nbody mass index and daily dietary intakes are provided in\nTable 2.",
+          "similarity": 0.036,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Side effects\nassociated with this tablet include gastrointestinal disorders and\ndiarrhea, thus it is difﬁcult to prescribe an amount of the supple-\nment that will not result in undesirable complicatio",
+          "nearest_result": "Tablet count showed a\ncompliance of >87% in both groups.",
+          "similarity": 0.037,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "In some studies, increased\nexpression of the BDNF gene has been observed after treatment\nwith electric shock and some antidepressants [24,37].",
+          "nearest_result": "As can be observed, of the 26 people in the MG, 19 were\nwomen and 7 were men (73.1% and 26.9%, respectively).",
+          "similarity": 0.038,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "According to these\nstudies, there is equilibrium between the concentration of serum\nmagnesium and bone, thus when magnesium is deﬁcient, this\nelement is released into the blood from the degradable par",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.043,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Eby et al. also investigated the effect of magne-\nsium supplement (125–300 mg in the form of turinate or glici-\nnate)\non\nthree\ndepressed\nindividuals,\nobserving\nrapid\nimprovement of major depression in",
+          "nearest_result": "Rajizadeh et al. / Nutrition 35 (2017) 56–60\n57\n\n\n--- Page 3 ---\nparticipants were excluded due to nonattendance, pregnancy,\nimmigration, or complications caused by consumption of the\ntablets.",
+          "similarity": 0.046,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "One factor could be the sensitivity of serum magnesium as an\nindex for evaluation of magnesium status (i.e., it appears that it\ndid not have the necessary sensitivity) [31].",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.046,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "One reviewstudy recommended dailyconsumption ofmagnesium\noxide for treating hypomagnesemia to be 800 mg/d.",
+          "nearest_result": "Although all of the participants had\nhypomagnesemia, at the end of the trial 88.5% of the MG\nreturned to a normal state of magnesium; this was 48.1% for\nindividuals in the PG (P ¼ 0.002).",
+          "similarity": 0.046,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Furthermore, because the status of vitamin D, parathormone,\nand calcium is associated with depression and serum magne-\nsium, measurement of these indices in future studies is sug-\ngested for\nbetter ev",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.05,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Although to\nour knowledge, few clinical studies have been conducted in this\nregard, Barrag\u0002an-Rodr\u0002ıguez et al. [29] conducted a similar study\nin which they investigated daily consumption of 450 mg ma",
+          "nearest_result": "Rajizadeh et al. / Nutrition 35 (2017) 56–60\n57\n\n\n--- Page 3 ---\nparticipants were excluded due to nonattendance, pregnancy,\nimmigration, or complications caused by consumption of the\ntablets.",
+          "similarity": 0.053,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "However, despite all of\nthese problems, serum magnesium is still one of the widely used\nindices when measuring the status of magnesium in the body.",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.053,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "There-\nfore, when evaluating patients with depression, evaluation of the\nserum magnesium status and resolving this deﬁciency, if present,\ncontribute\nto\nbetter\ntreatment\noutcomes\nand\nthus\nare\nrecommend",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.054,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "As a strong point of this trial, one can\nmention the high rate of patient compliance in consuming the\nsupplements and the consistency of follow-up in the treatment.",
+          "nearest_result": "Tablet count showed a\ncompliance of >87% in both groups.",
+          "similarity": 0.055,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Therefore,\nmagnesium can be effective in improving depression.",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.057,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Additionally, because the equilibrium of mag-\nnesium changes slowly in the body, consumption of oral sup-\nplements of magnesium might not affect the serum magnesium\neven within several weeks or months",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.063,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "In addition to what has been mentioned here, determination of\nthe magnesium dose and the duration of treatment for individuals\nsuffering from hypomagnesemia also are important.",
+          "nearest_result": "Although all of the participants had\nhypomagnesemia, at the end of the trial 88.5% of the MG\nreturned to a normal state of magnesium; this was 48.1% for\nindividuals in the PG (P ¼ 0.002).",
+          "similarity": 0.063,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Among the limitations of this study is its relatively short\nduration of treatment.",
+          "nearest_result": "At the end of the study, seven\nA.",
+          "similarity": 0.063,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "This study indicated that daily consumption of 500 mg\nmagnesium oxide tablet for \u00038 wk by individuals with depres-\nsion and hypomagnesemia results in improvement in both the\ndepression and the status ",
+          "nearest_result": "Although all of the participants had\nhypomagnesemia, at the end of the trial 88.5% of the MG\nreturned to a normal state of magnesium; this was 48.1% for\nindividuals in the PG (P ¼ 0.002).",
+          "similarity": 0.065,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Based on the results obtained from this study, it is suggested\nthat in future investigations, different doses of magnesium\nsupplements or different courses of treatment be evaluated.",
+          "nearest_result": "The mean of the changes in different variables, except for\ndaily intake of carbohydrates, did not demonstrate a signiﬁcant\ndifference between the two groups.",
+          "similarity": 0.065,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Participant ﬂow diagram throughout the study.",
+          "nearest_result": "At the end of the study, seven\nA.",
+          "similarity": 0.075,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Abbasi et al. [30] examined\nthe effect of 8 wk of daily consumption of 500 mg magnesium\noxide tablet on the sleep status of the elderly.",
+          "nearest_result": "Rajizadeh et al. / Nutrition 35 (2017) 56–60\n57\n\n\n--- Page 3 ---\nparticipants were excluded due to nonattendance, pregnancy,\nimmigration, or complications caused by consumption of the\ntablets.",
+          "similarity": 0.077,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "The ﬁndings of this study indicated that daily consumption of\n500 mg magnesium oxide for 8 wk resulted in improvement of\nserum magnesium levels and depression in patients who were\ndepressed and diagno",
+          "nearest_result": "As\nTable 3 shows, the mean serum magnesium at the end of the\nstudy increased signiﬁcantly only in MG compared with the\nbeginning of the study.",
+          "similarity": 0.081,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Furthermore, BDNF also has a role\nTable 2\nComparison of mean of anthropometric and dietary intake data between the two groups at baseline and study endpoint\nVariables\nn\nBaseline\nEnd\nChanges\nP value*\nB",
+          "nearest_result": "Comparison of the within- and between-group means of\nbody mass index and daily dietary intakes are provided in\nTable 2.",
+          "similarity": 0.1,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "They observed that\nat the end of the 8-wk period, the serum magnesium level was\nnot signiﬁcantly different between the magnesium group and\nthe placebo group [30].",
+          "nearest_result": "As\nTable 3 shows, the mean serum magnesium at the end of the\nstudy increased signiﬁcantly only in MG compared with the\nbeginning of the study.",
+          "similarity": 0.104,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Nevertheless, after the intervention w11.5% of\nthe individuals in the MG were still below the normal level of\nserum magnesium.",
+          "nearest_result": "Although all of the participants had\nhypomagnesemia, at the end of the trial 88.5% of the MG\nreturned to a normal state of magnesium; this was 48.1% for\nindividuals in the PG (P ¼ 0.002).",
+          "similarity": 0.105,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Although in the\nmentioned study the status of serum magnesium was not\nexamined in individuals at the prescribed dosage, the results\nwere in line with those of the present study.",
+          "nearest_result": "As\nTable 3 shows, the mean serum magnesium at the end of the\nstudy increased signiﬁcantly only in MG compared with the\nbeginning of the study.",
+          "similarity": 0.113,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "This can then falsely show the serum magnesium levels\nto be high [32].",
+          "nearest_result": "The age mean of the MG and PG were 32.20 \u0002 9.54 and\n32.07 \u0002 7.69, respectively (P ¼ 0.64).",
+          "similarity": 0.113,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Table 1\nComparison of qualitative characteristics between the two groups at baseline\nVariables\nMagnesium group\nn (%)\nPlacebo group\nn (%)\nP value*\nSex\n0.93\nFemale\n19 (73.1)\n20 (74.1)\nMale\n7 (26.9)\n7 (2",
+          "nearest_result": "As can be observed, of the 26 people in the MG, 19 were\nwomen and 7 were men (73.1% and 26.9%, respectively).",
+          "similarity": 0.164,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Following 12 wk of treatment,\nserum magnesium increased signiﬁcantly in both groups, but the\nFig. 1.",
+          "nearest_result": "As\nTable 3 shows, the mean serum magnesium at the end of the\nstudy increased signiﬁcantly only in MG compared with the\nbeginning of the study.",
+          "similarity": 0.181,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Evaluation of the serum magnesium levels of the participants\nindicated that more patients in the MG responded to the mag-\nnesium supplement treatment (88.5% versus 48.1%), and reached\nthe normal state",
+          "nearest_result": "Although all of the participants had\nhypomagnesemia, at the end of the trial 88.5% of the MG\nreturned to a normal state of magnesium; this was 48.1% for\nindividuals in the PG (P ¼ 0.002).",
+          "similarity": 0.193,
+          "flag": "scope_expansion"
+        },
+        {
+          "conclusion": "Table 3\nComparing the mean of Beck Depression Inventory-II score and serum magne-\nsium between and within the two groups\nVariables\nn\nBaseline\nEnd\nChanges\nP value*\nBeck score\nMagnesium group 26 26.9 \u0002 ",
+          "nearest_result": "The mean of the score of the Beck Depression Inventory-II\nand serum magnesium as well as their changes across the\ntwo groups are reported in Table 3.",
+          "similarity": 0.2,
+          "flag": "scope_expansion"
+        }
+      ],
+      "mean_conclusion_support": 0.074
+    },
+    "overall_overclaiming_score": 0.862,
+    "flags": [
+      "scope_expansion_in_conclusions"
+    ]
+  },
+  "verdict": {
+    "overall_severity": "high",
+    "flags": [
+      "significant overclaiming"
+    ],
+    "n_flags": 1
+  }
+}

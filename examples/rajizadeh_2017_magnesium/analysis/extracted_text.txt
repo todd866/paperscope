@@ -1,0 +1,724 @@
+--- Page 1 ---
+Applied nutritional investigation
+Effect of magnesium supplementation on depression status in
+depressed patients with magnesium deﬁciency: A randomized,
+double-blind, placebo-controlled trial
+Afsaneh Rajizadeh M.Sc. a, Hassan Mozaffari-Khosravi Ph.D. a,*,
+Mojtaba Yassini-Ardakani M.D. b, Ali Dehghani Ph.D. c
+a Department of Nutrition, Faculty of Health, Shahid Sadoughi University of Medical Sciences, Yazd, Iran
+b Department of General Psychiatry, Faculty of Medicine, Shahid Sadoughi University of Medical Sciences, Yazd, Iran
+c Department of Biostatistics and Epidemiology, Faculty of Health, Shahid Sadoughi University of Medical Sciences, Yazd, Iran
+a r t i c l e i n f o
+Article history:
+Received 20 July 2016
+Accepted 9 October 2016
+Keywords:
+Depression
+Magnesium supplementation
+Magnesium deﬁciency
+N-methyl-D-aspartate (NMDA)
+a b s t r a c t
+Objectives: The aim of this study was to determine the effect of magnesium supplementation on the
+depression status of depressed patients suffering from magnesium deﬁciency.
+Methods: Sixty depressed people suffering from hypomagnesemia participated in this trial. The
+individuals were randomly categorized into two groups of 30 members; one receiving two 250-mg
+tablets of magnesium oxide (MG) daily and the other receiving placebo (PG) for 8 wk. The Beck
+Depression Inventory-II was conducted and the concentration of serum magnesium was measured.
+Results: At the end of intervention, 88.5% of the MG and 48.1% of the PG (P ¼ 0.002) had a normal
+level of magnesium. The mean changes of serum magnesium were signiﬁcantly different across the
+two groups. After the intervention, the mean Beck score signiﬁcantly declined. However, in the MG,
+this reduction was more signiﬁcant than in the PG (P ¼ 0.02), so that the mean changes in this
+group experienced 15.65  8.9 reduction, but in the PG, it declined by 10.40  7.9.
+Conclusions: Daily consumption of 500 mg magnesium oxide tablets for 8 wk by depressed pa-
+tients suffering from magnesium deﬁciency leads to improvements in depression status and
+magnesium levels. Therefore, assessment of the magnesium serum and resolving this deﬁciency
+positively inﬂuence the treatment of depressed patients.
+ 2016 Elsevier Inc. All rights reserved.
+Introduction
+Magnesium is the second intracellular cation and the fourth
+major element in the body [1]. Given the complex function that
+this element plays in our body, it is considered an important
+element for human health [2]. This element is an important co-
+enzyme for many enzymes involved in the transfer of phosphate
+and energy metabolism. Additionally, magnesium has major
+roles in stabilizing genes, DNA replication, synthesis of protein
+and nucleic acids, and metabolism of macronutrients [3].
+Furthermore, by regulating and transferring some ions,
+including potassium and calcium, through pumps and channels,
+magnesium also is effective in neuro-transmission [4]. Accord-
+ingly, it is involved in the pathophysiology of some neurologic
+diseases including migraine, Alzheimer’s and Parkinson’s dis-
+eases,
+and
+attention-deﬁcit/hyperactivity
+disorder
+[2,5].
+In
+recent years, the role of this element in the incidence of
+depression, due to its effect on N-methyl-D-aspartate’s (NMDA)
+nonselective ionotropic channels in the brain, has gained a great
+deal of attention [6]. These glutamate-dependent channels have
+important roles in neurotransmission and neuronal plasticity.
+Thus magnesium is involved in learning, memory, and mood of
+individuals [7]. NMDA channels are excited by glutamate
+neurotransmitter and cause entrance of sodium and calcium into
+the cell. Once sodium is introduced and the intracellular space is
+depolarized, entrance of calcium is accelerated. Calcium, then, by
+exciting enzymatic paths including kinase protein and synthesis
+of nitric oxide, plays an important role in the pathophysiology of
+depression [8,9]. However, magnesium is the natural antagonist
+This work funded by Shahid Sadoughi University of Medical Sciences, Yazd,
+Iran. The authors have no conﬂicts of interest to declare.
+* Corresponding author. Tel.: þ98-35-38209143; fax: þ98-35-38209119.
+E-mail address: Mozaffari.kh@gmail.com (H. Mozaffari-Khosravi).
+http://dx.doi.org/10.1016/j.nut.2016.10.014
+0899-9007/ 2016 Elsevier Inc. All rights reserved.
+Contents lists available at ScienceDirect
+Nutrition
+journal homepage: www.nutritionjrnl.com
+Nutrition 35 (2017) 56–60
+
+
+--- Page 2 ---
+of calcium [10], whereby inhibiting NMDA ionotropic channels, it
+prevents entrance of calcium into the cell, thereby inhibiting the
+activation of its subsequent enzymatic cascade [9,11,12].
+In many studies, the level of dietary magnesium in relation to
+depression has been investigated. Although the obtained results
+are controversial, in the majority of studies a signiﬁcant rela-
+tionship has been observed between deﬁciency of the consumed
+magnesium and incidence of depression [13–15]. The result of a
+20-y follow-up study showed that magnesium intake may have
+an effect on the risk for developing depression [16].
+A deﬁciency in dietary magnesium can be accounted for by
+various factors such as the soil of agricultural lands and new
+agricultural techniques including genetic manipulation [17,18].
+Another factor is the water being consumed. According to a
+study, given the amounts of minerals, drinking water can provide
+8% of daily magnesium required by individuals [19]. Additionally,
+an unhealthy diet that contains a high consumption of processed
+foods and reﬁned grains can result in hypomagnesemia in long
+term [2]. Therefore, although major sources of magnesium,
+including dark green leafy vegetables, grains, and nuts are
+available [20], hypomagnesemia is still seen in many metabolic
+diseases [21]. Among depressed people, incidence of hypomag-
+nesemia has been estimated to be as high as 13.7% [22]. This
+ﬁgure is almost three times the value of nondepressed in-
+dividuals (4.6%) [23].
+Although
+the
+conventional
+treatment
+of
+depression
+is
+administration of antidepressants including selective serotonin
+reuptake inhibitors, monoamine oxidase inhibitors, and tricyclic
+antidepressants [24], not completing the treatment due to
+complications caused by these medications, such as headache
+and nausea, vomiting, restlessness, and drowsiness [25] as well
+as relapse of the depression or manic periods in about 60% of
+individuals, highlights the necessity of researching and investi-
+gating complementary treatments [26]. Furthermore, studying
+the effect of food supplements and nutrients such as magnesium
+on this disease can play an important role in the prevention and
+treatment of this problem.
+The question is to what extent the condition of patients
+suffering from depression as well as a lack of magnesium can be
+improved in terms of depression mitigation by resolving the
+deﬁciency
+of
+magnesium.
+Accordingly,
+this
+research
+was
+designed and conducted with the aim of examining the effect of
+magnesium supplementation on the status of depression in
+those suffering from magnesium deﬁciency.
+Materials and methods
+Type of study and participants
+This was a randomized, double-blind, placebo-controlled trial with 60 in-
+dividuals suffering from depression and magnesium deﬁciency. They were
+selected from patients referred to Khatam-ol-Anbiya Clinic in Yazd under the
+supervision of a psychiatrist and through using the Beck Depression Inventory-II
+questionnaire. This study was designed in two phases; initially, the status of
+magnesium in depressed patients was investigated. Those results were published
+previously [22]. In the second phase, the depressed candidates suffering with
+magnesium deﬁciency who met the exclusion and inclusion criteria participated
+in the study. The criterion for diagnosing depression was a score >11 in the Beck
+Depression Inventory-II under the provision of a psychiatrist. After determining
+the state of each participant’s depression, the magnesium status was evaluated.
+The criterion for deﬁciency was a serum magnesium level <1.8 mg/dL in men and
+<1.9 mg/dL in women [23].
+The inclusion criteria included a serum magnesium deﬁciency, depression,
+and age between 20 and 60 y old. Exclusion criteria included the following:
+ Evidence of malignancies and cancer;
+ Pregnancy;
+ Consumption of a multimineral/multivitamin supplement over the previous
+3 mo;
+ Death of a relative, loss of job, or divorce over the previous 6 mo;
+ History of treatment for depression;
+ Consumption of any kind of antidepressants and tranquilizers, diuretics,
+and laxatives over the previous 3 mo;
+ Diagnosis of hypertension; diabetes; cardiovascular, hepatic, or renal dis-
+ease; thyroid disorders; anemia; and cancer.
+To determine the sample size, we considered a ¼ 0.05 and the test power
+of 90% for reaching a signiﬁcant difference of 2 units of the mean of the total
+Beck score in two groups of previous studies; a sample of 25 individuals was
+obtained. Having accounted for the rate of attrition, this number increased to
+30 individuals. Using random codes obtained from the computer, they were
+then categorized randomly into two 30-member groups. The ﬁrst was the
+magnesium group (MG), and the second was the placebo group (PG). The MG
+received two 250-mg magnesium oxide tablets on a daily basis (21st Century
+Healthcare, Inc., Arizona, USA). On the other hand, the PG received two similar
+tablets in terms of shape, color, and size containing starch powder (developed
+by Pharmacy Faculty of Shahid Sadoughi University of Medical Sciences in
+Yazd). The supplement and placebo were administered in two 1-mo courses.
+At each course, the individuals were asked to revisit the clinic after 1 mo,
+whereby consumption of the medication was regularly controlled by the
+researcher. Compliance was deﬁned as consumption of >90% of attributed
+tables and was assessed by tablet count.
+Measurements
+To measure the depression status, the Beck Depression Inventory-II was used
+[27,28]. This included 21 questions for measuring the symptoms of depression,
+including disorders of sleep, appetite, self-conﬁdence, hope, and feelings of
+sadness. Each question had four options ranging from 0 to 3. The score was based
+on the number of each choice. Eventually, a total score was obtained out of the 21
+questions, ranging from 0 to 63. Based on this, individuals were placed in one of
+the following groups: 0 to 10, normal; 11 to 16, mild depression; 17 to 20, requires
+counseling; 21 to 30, moderately depressed; 31 to 40, severe depression; and
+40, very severe depression.
+To measure the serum magnesium, 5 mL venous blood was taken from each
+individual. After centrifuging the blood sample at 3000 to 4000g for 10 min after
+the sampling, the serum sample was obtained. The level of serum magnesium
+was measured by photometric method using blue Xylidyl (the magnesium
+assessment kit, Pars Azmoon Co., Iran, Tehran) with a sensitivity of 0.2 mg/dL. To
+investigate the intake of food, macronutrients, magnesium, and energy at the
+beginning and end of the study, a 24-h dietary recall questionnaire was applied.
+The weight of individuals was measured with an accuracy of 0.5 kg wearing light-
+weight clothing and using a digital balance of 100 g. Height was then measured
+with an accuracy of 0.5 cm, without shoes. Body mass index was obtained by
+dividing the weight (kg) by the square of height (m2).
+Data analysis
+Data were analyzed using SPSS for Windows, version16 (SPSS Inc., Chicago, IL,
+USA). The Kolmogorov–Smirnov test was used to specify the distribution of data.
+One-way analysis of variance and Student’s t test were used to compare the mean
+of the quantitative data with a normal distribution. Furthermore, paired sample t
+test was employed to compare the means of quantitative data before and after
+the treatment. Fisher’s exact test and c2 test were used to compare the frequency
+distribution of qualitative variables. The signiﬁcance level of P was considered to
+be <0.05. To analyze the data of dietary recall, Nutritionist IV software (Nutri-
+tionist IV, Bruno, CA, USA) was used.
+Ethical considerations
+The protocol of this clinical trial was conﬁrmed in the commission of
+ethics in research at Shahid Sodughi University of Medical Sciences. Upon
+entering the trial, participants provided written informed consent. Patient
+data were kept conﬁdentially, and participants were able to leave the study
+freely at any stage. Patients did not pay for the experiments or the supple-
+ment. This trial was registered in the registry of clinical trial of Health Ministry
+of Iran.
+Results
+Of 650 possible participants, 60 met the inclusion criteria and
+were randomly assigned to one of two groups (MG or PG). They
+were followed for 8 wk. At the end of the study, seven
+A. Rajizadeh et al. / Nutrition 35 (2017) 56–60
+57
+
+
+--- Page 3 ---
+participants were excluded due to nonattendance, pregnancy,
+immigration, or complications caused by consumption of the
+tablets. Eventually, information from 26 patients in the MG and
+27 in the PG was analyzed (Fig. 1). Tablet count showed a
+compliance of >87% in both groups.
+The age mean of the MG and PG were 32.20  9.54 and
+32.07  7.69, respectively (P ¼ 0.64). The distribution of the
+frequency of qualitative properties in the two groups is shown in
+Table 1. As can be observed, of the 26 people in the MG, 19 were
+women and 7 were men (73.1% and 26.9%, respectively). Simi-
+larly, of the 27 individuals in the PG, 20 were women (74.1%) and
+7 were male (25.9%). The frequency of the qualitative charac-
+teristics did not show a signiﬁcant difference between the two
+groups.
+Comparison of the within- and between-group means of
+body mass index and daily dietary intakes are provided in
+Table 2. The mean of the changes in different variables, except for
+daily intake of carbohydrates, did not demonstrate a signiﬁcant
+difference between the two groups.
+The mean of the score of the Beck Depression Inventory-II
+and serum magnesium as well as their changes across the
+two groups are reported in Table 3. As can be seen in Table 3,
+the mean Beck score declined signiﬁcantly in each group after
+the intervention. This reduction, however, was greater in the
+MG compared with the PG. the mean scores of changes were
+15.65  8.92 for MG and 10.40  7.90 for PG (P ¼ 0.02). As
+Table 3 shows, the mean serum magnesium at the end of the
+study increased signiﬁcantly only in MG compared with the
+beginning of the study. Also, its mean changes were signiﬁcant
+across the two groups. Although all of the participants had
+hypomagnesemia, at the end of the trial 88.5% of the MG
+returned to a normal state of magnesium; this was 48.1% for
+individuals in the PG (P ¼ 0.002).
+Discussion
+The ﬁndings of this study indicated that daily consumption of
+500 mg magnesium oxide for 8 wk resulted in improvement of
+serum magnesium levels and depression in patients who were
+depressed and diagnosed with hypomagnesemia. Although to
+our knowledge, few clinical studies have been conducted in this
+regard, Barragan-Rodrıguez et al. [29] conducted a similar study
+in which they investigated daily consumption of 450 mg mag-
+nesium in the form of magnesium chloride in the treatment
+group versus a control group. Following 12 wk of treatment,
+serum magnesium increased signiﬁcantly in both groups, but the
+Fig. 1. Participant ﬂow diagram throughout the study.
+Table 1
+Comparison of qualitative characteristics between the two groups at baseline
+Variables
+Magnesium group
+n (%)
+Placebo group
+n (%)
+P value*
+Sex
+0.93
+Female
+19 (73.1)
+20 (74.1)
+Male
+7 (26.9)
+7 (26.9)
+Marital Status
+0.28
+Single
+7 (26.9)
+11 (40.7)
+Married
+19 (73.1)
+16 (59.3)
+Education
+0.80
+Illiterate
+0 (0)
+1 (3.7)
+Elementary
+2 (7.7)
+3 (11.1)
+Diploma
+7 (26.9)
+8 (29.6)
+Associate degree
+2 (7.7)
+2 (7.4)
+Bachelor of science
+15 (57.6)
+13 (48.1)
+Occupation
+0.67
+Unemployed
+5 (19.2)
+4 (14.8)
+Self-employed
+1 (3.8)
+3 (11.1)
+Employed
+9 (34.6)
+8 (29.6)
+Housewife
+11 (42.3)
+12 (44.4)
+* c2 test.
+A. Rajizadeh et al. / Nutrition 35 (2017) 56–60
+58
+
+
+--- Page 4 ---
+difference of depression status between the two groups was not
+signiﬁcant [29]. Eby et al. also investigated the effect of magne-
+sium supplement (125–300 mg in the form of turinate or glici-
+nate)
+on
+three
+depressed
+individuals,
+observing
+rapid
+improvement of major depression in all [11]. Although in the
+mentioned study the status of serum magnesium was not
+examined in individuals at the prescribed dosage, the results
+were in line with those of the present study.
+Evaluation of the serum magnesium levels of the participants
+indicated that more patients in the MG responded to the mag-
+nesium supplement treatment (88.5% versus 48.1%), and reached
+the normal state. Nevertheless, after the intervention w11.5% of
+the individuals in the MG were still below the normal level of
+serum magnesium. This might be due to insufﬁcient magnesium
+dose, insufﬁcient duration of the treatment, insufﬁcient intake of
+magnesium from the diet, and so on. Abbasi et al. [30] examined
+the effect of 8 wk of daily consumption of 500 mg magnesium
+oxide tablet on the sleep status of the elderly. They observed that
+at the end of the 8-wk period, the serum magnesium level was
+not signiﬁcantly different between the magnesium group and
+the placebo group [30]. Reasons for the insigniﬁcant change vary.
+One factor could be the sensitivity of serum magnesium as an
+index for evaluation of magnesium status (i.e., it appears that it
+did not have the necessary sensitivity) [31]. According to these
+studies, there is equilibrium between the concentration of serum
+magnesium and bone, thus when magnesium is deﬁcient, this
+element is released into the blood from the degradable part of
+the bone. This can then falsely show the serum magnesium levels
+to be high [32]. Additionally, because the equilibrium of mag-
+nesium changes slowly in the body, consumption of oral sup-
+plements of magnesium might not affect the serum magnesium
+even within several weeks or months. However, despite all of
+these problems, serum magnesium is still one of the widely used
+indices when measuring the status of magnesium in the body.
+Because indices like magnesium erythrocyte and urine magne-
+sium are not very accurate, determination of an accurate method
+remains a challenge [33].
+In addition to what has been mentioned here, determination of
+the magnesium dose and the duration of treatment for individuals
+suffering from hypomagnesemia also are important. Based on
+previous studies, the dose prescribed for treating depression has
+ranged from 125 to 450 mg [11,29,34]. Furthermore, the course of
+therapeutic supplement also has varied from 7 to 20 mo [11,29,35].
+One reviewstudy recommended dailyconsumption ofmagnesium
+oxide for treating hypomagnesemia to be 800 mg/d. Side effects
+associated with this tablet include gastrointestinal disorders and
+diarrhea, thus it is difﬁcult to prescribe an amount of the supple-
+ment that will not result in undesirable complications and will be
+effective [36]. However, it seems that an increase in daily con-
+sumption leads to better results.
+Considering the mechanism of the effect of magnesium in
+brain and mental functions, various speculations have been
+presented. According to these studies, magnesium has a pivotal
+role in synaptic function, especially in the brain’s hippocampus
+neurons [24]. In addition to being an inhibitory regulator in
+NMDA channels, magnesium has also an excitatory effect on
+production of brain-derived neurotrophic factor (BDNF) and cy-
+clic adenosine monophosphate response element-binding pro-
+tein in the brain. Cyclic adenosine monophosphate response
+element-binding protein is a protein that regulates the activity
+of the genes affecting the function of human brain, especially the
+genes involved in the production of dopamine. BDNF is a
+neurotropic factor widely expressed in the central nervous sys-
+tem, playing an important role in the evolution of brain, survival,
+and maintenance of neurons. Furthermore, BDNF also has a role
+Table 2
+Comparison of mean of anthropometric and dietary intake data between the two groups at baseline and study endpoint
+Variables
+n
+Baseline
+End
+Changes
+P value*
+Body mass index (kg/m2)
+Magnesium group
+26
+28.58  4.5
+25.89  5.64
+1.4  0.30
+0.28
+Placebo group
+27
+25.67  4.09
+25.94  4.31
+0.46  0.26
+0.7
+P valuey
+0.89
+0.72
+0.87
+Protein (g)
+Magnesium group
+26
+63.33  22.83
+71.51  44.20
+44.31  8.17
+0.35
+Placebo group
+27
+75.08  23.89
+69.67  18.43
+23.45  5.40
+0.24
+P value
+0.07
+0.84
+0.16
+Carbohydrate (g)
+Magnesium group
+26
+305.1  106.93
+307.49  101.31
+87.21  2.38
+0.89
+Placebo group
+27
+364.08  101.04
+308.19  97.1
+113.34  55.89
+0.01
+P value
+0.04
+0.98
+0.04
+Fat (g)
+Magnesium group
+26
+81.88  37.13
+75.53  23.69
+6.35  36.97
+0.38
+Placebo group
+27
+87.17  28.87
+81.60  24.46
+32.15  5.56
+0.37
+P value
+0.56
+0.36
+0.93
+Magnesium (g)
+Magnesium group
+26
+153.47  66.71
+170.83  57.36
+81.50  17.35
+0.28
+Placebo group
+27
+162.96  74.84
+193.10  68.83
+90.29  30.13
+0.09
+P value
+0.62
+0.20
+0.59
+* Paired t test.
+y Student t test.
+Table 3
+Comparing the mean of Beck Depression Inventory-II score and serum magne-
+sium between and within the two groups
+Variables
+n
+Baseline
+End
+Changes
+P value*
+Beck score
+Magnesium group 26 26.9  7.1
+11.26  6.9
+15.65  8.92 0.001
+Placebo group
+27 25.6  6.1
+15.2  9.3
+10.40  7.90 0.001
+P valuey
+0.49
+0.08
+0.02
+Serum magnesium (mg/dL)
+Magnesium group 26 1.77  0.19
+2.08  0.19
+0.31  0.29 0.001
+Placebo group
+27 1.82  0.13
+1.91  0.27
+0.09  0.03 0.110
+P value
+0.27
+0.01
+0.01
+* Paired t test.
+y Student t test.
+A. Rajizadeh et al. / Nutrition 35 (2017) 56–60
+59
+
+
+--- Page 5 ---
+in inhibition of NMDA channels. In some studies, increased
+expression of the BDNF gene has been observed after treatment
+with electric shock and some antidepressants [24,37]. Therefore,
+magnesium can be effective in improving depression.
+Among the limitations of this study is its relatively short
+duration of treatment. Not measuring and specifying the status
+of some other nutrients involved in the metabolism of magne-
+sium such as vitamin D and calcium and not using some other
+sensitive indices indicating the status of magnesium in the body
+are other limitations. As a strong point of this trial, one can
+mention the high rate of patient compliance in consuming the
+supplements and the consistency of follow-up in the treatment.
+Based on the results obtained from this study, it is suggested
+that in future investigations, different doses of magnesium
+supplements or different courses of treatment be evaluated.
+Furthermore, because the status of vitamin D, parathormone,
+and calcium is associated with depression and serum magne-
+sium, measurement of these indices in future studies is sug-
+gested for
+better evaluation
+of
+the
+effect of
+magnesium
+supplements on depression.
+Conclusion
+This study indicated that daily consumption of 500 mg
+magnesium oxide tablet for 8 wk by individuals with depres-
+sion and hypomagnesemia results in improvement in both the
+depression and the status of magnesium in their bodies. There-
+fore, when evaluating patients with depression, evaluation of the
+serum magnesium status and resolving this deﬁciency, if present,
+contribute
+to
+better
+treatment
+outcomes
+and
+thus
+are
+recommended.
+Acknowledgments
+The authors acknowledge Shahid Sadoughi University of
+Medical Sciences for its continued attention and ﬁnancial sup-
+port of this research. They also acknowledge the ofﬁcials and
+employees of Khatam-ol-Anbiya Clinic, the central laboratory of
+Shahid Sadoughi University of Medical Sciences in Yazd, and all
+the participants whose cooperation facilitated completion of this
+study.
+References
+[1] Volpe SL. Magnesium and the athlete. Curr Sports Med Rep 2015;14:279–
+83.
+[2] Gröber U, Schmidt J, Kisters K. Magnesium in prevention and therapy.
+Nutrients 2015;7:8199–226.
+[3] Pasternak K, Kocot J, Horecka A. Biochemistry of magnesium. J Elementol
+2010;15:601–16.
+[4] Romani A. Regulation of magnesium homeostasis and transport in
+mammalian cells. Arch Biochem Biophys 2007;458:90–102.
+[5] de Baaij JH, Hoenderop JG, Bindels RJ. Magnesium in man: implications for
+health and disease. Physiol Rev 2015;95:1–46.
+[6] Haddad JJ. N-methyl-D-aspartate (NMDA) and the regulation of mitogen-
+activated protein kinase (MAPK) signaling pathways: a revolving neuro-
+chemical axis for therapeutic intervention? Prog Neurobiol 2005;77:252–
+82.
+[7] Paoletti P, Bellone C, Zhou Q. NMDA receptor subunit diversity: Impact on
+receptor properties, synaptic plasticity and disease. Nat Rev Neurosci
+2013;14:383–400.
+[8] Jin DZ, Xue B, Mao LM, Wang JQ. Metabotropic glutamate receptor 5
+upregulates surface NMDA receptor expression in striatal neurons via
+CaMKII. Brain Res 2015;1624:414–23.
+[9] Whittle N, Li L, Chen WQ, Yang JW, Sartori SB, Lubec G, et al. Changes in
+brain protein expression are linked to magnesium restriction-induced
+depression-like behavior. Amino Acids 2011;40:1231–48.
+[10] Iseri LT, French JH. Magnesium: nature’s physiologic calcium blocker. Am
+Heart J 1984;108:188–93.
+[11] Eby GA, Eby KL. Rapid recovery from major depression using magnesium
+treatment. Med Hypotheses 2006;67:362–70.
+[12] Eby GA, Eby KL. Magnesium for treatment-resistant depression: a review
+and hypothesis. Med Hypotheses 2010;74:649.
+[13] Derom ML, Martınez-Gonzalez MA, del Carmen Sayon-Orea M, Bes-
+Rastrollo M, Beunza JJ, Sanchez-Villegas A. Magnesium intake is not
+related
+to
+depression
+risk
+in
+Spanish
+university graduates.
+J
+Nutr
+2012;142:1053–9.
+[14] Tarleton EK, Littenberg B. Magnesium intake and depression in adults. J Am
+Board Fam Med 2015;28:249–56.
+[15] Yary T, Aazami S, Soleimannejad K. Dietary intake of magnesium may
+modulate depression. Biol Trace Elem Res 2013;151:324–9.
+[16] Yary T, Lehto SM, Tolmunen T, Tuomainen TP, Kauhanen J, Voutilainen S,
+et al. Dietary magnesium intake and the incidence of depression: a 20-year
+follow-up study. J Affect Disord 2016;193:94–8.
+[17] Davis DR. Declining fruit and vegetable nutrient composition: what is the
+evidence? HortScience 2009;44:15–9.
+[18] Grzebisz W. Magnesium-food and human health. J Elementol 2011;16:300–
+7.
+[19] Drywien ME, Nadolna A. Assessment of mineral bottled water as a source of
+selected minerals among students. Roca Panstw Zakl Hig 2011;63:347–52.
+[20] Volpe SL. Magnesium in disease prevention and overall health. Adv Nutr
+2013;4:378S–83S.
+[21] Blaszczyk U, Duda-Chodak A. Magnesium: its role in nutrition and carci-
+nogenesis. Roca Panstw Zakl Hig 2013;64:165–71.
+[22] Rajizadeh A, Mozaffari-Khosravi H, Yassini-Ardakani M, Dehghani A. Serum
+magnesium status in patients subjects with depression in the City of Yazd
+in Iran 2013–2014. Biol Trace Elem Res 2016;171:275–82.
+[23] Syedmoradi L, Ghasemi A, Zahediasl S, Azizi F. Prevalence of hypo-and
+hypermagnesemia
+in
+an
+Iranian
+urban
+population.
+Ann
+Hum
+Biol
+2011;38:150–5.
+[24] Szewczyk B, Poleszak E, Sowa-Kucma M, Siwek M, Dudek D, Ryszewska-
+Pokrasniewicz B, et al. Antidepressant activity of zinc and magnesium in
+view of the current hypotheses of antidepressant action. Pharmacol Rep
+2008;60:588–9.
+[25] Anderson HD, Pace WD, Libby AM, West DR, Valuck RJ. Rates of 5
+common antidepressant side effects among new adult and adolescent
+cases
+of
+depression:
+a
+retrospective
+US
+claims
+study.
+Clin
+Ther
+2012;34:113–23.
+[26] Culver JL, Arnow BA, Ketter TA. Bipolar disorder: improving diagnosis and
+optimizing integrated care. Clin Psychol 2007;63:73–92.
+[27] American Psychiatric Association. Diagnostic and statistical manual of
+mental disorders. 4th text revision. Washington, DC: Author; 2000.
+[28] Dabson K, Mohammadkhani P. Psychometrics characteristic of Beck
+Depression Inventory-II in patients with major depressive disorder. J
+Rehabil 2007;8:82–6.
+[29] Barragan-Rodrıguez L, Rodrıguez-Moran M, Guerrero-Romero F. Efﬁcacy
+and safety of oral magnesium supplementation in the treatment of
+depression in the elderly with type 2 diabetes: a randomized, equivalent
+trial. Magnes Res 2008;21:218–23.
+[30] Abbasi
+B,
+Kimiagar
+M,
+Sadeghniiat
+K,
+Shirazi
+MM,
+Hedayati
+M,
+Rashidkhani B. The effect of magnesium supplementation on primary
+insomnia in elderly: a double blind placebo-controlled clinical trial. J Res
+Med Sci 2012;17:1161–9.
+[31] Witkowski M, Hubert J, Mazur A. Methods of assessment of magnesium
+status in humans: a systematic review. Magnes Res 2012;24:163–80.
+[32] Elin RJ. Assessment of magnesium status for diagnosis and therapy. Magnes
+Res 2010;23:194–8.
+[33] Arnaud MJ. Update on the assessment of magnesium status. Br J Nutr
+2008;99:S24–36.
+[34] Walker AF, De Souza MC, Vickers MF, Abeyasekera S, Collins ML, Trinca LA.
+Magnesium supplementation alleviates premenstrual symptoms of ﬂuid
+retention. J Womens Health 1998;7:1157–65.
+[35] Bhudia SK, Cosgrove DM, Naugle RI, Rajeswaran J, Lam BK, Walton E, et al.
+Magnesium as a neuroprotectant in cardiac surgery: a randomized clinical
+trial. J Thorac Cardiovasc Surg 2006;131:853–61.
+[36] Guerrera MP, Volpe SL, Mao JJ. Therapeutic uses of magnesium. Am Fam
+Physician 2009;80:157–62.
+[37] Bocchio-Chiavetto L, Zanardini R, Bortolomasi M, Abate M, Segala M,
+Giacopuzzi M, et al. Electroconvulsive therapy (ECT) increases serum brain
+derived neurotrophic factor (BDNF) in drug resistant depressed patients.
+Eur Neuropsychopharmacol 2006;16:620–4.
+A. Rajizadeh et al. / Nutrition 35 (2017) 56–60
+60

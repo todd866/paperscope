@@ -165,6 +165,23 @@ Based on techniques from Heathers (2025) [*An Introduction to Forensic Metascien
 | `check_change_arithmetic()` | Verifies End - Baseline = reported Change |
 | `check_sd_positive()` | Flags negative standard deviations |
 
+## Example
+
+See [`examples/rajizadeh_2017_magnesium/`](examples/rajizadeh_2017_magnesium/) for a complete worked example: a forensic audit of a published RCT that found 14 impossible statistics and 7 suspicious flags across 50 checks. Includes the full PDF report, raw outputs, and LaTeX source.
+
+## Development workflow
+
+Paperscope is developed using a multi-model feedback loop:
+
+1. **Claude Code** (Opus) writes features and runs analyses
+2. **Codex** reviews the code and output, producing detailed findings
+3. The human routes Codex's feedback back to Claude for fixes
+4. Repeat until Codex stops finding issues
+
+This loop catches bugs that either model would miss alone -- Claude builds fast but can be overconfident about its own output; Codex is a thorough critic but doesn't write the fixes. The human's role is routing and judgment: deciding which findings matter and when the code is done.
+
+The forensic statistics module went through three review passes this way, fixing 11 issues including empty-corpus crashes, false-negative verdicts, broken retraction detection, and over-aggressive author name filtering.
+
 ## Requirements
 
 - Python 3.8+
