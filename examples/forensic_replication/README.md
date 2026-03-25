@@ -14,7 +14,7 @@ Each case is a self-contained directory with:
 | Dir | Paper | Expert source | Key findings | Agreement |
 |-----|-------|---------------|--------------|-----------|
 | `rajizadeh_2017/` | Rajizadeh et al., Nutrition (2017) | [PubPeer](https://pubpeer.com/publications/AE40ABD7018121884545ECDD2A2C43) | GRIM failures, impossible correlation, arithmetic errors | 5/6 |
-| `haghighian_2015/` | Haghighian et al., Fertil Steril (2015) | [PubPeer](https://pubpeer.com/publications/AE40ABD7018121884545ECDD2A2C43) + ASRM EoC | 16/18 GRIM failures, duplicate ANCOVA p-values, d>2 | 4/4 |
+| `haghighian_2015/` | Haghighian et al., Fertil Steril (2015) | [PubPeer](https://pubpeer.com/publications/26051095) + ASRM EoC | 16/18 GRIM failures, duplicate ANCOVA p-values, d>2 | 4/4 |
 | `fallah_2015/` | Fallah et al., Nutrition (2015) | [PubPeer](https://pubpeer.com/publications/26429655) | p-value off by 10^6, count inconsistencies, cross-table mismatch | 6/6 |
 | `azhar_2026/` | Azhar et al., J Affect Disord (2026) | [PubPeer](https://pubpeer.com/publications/799F60D117E44BAEE391AC93A216D2) (4 commenters) | d=6.04, d up to 21, table discrepancies, frozen p-values | 6/6 |
 

@@ -164,9 +164,9 @@ python3 -m paperscope pre-submit paper.tex --bib bibliography.json
 
 For the full technical description, see the [paper (PDF)](paper/paperscope.pdf).
 
-## Example
+## Examples
 
-See [`examples/rajizadeh_2017_magnesium/`](examples/rajizadeh_2017_magnesium/) for a complete worked example: a forensic audit of a published RCT that found 14 impossible statistics and 7 suspicious flags across 50 checks. Includes a 6-page PDF report, raw outputs, and LaTeX source.
+See [`examples/forensic_replication/`](examples/forensic_replication/) for 4 worked examples replicating published expert forensic analyses (Meyerowitz-Katz, Plöderl, Hussey, Cristea). Across 4 papers, Paperscope confirmed 21 of 22 expert findings (95.5%) and identified additional issues not in the original analyses.
 
 ## Development Workflow
 

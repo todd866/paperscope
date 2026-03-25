@@ -8,7 +8,7 @@ seminal oxidative stress in infertile men"
 DOI: 10.1016/j.fertnstert.2015.05.014
 
 Expert comparison: Gideon Meyerowitz-Katz (PubPeer, December 2023)
-https://pubpeer.com/publications/AE40ABD7018121884545ECDD2A2C43
+https://pubpeer.com/publications/26051095
 
 Outcome: ASRM issued an Expression of Concern (October 2025) confirming
 Gideon's findings. The authors provided a dataset but it didn't fully
@@ -16,7 +16,7 @@ match the published numbers, and ANCOVA results could not be verified.
 
 How to run:
     cd paperscope/
-    PYTHONPATH=. python3 examples/02_haghighian_ala.py
+    PYTHONPATH=. python3 examples/forensic_replication/haghighian_2015/analysis.py
 """
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))

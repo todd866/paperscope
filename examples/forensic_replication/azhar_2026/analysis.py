@@ -18,7 +18,7 @@ https://pubpeer.com/publications/799F60D117E44BAEE391AC93A216D2
 
 How to run:
     cd paperscope/
-    PYTHONPATH=. python3 examples/04_azhar_omega3.py
+    PYTHONPATH=. python3 examples/forensic_replication/azhar_2026/analysis.py
 """
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))

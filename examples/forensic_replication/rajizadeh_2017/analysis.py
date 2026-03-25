@@ -14,7 +14,7 @@ bounds. This script replicates his findings and extends them.
 
 How to run:
     cd paperscope/
-    PYTHONPATH=. python3 examples/01_rajizadeh_magnesium.py
+    PYTHONPATH=. python3 examples/forensic_replication/rajizadeh_2017/analysis.py
 """
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -198,12 +198,10 @@ scorecard.append(("Paired p-values", "4 mismatches (orders of magnitude)",
 #   (Stouffer, Fisher, one-tailed, chi-squared, etc.) — all yield
 #   p > 0.16 for these values.
 #
-#   The most likely explanation is that Gideon used a different
-#   set of continuous baseline p-values — the paper has additional
-#   variables we may not have included, and the Carlisle result is
-#   sensitive to which p-values are combined. We'd welcome
-#   clarification on which specific p-values were used so we can
-#   verify the calculation.
+#   The disagreement could reflect a different set of input p-values,
+#   a different combination formula, or both — the Carlisle result is
+#   sensitive to these choices. We'd welcome clarification on which
+#   p-values and method were used so we can verify.
 
 print("\n--- 6. Carlisle test: baseline randomization ---\n")
 
@@ -224,12 +222,7 @@ for r in results:
 
 scorecard.append(("Carlisle", "Not suspicious (p=0.49 for our 5 continuous p-values)",
                   "Gideon: ~0.01 for continuous",
-                  "UNABLE TO REPLICATE — likely different p-value set (see note above)"))
-
-# Note: the Carlisle test is sensitive to which p-values are included.
-# Gideon may have used additional continuous baseline variables from
-# the paper, or a different subset. The tool itself works correctly —
-# this is a data specification question, not a computation error.
+                  "UNABLE TO REPLICATE — could be different p-values or formula"))
 
 
 # ═══════════════════════════════════════════════════════════════════════

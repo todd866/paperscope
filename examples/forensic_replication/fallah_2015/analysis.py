@@ -17,7 +17,7 @@ counts, and impossible confidence intervals.
 
 How to run:
     cd paperscope/
-    PYTHONPATH=. python3 examples/03_fallah_zinc.py
+    PYTHONPATH=. python3 examples/forensic_replication/fallah_2015/analysis.py
 """
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
