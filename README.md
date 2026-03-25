@@ -32,6 +32,8 @@ Works with Claude Code (plugin with auto-invocation) and Codex (via AGENTS.md).
 - **Abstract gaps** -- sections of the paper not represented in the abstract
 - **Missing related work** -- papers you should cite but don't know about yet
 - **Bad metadata** -- DOIs that don't match, missing DOIs, duplicate references
+- **Impossible statistics** -- GRIM/DEBIT/SPRITE tests on means and percentages, correlation bound violations, p-value recalculation failures, arithmetic inconsistencies in tables
+- **Fabrication signals** -- Benford's law deviations, suspiciously uniform variances, impossible SDs, effect size inconsistencies
 
 ## Install
 
@@ -115,6 +117,40 @@ python3 -m paperscope revision-diff old.tex new.tex
 python3 -m paperscope related paper.tex
 python3 -m paperscope extract . && python3 -m paperscope verify bibliography.json
 ```
+
+### Forensic statistics
+
+Run data-integrity checks on any paper's summary statistics tables:
+
+```bash
+# Run the demo audit (Rajizadeh et al. 2017 magnesium paper)
+python3 -m paperscope.analysis.forensic_stats
+
+# Or import individual checks
+python3 -c "
+from paperscope.analysis.forensic_stats import grim, debit, correlation_bound
+print(grim(mean=26.9, n=26, dp=1))         # GRIM test
+print(debit(percentage=88.5, n=26, dp=1))   # DEBIT test
+print(correlation_bound(0.13, 0.27, 0.03))  # impossible r
+"
+```
+
+**Available checks:**
+
+| Check | Detects |
+|-------|---------|
+| `grim()` | Impossible means for integer-valued instruments (BDI, Likert, counts) |
+| `debit()` | Impossible percentages from discrete counts |
+| `sprite()` | Whether any valid dataset can produce the reported mean + SD |
+| `correlation_bound()` | Impossible pre/post/change SD combinations (implied \|r\| > 1) |
+| `check_ttest_paired()` | Recalculates paired t-test p-values from reported statistics |
+| `check_ttest_independent()` | Recalculates independent t-test p-values |
+| `sample_size_from_t()` | Back-calculates n from reported t and p |
+| `effect_size_consistency()` | Cross-checks Cohen's d, p-values, and confidence intervals |
+| `benfords_law()` | Tests first-digit distribution against Benford's law |
+| `variance_ratio_test()` | Flags suspiciously similar or divergent group variances |
+| `check_change_arithmetic()` | Verifies End - Baseline = reported Change |
+| `check_sd_positive()` | Flags negative standard deviations |
 
 ## Requirements
 

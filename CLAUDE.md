@@ -77,7 +77,7 @@ python3 -m paperscope depth2 /path/to/literature/
 paperscope/
 ├── text/       # Shared text processing (LaTeX cleaning, chunking, parsing)
 ├── embed/      # Embedding infrastructure (sentence-transformers + TF-IDF fallback)
-├── analysis/   # 16 analysis tools
+├── analysis/   # 17 analysis tools
 │   ├── citation_alignment.py    # Do citations match the citing sentence?
 │   ├── novelty.py               # Which claims are furthest from literature?
 │   ├── reviewer_probes.py       # Anticipate reviewer objections
@@ -94,7 +94,9 @@ paperscope/
 │   ├── author_profile.py       # Author COI and self-validation detection
 │   ├── method_resolution.py    # Method-conclusion resolution mismatch
 │   ├── missing_methods.py      # Complementary methods from same ecosystem
-│   └── overclaiming.py         # Hedge erosion and scope expansion
+│   ├── overclaiming.py         # Hedge erosion and scope expansion
+│   └── forensic_stats.py       # GRIM, DEBIT, SPRITE, correlation bounds,
+│                                # p-value recalc, Benford's, variance ratios
 ├── bib/        # Bibliography management (extract, resolve, verify)
 ├── harvest/    # Paper discovery (OpenAlex, arXiv, bioRxiv)
 ├── ingest/     # PDF acquisition + text extraction
