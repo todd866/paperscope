@@ -4,13 +4,13 @@
 
 AI-assisted research works best as a two-system process, analogous to how the brain uses different modes for different cognitive demands.
 
-**System 1 — High-dimensional reasoning (Claude Opus 4.5):**
+**System 1 — High-dimensional reasoning (Claude Code / Opus):**
 - Framework construction and theoretical synthesis
 - Detecting structural analogies across distant fields
 - Generating novel mathematical formalisms
 - Navigating large conceptual spaces
 
-**System 2 — Low-dimensional verification (GPT 5.2 Pro):**
+**System 2 — Low-dimensional verification (Codex / independent review):**
 - Fact-checking specific claims against literature
 - Catching arithmetic errors in derivations
 - Grounding abstract frameworks in concrete examples
@@ -22,8 +22,8 @@ No single model excels at both. The failure modes are complementary:
 
 | Mode | Strength | Failure mode |
 |------|----------|-------------|
-| High-D (Opus) | Finds deep structural connections | Can construct beautiful but wrong theories |
-| Low-D (GPT) | Catches specific errors | Can miss the forest for the trees |
+| High-D (Claude) | Finds deep structural connections | Can construct beautiful but wrong theories |
+| Low-D (Codex) | Catches specific errors | Can miss the forest for the trees |
 
 The toolchain supports both:
 - **Discovery tools** (harvest, embed, query) feed the high-D system with raw material

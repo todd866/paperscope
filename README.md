@@ -150,7 +150,7 @@ python3 -m paperscope pre-submit paper.tex --bib bibliography.json
 **Semantic analysis** (embedding-based tools):
 1. LaTeX is cleaned to plain text, split into ~200-word overlapping chunks
 2. Chunks encoded using sentence-transformers (all-MiniLM-L6-v2, 384-dim), or TF-IDF as fallback
-3. Cosine similarity matrices between paper chunks and literature chunks power 12 analysis modules
+3. Cosine similarity matrices between paper chunks and literature chunks power the analysis modules
 
 **Critical read** (external papers):
 1. PDF text extracted via PyMuPDF

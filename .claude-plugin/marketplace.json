@@ -4,7 +4,7 @@
     {
       "id": "paperscope",
       "name": "Paperscope",
-      "description": "Embedding-powered analysis tools for academic papers. Citation alignment, novelty detection, abstract coverage, journal targeting, and reviewer preparation.",
+      "description": "Toolkit for writing and reviewing academic papers. Semantic analysis, forensic statistics (19 data-integrity checks), critical read, and bibliography management.",
       "version": "1.0.0",
       "source": {
         "type": "github",
