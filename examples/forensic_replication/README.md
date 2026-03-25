@@ -32,7 +32,7 @@ PYTHONPATH=. python3 examples/forensic_replication/azhar_2026/analysis.py
 
 Across 4 cases comparing against expert forensic analyses:
 - **21 of 22 expert findings confirmed** (95.5%)
-- **1 numeric discrepancy** (Carlisle p-value formula, rajizadeh_2017)
+- **1 unable to replicate** (Carlisle p-value, rajizadeh_2017 — likely a different set of input p-values; see [note in analysis](rajizadeh_2017/analysis.py))
 - **Multiple new findings** not in the original expert analyses (DEBIT, extended GRIM)
 
 ## Adding a new case

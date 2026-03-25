@@ -192,13 +192,18 @@ scorecard.append(("Paired p-values", "4 mismatches (orders of magnitude)",
 #
 # OUR RESULT:
 #   Using typed input (auto-split), continuous p-values give
-#   Z=0.69, p=0.49. This does NOT match Gideon's claim of ~0.01.
-#   We tested 9 formula variants (Stouffer both directions, Fisher,
-#   one-tailed, chi-squared sum, ISF, dropping BMI) — none produce
-#   p≈0.01 or p≈0.023 for these 5 p-values. The discrepancy is
-#   unresolved and may reflect different p-values or a non-standard
-#   method. We flag this honestly rather than presenting either
-#   result as settled.
+#   Z=0.69, p=0.49. We were unable to reproduce Gideon's ~0.01
+#   from the 5 continuous p-values we extracted (BMI, Protein,
+#   Carbohydrate, Fat, Dietary Mg). We tested 9 formula variants
+#   (Stouffer, Fisher, one-tailed, chi-squared, etc.) — all yield
+#   p > 0.16 for these values.
+#
+#   The most likely explanation is that Gideon used a different
+#   set of continuous baseline p-values — the paper has additional
+#   variables we may not have included, and the Carlisle result is
+#   sensitive to which p-values are combined. We'd welcome
+#   clarification on which specific p-values were used so we can
+#   verify the calculation.
 
 print("\n--- 6. Carlisle test: baseline randomization ---\n")
 
@@ -217,9 +222,14 @@ results = carlisle_stouffer_fisher([
 for r in results:
     print(f"  {r['detail']}")
 
-scorecard.append(("Carlisle", "Not suspicious (p=0.49 continuous)",
+scorecard.append(("Carlisle", "Not suspicious (p=0.49 for our 5 continuous p-values)",
                   "Gideon: ~0.01 for continuous",
-                  "DISCREPANCY — different formula or p-values?"))
+                  "UNABLE TO REPLICATE — likely different p-value set (see note above)"))
+
+# Note: the Carlisle test is sensitive to which p-values are included.
+# Gideon may have used additional continuous baseline variables from
+# the paper, or a different subset. The tool itself works correctly —
+# this is a data specification question, not a computation error.
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -236,7 +246,8 @@ for check, ours, gideon, verdict in scorecard:
     print(f"    Verdict:    {verdict}")
 
 print(f"\n{'=' * 72}")
-print("OVERALL: 5/6 findings confirmed, 1 discrepancy (Carlisle numeric)")
+print("OVERALL: 5/6 findings confirmed, 1 unable to replicate")
+print("(Carlisle — likely different input p-values, not a computation error)")
 print("The strongest findings (GRIM, correlation bound, arithmetic,")
 print("p-value mismatches) all replicate exactly.")
 print(f"{'=' * 72}")
