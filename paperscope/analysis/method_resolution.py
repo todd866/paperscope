@@ -111,6 +111,24 @@ def _keyword_score(
     return score, matched
 
 
+def _detect_domain(text: str) -> str:
+    """Infer the domain from text to select appropriate resolution labels."""
+    text_lower = text.lower()
+    genomics_signals = ["genome", "nucleotide", "codon", "allele", "snp",
+                        "mutation", "sequenc", "gene ", "locus", "variant"]
+    temporal_signals = ["epoch", "era ", "decade", "century", "year-over-year",
+                        "longitudinal", "time series", "temporal trend"]
+
+    genomics_count = sum(1 for s in genomics_signals if s in text_lower)
+    temporal_count = sum(1 for s in temporal_signals if s in text_lower)
+
+    if genomics_count >= 3:
+        return "genomics"
+    if temporal_count >= 2:
+        return "temporal"
+    return "general"
+
+
 def _resolution_scores(sentences: List[str]) -> Dict:
     """Compute aggregate and specific resolution scores across sentences.
 
@@ -123,13 +141,15 @@ def _resolution_scores(sentences: List[str]) -> Dict:
     )
     spec_score, spec_phrases = _keyword_score(all_text, SPECIFIC_INDICATORS)
 
+    domain = _detect_domain(all_text)
+
     # Determine detected level
     if spec_score > agg_score + 0.1:
-        detected = _best_level("fine")
+        detected = _best_level("fine", domain)
     elif agg_score > spec_score + 0.1:
-        detected = _best_level("aggregate")
+        detected = _best_level("aggregate", domain)
     else:
-        detected = _best_level("regional")
+        detected = _best_level("regional", domain)
 
     return {
         "aggregate_score": round(float(agg_score), 3),
@@ -139,8 +159,30 @@ def _resolution_scores(sentences: List[str]) -> Dict:
     }
 
 
-def _best_level(granularity: str) -> str:
-    """Return the first RESOLUTION_LEVELS key matching a granularity."""
+def _best_level(granularity: str, domain_hint: str = "general") -> str:
+    """Return the most appropriate RESOLUTION_LEVELS key for a granularity.
+
+    Uses domain_hint to prefer domain-specific labels:
+    - "genomics": genome_wide, gene_wide, site_specific
+    - "population": aggregate, subgroup, individual
+    - "temporal": temporal_coarse, temporal_medium, temporal_fine
+    - "general": aggregate, subgroup, individual (safe default)
+    """
+    domain_preferences = {
+        "genomics": ["genome_wide", "gene_wide", "site_specific"],
+        "population": ["aggregate", "subgroup", "individual"],
+        "temporal": ["temporal_coarse", "temporal_medium", "temporal_fine"],
+        "general": ["aggregate", "subgroup", "individual"],
+    }
+    preferred = domain_preferences.get(domain_hint, domain_preferences["general"])
+
+    # First try domain-preferred levels
+    for name in preferred:
+        info = RESOLUTION_LEVELS.get(name, {})
+        if info.get("granularity") == granularity:
+            return name
+
+    # Fallback to any match
     for name, info in RESOLUTION_LEVELS.items():
         if info["granularity"] == granularity:
             return name

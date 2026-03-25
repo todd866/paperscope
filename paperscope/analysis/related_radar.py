@@ -119,6 +119,34 @@ def related_radar(
     # Get existing bibliography keys
     existing_keys: Set[str] = set(extract_cite_keys(tex_text))
 
+    # Build set of already-known DOIs from literature_dir if provided
+    known_dois: Set[str] = set()
+    known_titles: Set[str] = set()
+    if literature_dir:
+        from pathlib import Path
+        lit_path = Path(literature_dir)
+        # Check for bibliography.json
+        bib_path = lit_path / "bibliography.json"
+        if not bib_path.exists():
+            bib_path = lit_path.parent / "bibliography.json"
+        if bib_path.exists():
+            import json
+            try:
+                with open(bib_path) as f:
+                    bib_data = json.load(f)
+                refs = bib_data.get("references", bib_data) if isinstance(bib_data, dict) else bib_data
+                for ref in refs:
+                    if ref.get("doi"):
+                        known_dois.add(ref["doi"].lower().strip())
+                    if ref.get("title"):
+                        known_titles.add(ref["title"].lower().strip()[:80])
+            except (json.JSONDecodeError, KeyError):
+                pass
+        # Also count text files as known
+        text_dir = lit_path / "text" if (lit_path / "text").is_dir() else lit_path
+        for txt in text_dir.glob("*.txt"):
+            existing_keys.add(txt.stem)
+
     # Extract search keywords
     keywords = _extract_keywords_from_embeddings(tex_text, model=model)
     if not keywords:
@@ -147,8 +175,16 @@ def related_radar(
 
         title = work.get("title", "")
         year = work.get("publication_year")
-        # Check if already cited (by DOI match or title similarity)
-        # Simple check: skip if any existing key appears in the title
+
+        # Check if already known by DOI
+        if doi.lower().strip() in known_dois:
+            continue
+
+        # Check if already known by title
+        if title and title.lower().strip()[:80] in known_titles:
+            continue
+
+        # Check if already cited by cite key match
         title_lower = title.lower() if title else ""
         already_cited = any(
             key.lower().replace("_", " ") in title_lower

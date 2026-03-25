@@ -32,6 +32,13 @@ def novelty_analysis(
         each enriched with ``max_literature_similarity``, ``nearest_refs``,
         ``novelty_flag``.
     """
+    if chunk_emb.size == 0 or len(chunk_keys) == 0:
+        return [
+            {**claim, "max_literature_similarity": 0.0,
+             "nearest_refs": [], "novelty_flag": True}
+            for claim in claims
+        ]
+
     sims = cosine_sim(claim_emb, chunk_emb)
     results: List[Dict] = []
     for i, claim in enumerate(claims):

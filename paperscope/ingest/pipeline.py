@@ -116,8 +116,17 @@ def ingest_main(
     skipped = 0
     failed = 0
 
-    # Process all PDFs in pdf_dir (not just newly acquired)
-    for pdf_path in sorted(pdf_dir.glob("*.pdf")):
+    # Determine which PDFs to extract text from
+    if paper_filter:
+        # Only extract PDFs for refs matching the filter
+        filtered_keys = {r["cite_key"] for r in with_doi}
+        pdf_candidates = sorted(
+            p for p in pdf_dir.glob("*.pdf") if p.stem in filtered_keys
+        )
+    else:
+        pdf_candidates = sorted(pdf_dir.glob("*.pdf"))
+
+    for pdf_path in pdf_candidates:
         text_path = text_dir / f"{pdf_path.stem}.txt"
         if text_path.exists():
             skipped += 1

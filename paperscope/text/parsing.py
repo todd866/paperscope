@@ -28,16 +28,18 @@ def extract_paragraphs(tex_text: str, min_words: int = 10) -> List[Dict]:
     body = re.split(
         r"\\bibliography\{|\\begin\{thebibliography\}", tex_text, maxsplit=1
     )[0]
-    # Remove preamble
+    # Remove preamble but track offset for correct line numbers
+    preamble_lines = 0
     begin = body.find(r"\begin{document}")
     if begin >= 0:
+        preamble_lines = body[:begin].count("\n")
         body = body[begin:]
 
     paragraphs: List[Dict] = []
     current_lines: List[str] = []
     start_line = 1
 
-    for lineno, line in enumerate(body.splitlines(), 1):
+    for lineno, line in enumerate(body.splitlines(), preamble_lines + 1):
         stripped = line.strip()
         if stripped:
             if not current_lines:

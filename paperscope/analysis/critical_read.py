@@ -140,10 +140,14 @@ def extract_author_names(text: str) -> List[str]:
         # Skip very short or very long lines
         if len(line) < 5 or len(line) > 500:
             continue
-        # Skip lines that look like titles, abstracts, or affiliations
+        # Skip lines that look like titles, abstracts, affiliations, or addresses
         if any(kw in line.lower() for kw in ["abstract", "introduction", "university",
                                                "department", "institute", "keywords",
-                                               "correspondence", "email"]):
+                                               "correspondence", "email", "faculty",
+                                               "school of", "college of", "center for",
+                                               "centre for", "hospital", "clinic",
+                                               "received", "accepted", "published",
+                                               "doi:", "http", "orcid", "@"]):
             continue
         # Look for lines with multiple names (commas or "and")
         if ("," in line or " and " in line) and not line.endswith("."):
@@ -168,9 +172,22 @@ def _compute_verdict(result: Dict) -> Dict:
     """Compute overall verdict from component analyses."""
     flags = []
     severity = "low"
+    analysis_gaps = []
+
+    # Check for analysis failures (insufficient text extracted)
+    res = result.get("resolution_analysis", {})
+    if res.get("error"):
+        analysis_gaps.append(f"resolution analysis failed: {res['error']}")
+    oc = result.get("overclaiming", {})
+    if oc.get("error"):
+        analysis_gaps.append(f"overclaiming analysis failed: {oc['error']}")
+
+    if analysis_gaps:
+        flags.append(f"incomplete analysis ({len(analysis_gaps)} modules failed)")
+        if severity == "low":
+            severity = "incomplete"
 
     # Resolution mismatch
-    res = result.get("resolution_analysis", {})
     mismatch = res.get("mismatch", {})
     if mismatch.get("detected"):
         sev = mismatch.get("severity", "low")
@@ -227,6 +244,9 @@ def _print_author_summary(result: Dict) -> None:
 
 def _print_resolution_summary(result: Dict) -> None:
     """Print method-resolution summary."""
+    if result.get("error"):
+        print(f"  ⚠ Resolution analysis failed: {result['error']}")
+        return
     mismatch = result.get("mismatch", {})
     if mismatch.get("detected"):
         sev = mismatch.get("severity", "unknown")

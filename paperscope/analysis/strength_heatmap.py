@@ -26,6 +26,31 @@ def strength_heatmap(
     if n == 0:
         return {"paragraphs": [], "summary": {}}
 
+    # Handle empty literature corpus
+    if chunk_emb.size == 0 or len(chunk_keys) == 0:
+        norms = paper_emb / (np.linalg.norm(paper_emb, axis=1, keepdims=True) + 1e-12)
+        continuity = np.zeros(n)
+        for i in range(1, n):
+            continuity[i] = float(np.dot(norms[i], norms[i - 1]))
+        paragraphs = [
+            {"line": paper_chunks[i]["line"],
+             "text_preview": paper_chunks[i]["text"][:100],
+             "citation_support": 0.0,
+             "best_supporting_ref": None,
+             "argument_continuity": float(continuity[i])}
+            for i in range(n)
+        ]
+        return {
+            "paragraphs": paragraphs,
+            "summary": {
+                "mean_citation_support": 0.0,
+                "min_citation_support": 0.0,
+                "mean_continuity": float(np.mean(continuity[1:])) if n > 1 else 0.0,
+                "weak_paragraphs": n,
+                "note": "No literature corpus loaded — all paragraphs scored 0",
+            },
+        }
+
     # Citation support: best similarity to any literature chunk
     lit_sims = cosine_sim(paper_emb, chunk_emb)
     best_lit_sim = np.max(lit_sims, axis=1)

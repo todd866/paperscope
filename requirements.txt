@@ -4,6 +4,11 @@ pyyaml>=6.0
 pydantic>=2.5.0
 httpx>=0.26.0
 b2sdk>=2.0.0
-sentence-transformers>=2.2.0
 numpy>=1.24.0
 scipy>=1.11.0
+
+# Optional: install for full functionality
+# sentence-transformers>=2.2.0   # Embedding (falls back to TF-IDF without it)
+# scikit-learn>=1.3.0             # TF-IDF fallback when sentence-transformers absent
+# matplotlib>=3.7.0               # Plotting (strength heatmap, argument graph)
+# networkx>=3.0                   # Argument graph visualization

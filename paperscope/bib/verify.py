@@ -72,6 +72,9 @@ def verify_doi(doi: str, ref: Dict, session: requests.Session) -> Dict:
                 issues.append("RETRACTED")
 
     if issues:
+        # Retraction takes priority over other issues
+        if any("RETRACTED" in i for i in issues):
+            return {"status": "retracted", "details": "; ".join(issues)}
         return {"status": "mismatch", "details": "; ".join(issues)}
     return {"status": "ok", "details": "verified"}
 
