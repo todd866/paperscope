@@ -136,16 +136,25 @@ def extract_author_names(text: str) -> List[str]:
     lines = text.split("\n")[:50]
     candidates = []
 
-    # Keywords that indicate non-author lines
+    # Keywords that indicate non-author lines (institutional/structural)
     skip_keywords = [
         "abstract", "introduction", "university", "department", "institute",
         "keywords", "correspondence", "email", "faculty", "school of",
         "college of", "center for", "centre for", "hospital", "clinic",
         "received", "accepted", "published", "doi:", "http", "orcid", "@",
-        "sydney", "melbourne", "london", "new york", "berlin", "tokyo",
-        "australia", "usa", "united states", "united kingdom",
-        "nsw", "vic", "qld",  # state abbreviations
     ]
+
+    # Address patterns: "City, State/Country" lines (but not "Name, Name")
+    # These match lines that look like postal addresses rather than name lists
+    _address_re = re.compile(
+        r",\s*(?:"
+        r"NSW|VIC|QLD|SA|WA|TAS|NT|ACT"  # AU states
+        r"|CA|NY|MA|TX|IL|PA|OH|FL|WA"    # US states
+        r"|UK|USA|Australia|Canada|Germany|France|Japan|China|India"
+        r"|[A-Z]{2}\s+\d{4,5}"            # state + postcode
+        r")\b",
+        re.IGNORECASE,
+    )
 
     for line in lines:
         line = line.strip()
@@ -155,8 +164,11 @@ def extract_author_names(text: str) -> List[str]:
         # Skip lines with LaTeX commands (likely affiliations)
         if "\\\\" in line or "\\texttt" in line or "\\href" in line:
             continue
-        # Skip lines that look like titles, abstracts, affiliations, or addresses
+        # Skip lines that look like titles, abstracts, affiliations
         if any(kw in line.lower() for kw in skip_keywords):
+            continue
+        # Skip lines matching address patterns (City, State/Country)
+        if _address_re.search(line):
             continue
         # Skip lines that are mostly numbers/punctuation (addresses, phone numbers)
         alpha_ratio = sum(1 for c in line if c.isalpha()) / max(len(line), 1)
