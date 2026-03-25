@@ -13,7 +13,8 @@ Usage:
 In practice, import the functions and feed in extracted table data:
 
     from paperscope.analysis.forensic_stats import (
-        grim, grimmer, debit, sprite, correlation_bound,
+        grim, grim_column, grim_row,
+        grimmer, debit, sprite, correlation_bound,
         check_ttest_paired, check_ttest_independent,
         check_anova_oneway, check_chi_squared,
         sample_size_from_t, effect_size_consistency,
@@ -21,6 +22,7 @@ In practice, import the functions and feed in extracted table data:
         quick_sd_check, check_contingency_table,
         benfords_law, variance_ratio_test,
         check_change_arithmetic, check_sd_positive,
+        infer_column_dp,
     )
 
 References:
@@ -38,30 +40,75 @@ import math
 import random
 from collections import Counter
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from scipy import stats as sp
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 0. HELPERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _dp_from_str(s: str) -> int:
+    """Extract decimal places from a string representation of a number."""
+    s = s.strip()
+    if '.' in s:
+        return len(s.split('.')[-1])
+    return 0
+
+
+def infer_column_dp(values: List[Union[str, float]]) -> int:
+    """
+    Infer the decimal-place precision for a column of reported values.
+
+    Papers often drop trailing zeros (e.g., "26.9" when other values in the
+    same column are reported to 2 dp like "11.26").  The correct dp for GRIM
+    is the *maximum* across the column, because the trailing zero was merely
+    suppressed in display.
+
+    Accepts strings (preferred — preserves trailing zeros like "26.90") or
+    floats (trailing zeros lost by Python's float representation).
+
+    Ref: Gideon Meyerowitz-Katz (personal communication, 2026).
+    """
+    max_dp = 0
+    for v in values:
+        s = v if isinstance(v, str) else f"{v}"
+        max_dp = max(max_dp, _dp_from_str(s))
+    return max_dp
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1. GRIM (Granularity-Related Inconsistency of Means)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def grim(mean: float, n: int, scale: int = 1, dp: int = 2) -> dict:
+def grim(mean: Union[str, float], n: int, scale: int = 1,
+         dp: Optional[int] = None) -> dict:
     """
     GRIM test: is this mean possible for n integer-valued observations?
 
     Args:
-        mean:  reported mean
+        mean:  reported mean.  Pass as a *string* (e.g., "26.90") to
+               preserve trailing zeros and get correct dp inference.
+               Float input works but may lose trailing-zero precision.
         n:     sample size
         scale: granularity of the instrument (1 for integers, 0.5 for
                half-points, etc.)
-        dp:    decimal places reported (2 = reported to hundredths)
+        dp:    decimal places reported.  If None, inferred from `mean`:
+               - string "26.90" → dp=2
+               - float 26.9 → dp=1 (trailing zero lost!)
+               Prefer passing strings or explicit dp for safety.
 
     Returns:
         dict with 'possible' (bool), 'implied_sum', 'nearest_achievable',
         and 'detail' (str).
     """
+    if isinstance(mean, str):
+        if dp is None:
+            dp = _dp_from_str(mean)
+        mean = float(mean)
+    elif dp is None:
+        dp = _dp_from_str(f"{mean}")
     implied_sum = mean * n
     granularity = scale
     remainder = (implied_sum / granularity) % 1.0
@@ -89,6 +136,113 @@ def grim(mean: float, n: int, scale: int = 1, dp: int = 2) -> dict:
             f"nearest achievable means are {lower:.{dp+2}f} and {upper:.{dp+2}f}"
         )
     return result
+
+
+def grim_column(means: List[Union[str, float]], ns: List[int],
+                labels: Optional[List[str]] = None,
+                scale: int = 1) -> List[dict]:
+    """
+    Run GRIM on a column of means with automatic column-level dp inference.
+
+    The dp is inferred from the *maximum* across all means in the column,
+    because papers often drop trailing zeros (e.g., "26.9" when the column
+    also contains "11.26", implying the real value is "26.90").
+
+    Args:
+        means:  list of reported means (strings preferred for dp safety)
+        ns:     list of sample sizes (one per mean, or a single int for all)
+        labels: optional labels for each mean
+        scale:  instrument granularity (1 for integers)
+
+    Returns:
+        list of grim() result dicts, each with an added 'label' key.
+    """
+    dp = infer_column_dp(means)
+
+    if isinstance(ns, int):
+        ns = [ns] * len(means)
+    if labels is None:
+        labels = [None] * len(means)
+
+    results = []
+    for mean, n, label in zip(means, ns, labels):
+        r = grim(mean, n, scale=scale, dp=dp)
+        r['column_dp'] = dp
+        if label:
+            r['label'] = label
+        results.append(r)
+    return results
+
+
+def grim_row(baseline: Union[str, float], end: Union[str, float],
+             change: Union[str, float], n: int,
+             scale: int = 1, label: str = "") -> dict:
+    """
+    Cross-cell GRIM: check baseline, end, and change with precision
+    constraints enforced across the row.
+
+    When a table reports baseline, end, and change in the same row,
+    the precision of each value constrains the others.  For example,
+    if end=11.26 (2dp) and change=15.65 (2dp), then baseline must
+    also be at 2dp precision, even if printed as "26.9".
+
+    Also checks arithmetic consistency: baseline - end ≈ change
+    (or baseline + change ≈ end, depending on sign convention).
+
+    Ref: Gideon Meyerowitz-Katz (personal communication, 2026).
+
+    Returns:
+        dict with 'baseline_grim', 'end_grim', 'change_grim',
+        'row_dp', 'arithmetic_ok', and 'detail'.
+    """
+    strs = [baseline if isinstance(baseline, str) else f"{baseline}",
+            end if isinstance(end, str) else f"{end}",
+            change if isinstance(change, str) else f"{change}"]
+    row_dp = max(_dp_from_str(s) for s in strs)
+
+    b_val = float(baseline) if isinstance(baseline, str) else baseline
+    e_val = float(end) if isinstance(end, str) else end
+    c_val = float(change) if isinstance(change, str) else change
+
+    r_base = grim(b_val, n, scale=scale, dp=row_dp)
+    r_end = grim(e_val, n, scale=scale, dp=row_dp)
+    r_change = grim(c_val, n, scale=scale, dp=row_dp)
+
+    # Arithmetic: check if end - baseline ≈ change OR baseline - end ≈ change
+    # (sign conventions vary across papers)
+    diff = e_val - b_val
+    tolerance = 1.5 * (10 ** -row_dp)  # generous for rounding
+    arith_ok = (abs(diff - c_val) <= tolerance or
+                abs(-diff - c_val) <= tolerance)
+
+    flags = []
+    if not r_base['possible']:
+        flags.append(f"baseline {b_val} fails GRIM at {row_dp}dp")
+    if not r_end['possible']:
+        flags.append(f"end {e_val} fails GRIM at {row_dp}dp")
+    if not r_change['possible']:
+        flags.append(f"change {c_val} fails GRIM at {row_dp}dp")
+    if not arith_ok:
+        flags.append(
+            f"arithmetic: end-baseline={diff:.{row_dp}f}, "
+            f"reported change={c_val}"
+        )
+
+    prefix = f"{label}: " if label else ""
+    if flags:
+        detail = f"FLAG: {prefix}{'; '.join(flags)}"
+    else:
+        detail = f"PASS: {prefix}all row values consistent at {row_dp}dp"
+
+    return {
+        'baseline_grim': r_base,
+        'end_grim': r_end,
+        'change_grim': r_change,
+        'row_dp': row_dp,
+        'arithmetic_ok': arith_ok,
+        'flags': flags,
+        'detail': detail,
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1212,7 +1366,10 @@ def check_contingency_table(
 # 17. Carlisle-Stouffer-Fisher test (Table 1 baseline p-values)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def carlisle_stouffer_fisher(p_values: List[float], label: str = "") -> dict:
+def carlisle_stouffer_fisher(
+    p_values: Union[List[float], List[Tuple[float, str]]],
+    label: str = "",
+) -> Union[dict, List[dict]]:
     """
     Test whether a set of baseline comparison p-values (typically from
     Table 1 of an RCT) are suspiciously well-balanced.
@@ -1225,13 +1382,54 @@ def carlisle_stouffer_fisher(p_values: List[float], label: str = "") -> dict:
     Uses the Stouffer method: Z = sum(Phi_inv(1 - p_i)) / sqrt(k),
     then tests whether combined Z is significantly extreme.
 
-    Ref: Carlisle (2017) doi:10.1111/anae.13938
-    Ref: Heathers (2025) ch. "Analyzing multiple Table 1 p-values"
+    **Important:** Categorical and continuous baseline variables should
+    be tested separately, because they have different distributional
+    properties. Pooling them can mask a real signal in one stratum.
 
     Args:
-        p_values: list of p-values from baseline comparisons
+        p_values: Either:
+            - List[float]: plain p-values (backward compatible)
+            - List[Tuple[float, str]]: typed p-values where str is
+              "categorical" or "continuous".  When types are mixed,
+              the function auto-splits and returns a list of results
+              (one per type, plus a combined result).
         label: optional label
+
+    Returns:
+        dict (single result) when all p-values are the same type or
+        untyped.  list[dict] when mixed types trigger auto-split —
+        each dict has 'variable_type' key.
+
+    Ref: Carlisle (2017) doi:10.1111/anae.13938
+    Ref: Heathers (2025) ch. "Analyzing multiple Table 1 p-values"
+    Ref: Meyerowitz-Katz (personal communication, 2026) — split by type.
     """
+    # Detect typed input and auto-split if needed
+    if p_values and isinstance(p_values[0], (tuple, list)):
+        types_seen = set(t for _, t in p_values)
+        if len(types_seen) > 1:
+            results = []
+            for vtype in sorted(types_seen):
+                sub = [p for p, t in p_values if t == vtype]
+                sub_label = f"{label} ({vtype})" if label else vtype
+                r = carlisle_stouffer_fisher(sub, label=sub_label)
+                r['variable_type'] = vtype
+                results.append(r)
+            # Also run combined for reference
+            all_p = [p for p, _ in p_values]
+            combined_label = f"{label} (combined)" if label else "combined"
+            r_all = carlisle_stouffer_fisher(all_p, label=combined_label)
+            r_all['variable_type'] = 'combined'
+            r_all['_note'] = (
+                'Combined result — interpret with caution. '
+                'Categorical and continuous variables were also '
+                'tested separately (see other results).'
+            )
+            results.append(r_all)
+            return results
+        else:
+            # All same type — unwrap and run normally
+            p_values = [p for p, _ in p_values]
     k = len(p_values)
     if k < 3:
         return {
@@ -1322,24 +1520,38 @@ def demo_magnesium_paper():
         else:
             findings['PASS'] += 1
 
-    # ── 1. GRIM on BDI scores ──
+    # ── 1. GRIM on BDI scores (using grim_column for column-level dp) ──
     print("\n--- 1. GRIM TEST: Beck Depression Inventory means ---")
-    print("(BDI is integer-valued: 21 items scored 0-3, total 0-63)\n")
+    print("(BDI is integer-valued: 21 items scored 0-3, total 0-63)")
+    print("(dp inferred from column: max across all values)\n")
 
-    bdi_tests = [
-        (26.9,  26, "Mg baseline"),
-        (11.26, 26, "Mg end"),
-        (25.6,  27, "Placebo baseline"),
-        (15.2,  27, "Placebo end"),
-    ]
-    for mean, n, label in bdi_tests:
-        dp = len(str(mean).split('.')[-1]) if '.' in str(mean) else 0
-        r = grim(mean, n, scale=1, dp=dp)
+    bdi_results = grim_column(
+        means=["26.9", "11.26", "25.6", "15.2"],
+        ns=[26, 26, 27, 27],
+        labels=["Mg baseline", "Mg end", "Placebo baseline", "Placebo end"],
+    )
+    for r in bdi_results:
         tally(r)
         status = "PASS" if r['possible'] else "FAIL"
-        print(f"  [{status}] {label}: mean={mean}, n={n}")
+        label = r.get('label', '')
+        print(f"  [{status}] {label}: mean={r['reported_mean']}, n={r['n']}, "
+              f"column_dp={r['column_dp']}")
         if not r['possible']:
-            print(f"         n*mean = {mean*n:.2f}, nearest: {r['nearest_achievable']}")
+            print(f"         n*mean = {r['implied_sum']:.2f}, "
+                  f"nearest: {r['nearest_achievable']}")
+
+    # ── 1b. Cross-row GRIM (baseline/end/change constraints) ──
+    print("\n--- 1b. CROSS-ROW GRIM: BDI row consistency ---\n")
+
+    # Change values are signed negative in the paper (depression decreased)
+    row_tests = [
+        ("26.9", "11.26", "-15.65", 26, "Mg BDI"),
+        ("25.6", "15.2", "-10.40", 27, "Placebo BDI"),
+    ]
+    for b, e, c, n, label in row_tests:
+        r = grim_row(b, e, c, n, label=label)
+        tally(r)
+        print(f"  {r['detail']}")
 
     # ── 2. DEBIT on percentages ──
     print("\n--- 2. DEBIT TEST: Reported percentages ---")
@@ -1360,8 +1572,15 @@ def demo_magnesium_paper():
             print(f"         nearest: {r['nearest_achievable_pcts']}")
 
     # ── 3. SPRITE on BDI ──
+    # NOTE: SPRITE should only be run on means that PASS GRIM first.
+    # If GRIM fails, SPRITE will also fail (can't match an impossible mean),
+    # but the root cause is GRIM, not SPRITE. Reporting a GRIM failure as
+    # a SPRITE failure is misleading.
+    # Ref: Gideon Meyerowitz-Katz (personal communication, 2026).
     print("\n--- 3. SPRITE: Can any valid dataset produce these BDI stats? ---")
-    print("(BDI range: 0-63, integer scores)\n")
+    print("(BDI range: 0-63, integer scores)")
+    print("(Skipping values that already fail GRIM — those are GRIM errors,")
+    print(" not SPRITE errors. SPRITE only adds value on GRIM-passing means.)\n")
 
     sprite_tests = [
         (26.9, 7.1, 26, "Mg baseline"),
@@ -1369,7 +1588,15 @@ def demo_magnesium_paper():
         (25.6, 6.1, 27, "Placebo baseline"),
         (15.2, 9.3, 27, "Placebo end"),
     ]
+    bdi_dp = infer_column_dp([m for m, _, _, _ in sprite_tests])
     for mean, sd, n, label in sprite_tests:
+        # Check GRIM first at column dp
+        grim_r = grim(mean, n, scale=1, dp=bdi_dp)
+        if not grim_r['possible']:
+            tally({'detail': 'SKIP'})  # count as pass (already caught by GRIM)
+            print(f"  [SKIP] {label}: mean={mean} fails GRIM at {bdi_dp}dp — "
+                  f"SPRITE not applicable")
+            continue
         r = sprite(mean, sd, n, lo=0, hi=63, max_iter=50_000, n_seeds=3)
         tally(r)
         status = "PASS" if r['possible'] else "FLAG"
@@ -1378,7 +1605,7 @@ def demo_magnesium_paper():
             print(f"         reconstructed: mean={r['reconstructed_mean']}, "
                   f"SD={r['reconstructed_sd']}")
         elif not r['possible']:
-            print(f"         no valid dataset found")
+            print(f"         no valid dataset found (genuine SPRITE failure)")
 
     # ── 4. Correlation bound ──
     print("\n--- 4. CORRELATION BOUND: Serum magnesium change SDs ---\n")
@@ -1513,16 +1740,25 @@ def demo_magnesium_paper():
     print(f"  {r['detail']}")
 
     # ── 12. Carlisle-Stouffer-Fisher on Table 1 p-values ──
-    print("\n--- 12. CARLISLE TEST: Are Table 1 p-values too well-balanced? ---\n")
+    print("\n--- 12. CARLISLE TEST: Are Table 1 p-values too well-balanced? ---")
+    print("(auto-split by variable type: categorical vs continuous)\n")
 
-    # Table 1 p-values: Sex 0.93, Marital 0.28, Education 0.80, Occupation 0.67
-    # Plus BMI baseline between-group p=0.89 (from Table 2)
-    r = carlisle_stouffer_fisher(
-        [0.93, 0.28, 0.80, 0.67, 0.89],
-        label="Table 1 + BMI"
-    )
-    tally(r)
-    print(f"  {r['detail']}")
+    # Typed input: auto-splits categorical and continuous, adds combined
+    carlisle_results = carlisle_stouffer_fisher([
+        (0.93, "categorical"),   # Sex
+        (0.28, "categorical"),   # Marital status
+        (0.80, "categorical"),   # Education
+        (0.67, "categorical"),   # Occupation
+        (0.89, "continuous"),    # BMI baseline
+        (0.07, "continuous"),    # Protein baseline
+        (0.04, "continuous"),    # Carbohydrate baseline
+        (0.56, "continuous"),    # Fat baseline
+        (0.62, "continuous"),    # Dietary Mg baseline
+    ], label="Baseline")
+
+    for r in carlisle_results:
+        tally(r)
+        print(f"  {r['detail']}")
 
     # ── 13. SD/SE confusion ──
     print("\n--- 13. SD/SE CONFUSION CHECK ---\n")
