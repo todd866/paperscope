@@ -13,17 +13,23 @@ Usage:
 In practice, import the functions and feed in extracted table data:
 
     from paperscope.analysis.forensic_stats import (
-        grim, debit, sprite, correlation_bound, check_ttest_paired,
-        check_ttest_independent, sample_size_from_t, effect_size_consistency,
-        benfords_law, variance_ratio_test, check_change_arithmetic,
-        check_sd_positive,
+        grim, grimmer, debit, sprite, correlation_bound,
+        check_ttest_paired, check_ttest_independent,
+        check_anova_oneway, check_chi_squared,
+        sample_size_from_t, effect_size_consistency,
+        carlisle_stouffer_fisher, check_sd_se_confusion,
+        quick_sd_check, check_contingency_table,
+        benfords_law, variance_ratio_test,
+        check_change_arithmetic, check_sd_positive,
     )
 
 References:
+    Heathers (2025) "An Introduction to Forensic Metascience" doi:10.5281/zenodo.14871843
     Brown & Heathers (2017) "The GRIM Test" doi:10.1177/1948550616673876
     Heathers & Brown (2019) "GRIMMER" doi:10.31234/osf.io/6cn2h
     Jane (2024) matthewbjane.github.io/blog-posts/blog-post-1.html
     Anaya (2016) "The SPRITE Procedure" doi:10.7287/peerj.preprints.2748v1
+    Carlisle (2017) doi:10.1111/anae.13938
 """
 
 from __future__ import annotations
@@ -149,9 +155,10 @@ def sprite(
     n: int,
     lo: int = 0,
     hi: int = 63,
-    max_iter: int = 100_000,
-    n_solutions: int = 5,
+    max_iter: int = 2_000_000,
+    n_seeds: int = 5,
     seed: int = 42,
+    dp: Optional[int] = None,
 ) -> dict:
     """
     SPRITE: attempt to reconstruct a valid dataset that produces the
@@ -159,124 +166,178 @@ def sprite(
 
     If no valid dataset exists, the reported statistics are impossible.
 
+    Two-phase approach:
+      Phase 1 (analytical): enumerate all integer sums compatible with
+        the reported mean (within rounding), then check whether valid
+        integer sum-of-squares targets exist for the reported SD.
+      Phase 2 (search): for each feasible (sum, sum_sq) pair, run
+        randomized perturbation search with multiple seeds.
+
     Args:
         mean: reported mean
         sd:   reported standard deviation
         n:    sample size
         lo:   minimum possible value (e.g. 0 for BDI)
         hi:   maximum possible value (e.g. 63 for BDI)
-        max_iter:    maximum random perturbation attempts per solution
-        n_solutions: number of valid datasets to find before stopping
-        seed: random seed for reproducibility
+        max_iter: perturbation attempts per seed per target sum (default 2M)
+        n_seeds:  number of independent random seeds to try per sum
+        seed: base random seed for reproducibility
+        dp:   decimal places of the reported mean (auto-detected if None)
 
     Returns:
-        dict with 'possible', 'solutions_found', 'example_dataset', 'detail'.
+        dict with 'possible', 'grim_possible', 'n_target_sums',
+        'n_sumsq_targets', 'example_dataset', 'closest', and 'detail'.
     """
-    rng = random.Random(seed)
-    target_sum = round(mean * n)
-    target_var = sd ** 2
+    # Auto-detect decimal places
+    if dp is None:
+        s = str(mean)
+        dp = len(s.split('.')[-1]) if '.' in s else 0
 
-    # Quick feasibility: can the sum even be achieved?
-    if target_sum < lo * n or target_sum > hi * n:
+    # ── Phase 1: analytical feasibility ──
+    half_unit = 0.5 * 10**(-dp)
+    lo_mean = mean - half_unit
+    hi_mean = mean + half_unit
+    lo_sum = max(math.ceil(lo_mean * n), lo * n)
+    hi_sum = min(math.floor(hi_mean * n), hi * n)
+    possible_sums = list(range(lo_sum, hi_sum + 1))
+
+    if not possible_sums:
         return {
             'possible': False,
-            'solutions_found': 0,
+            'grim_possible': False,
+            'n_target_sums': 0,
             'detail': (
-                f"FAIL: target sum {target_sum} is outside [{lo*n}, {hi*n}] "
-                f"for n={n} with range [{lo}, {hi}]"
+                f"FAIL: no integer sum compatible with mean={mean}, n={n} "
+                f"(GRIM failure). Range [{lo_mean*n:.4f}, {hi_mean*n:.4f}] "
+                f"contains no integer."
             ),
         }
 
-    solutions = []
+    # For each possible sum, find valid sum-of-squares range
+    sd_lo = sd - 0.05  # rounding tolerance on SD (1 dp)
+    sd_hi = sd + 0.05
+    target_var = sd ** 2
 
-    for attempt in range(n_solutions * 3):
-        if len(solutions) >= n_solutions:
+    feasible_targets = []  # list of (target_sum, lo_sumsq, hi_sumsq)
+    total_sumsq_targets = 0
+    for ts in possible_sums:
+        lo_sumsq = sd_lo**2 * (n - 1) + ts**2 / n
+        hi_sumsq = sd_hi**2 * (n - 1) + ts**2 / n
+        lo_int = math.ceil(lo_sumsq)
+        hi_int = math.floor(hi_sumsq)
+        if lo_int <= hi_int:
+            feasible_targets.append((ts, lo_int, hi_int))
+            total_sumsq_targets += hi_int - lo_int + 1
+
+    # ── Phase 2: randomized search ──
+    best_var_diff = float('inf')
+    best_dataset = None
+    best_stats = None
+    found_dataset = None
+
+    for target_sum, _, _ in feasible_targets:
+        for seed_offset in range(n_seeds):
+            if found_dataset is not None:
+                break
+
+            rng = random.Random(seed + seed_offset + target_sum)
+
+            # Initialize dataset to hit target sum
+            data = [lo] * n
+            remaining = target_sum - lo * n
+            for i in range(n):
+                add = min(remaining, hi - lo)
+                data[i] = lo + add
+                remaining -= add
+                if remaining <= 0:
+                    break
+            rng.shuffle(data)
+
+            for _ in range(max_iter):
+                cur_mean = sum(data) / n
+                cur_var = sum((x - cur_mean) ** 2 for x in data) / (n - 1)
+                vd = abs(cur_var - target_var)
+
+                if vd < best_var_diff:
+                    best_var_diff = vd
+                    best_dataset = list(data)
+                    best_stats = (cur_mean, cur_var ** 0.5)
+
+                if vd < 0.005:
+                    found_dataset = list(data)
+                    break
+
+                # Perturb: swap toward/away from target variance
+                i, j = rng.sample(range(n), 2)
+                if cur_var < target_var:
+                    if data[i] < hi and data[j] > lo:
+                        data[i] += 1
+                        data[j] -= 1
+                else:
+                    mid = int(round(cur_mean))
+                    if abs(data[i] - mid) > abs(data[j] - mid):
+                        far, near = i, j
+                    else:
+                        far, near = j, i
+                    if data[far] > mid and data[far] > lo:
+                        data[far] -= 1
+                        if data[near] < hi:
+                            data[near] += 1
+                    elif data[far] < mid and data[far] < 63:
+                        data[far] += 1
+                        if data[near] > lo:
+                            data[near] -= 1
+
+        if found_dataset is not None:
             break
 
-        # Initialize: spread values to hit the target sum
-        data = [lo] * n
-        remaining = target_sum - lo * n
-        for i in range(n):
-            add = min(remaining, hi - lo)
-            data[i] = lo + add
-            remaining -= add
-            if remaining <= 0:
-                break
-
-        rng.shuffle(data)
-
-        # Iteratively perturb to match SD
-        best_var_diff = float('inf')
-        for _ in range(max_iter):
-            current_mean = sum(data) / n
-            current_var = sum((x - current_mean) ** 2 for x in data) / (n - 1)
-            var_diff = abs(current_var - target_var)
-
-            if var_diff < 0.005:  # close enough (rounding tolerance)
-                solutions.append(list(data))
-                break
-
-            if var_diff < best_var_diff:
-                best_var_diff = var_diff
-
-            # Pick two random indices and perturb
-            i, j = rng.sample(range(n), 2)
-
-            if current_var < target_var:
-                # Need more spread: move values apart
-                if data[i] < hi and data[j] > lo:
-                    data[i] += 1
-                    data[j] -= 1
-            else:
-                # Need less spread: move values closer to mean
-                if data[i] > current_mean and data[i] > lo:
-                    idx_far = i
-                elif data[j] > current_mean and data[j] > lo:
-                    idx_far = j
-                elif data[i] < current_mean and data[i] < hi:
-                    idx_far = i
-                else:
-                    idx_far = j
-
-                if data[idx_far] > current_mean and data[idx_far] > lo:
-                    data[idx_far] -= 1
-                    # Find someone below mean to increment
-                    below = [k for k in range(n) if data[k] < current_mean and data[k] < hi]
-                    if below:
-                        data[rng.choice(below)] += 1
-                elif data[idx_far] < current_mean and data[idx_far] < hi:
-                    data[idx_far] += 1
-                    above = [k for k in range(n) if data[k] > current_mean and data[k] > lo]
-                    if above:
-                        data[rng.choice(above)] -= 1
-
-    possible = len(solutions) > 0
+    # ── Build result ──
     result = {
-        'possible': possible,
-        'solutions_found': len(solutions),
+        'possible': found_dataset is not None,
+        'grim_possible': True,
+        'n_target_sums': len(possible_sums),
+        'possible_sums': possible_sums,
+        'n_feasible_sum_targets': len(feasible_targets),
+        'n_sumsq_targets': total_sumsq_targets,
         'target_mean': mean,
         'target_sd': sd,
         'n': n,
         'range': [lo, hi],
+        'max_iter': max_iter,
+        'n_seeds': n_seeds,
+        'total_iterations': max_iter * n_seeds * len(feasible_targets),
     }
 
-    if solutions:
-        example = sorted(solutions[0])
+    if found_dataset is not None:
+        example = sorted(found_dataset)
         actual_mean = sum(example) / n
         actual_sd = (sum((x - actual_mean) ** 2 for x in example) / (n - 1)) ** 0.5
         result['example_dataset'] = example
         result['reconstructed_mean'] = round(actual_mean, 4)
         result['reconstructed_sd'] = round(actual_sd, 4)
         result['detail'] = (
-            f"PASS: found {len(solutions)} valid dataset(s). "
-            f"Example reconstructs mean={actual_mean:.2f}, SD={actual_sd:.2f}"
+            f"PASS: valid dataset found. "
+            f"Reconstructs mean={actual_mean:.4f}, SD={actual_sd:.4f}"
         )
     else:
-        result['detail'] = (
-            f"FLAG: could not reconstruct any dataset with mean={mean}, SD={sd}, "
-            f"n={n}, range=[{lo},{hi}] in {max_iter} iterations. "
-            f"Statistics may be impossible or extremely constrained."
-        )
+        result['closest_var_diff'] = round(best_var_diff, 6)
+        if best_stats:
+            result['closest_mean'] = round(best_stats[0], 4)
+            result['closest_sd'] = round(best_stats[1], 4)
+        if not feasible_targets:
+            result['detail'] = (
+                f"FAIL: GRIM passes but no integer sum-of-squares is compatible "
+                f"with SD={sd} for any valid sum. "
+                f"The mean and SD are mutually impossible for n={n}, range=[{lo},{hi}]."
+            )
+        else:
+            result['detail'] = (
+                f"FLAG: {total_sumsq_targets} valid (sum, sum_sq) targets exist, "
+                f"but no dataset found in {result['total_iterations']:,} iterations "
+                f"({n_seeds} seeds x {len(feasible_targets)} targets x {max_iter:,}). "
+                f"Closest SD: {best_stats[1]:.4f} (target {sd}, gap {best_var_diff:.6f}). "
+                f"Statistics may be achievable but are highly constrained."
+            )
     return result
 
 
@@ -488,8 +549,8 @@ def effect_size_consistency(
     # 95% CI for the mean difference
     diff = mean1 - mean2
     t_crit = sp.t.ppf(0.975, df)
-    ci_lower = diff - t_crit * se
-    ci_upper = diff + t_crit * se
+    ci_lower = float(diff - t_crit * se)
+    ci_upper = float(diff + t_crit * se)
 
     flags = []
 
@@ -744,6 +805,496 @@ def check_sd_positive(sd: float, label: str = "") -> dict:
             f"{'' if ok else ' — IMPOSSIBLE: standard deviation cannot be negative'}"
         )
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 11. GRIMMER (SD consistency for integer data)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def grimmer(mean: float, sd: float, n: int, scale: int = 1,
+            dp_mean: int = 2, dp_sd: int = 2) -> dict:
+    """
+    GRIMMER test: is this SD possible for n integer-valued observations
+    with the given mean?
+
+    Extends GRIM to standard deviations. For integer data with known n
+    and mean, the sum of squares must be an integer, which constrains
+    the achievable SDs.
+
+    Ref: Heathers & Brown (2019) doi:10.31234/osf.io/6cn2h
+
+    Args:
+        mean:    reported mean
+        sd:      reported standard deviation
+        n:       sample size
+        scale:   granularity (1 for integers)
+        dp_mean: decimal places of the mean
+        dp_sd:   decimal places of the SD
+    """
+    # First check GRIM
+    grim_result = grim(mean, n, scale=scale, dp=dp_mean)
+    if not grim_result['possible']:
+        return {
+            'possible': False,
+            'grim_pass': False,
+            'detail': f"FAIL: GRIM fails first — mean {mean} is impossible for n={n}"
+        }
+
+    # Find the compatible integer sum
+    implied_sum = round(mean * n)
+
+    # SD^2 * (n-1) = sum_of_squares - n * mean_exact^2
+    # sum_of_squares = SD^2 * (n-1) + implied_sum^2 / n
+    exact_mean = implied_sum / n
+    target_sumsq = sd**2 * (n - 1) + implied_sum**2 / n
+
+    # Sum of squares must be an integer (sum of integer squares)
+    # Allow rounding tolerance
+    sd_lo = sd - 0.5 * 10**(-dp_sd)
+    sd_hi = sd + 0.5 * 10**(-dp_sd)
+    lo_sumsq = sd_lo**2 * (n - 1) + implied_sum**2 / n
+    hi_sumsq = sd_hi**2 * (n - 1) + implied_sum**2 / n
+
+    lo_int = math.ceil(lo_sumsq)
+    hi_int = math.floor(hi_sumsq)
+
+    possible = lo_int <= hi_int
+
+    result = {
+        'possible': possible,
+        'grim_pass': True,
+        'reported_mean': mean,
+        'reported_sd': sd,
+        'n': n,
+        'implied_sum': implied_sum,
+        'sumsq_range': [round(lo_sumsq, 4), round(hi_sumsq, 4)],
+        'n_valid_sumsq': max(0, hi_int - lo_int + 1),
+    }
+    if possible:
+        result['detail'] = (
+            f"PASS: SD={sd} is achievable with mean={mean}, n={n}. "
+            f"{hi_int - lo_int + 1} valid sum-of-squares target(s)."
+        )
+    else:
+        result['detail'] = (
+            f"FAIL: SD={sd} is impossible with mean={mean}, n={n}. "
+            f"Required sum_sq in [{lo_sumsq:.2f}, {hi_sumsq:.2f}] — "
+            f"no integer in range."
+        )
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 12. One-way ANOVA recalculation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def check_anova_oneway(
+    means: List[float],
+    sds: List[float],
+    ns: List[int],
+    reported_f: Optional[float] = None,
+    reported_p: Optional[float] = None,
+    labels: Optional[List[str]] = None,
+) -> dict:
+    """
+    Recalculate a one-way ANOVA F-statistic from reported group statistics.
+
+    F = MS_between / MS_within
+
+    Ref: Heathers (2025) ch. "One-way ANOVA"
+    """
+    k = len(means)
+    if k < 2:
+        return {'detail': "SKIP: need at least 2 groups"}
+    if labels is None:
+        labels = [f"Group {i+1}" for i in range(k)]
+
+    N = sum(ns)
+    grand_mean = sum(m * n for m, n in zip(means, ns)) / N
+
+    # Between-groups SS
+    ss_between = sum(n * (m - grand_mean)**2 for m, n in zip(means, ns))
+    df_between = k - 1
+    ms_between = ss_between / df_between
+
+    # Within-groups SS (from reported SDs)
+    ss_within = sum((n - 1) * sd**2 for n, sd in zip(ns, sds))
+    df_within = N - k
+    ms_within = ss_within / df_within if df_within > 0 else float('inf')
+
+    if ms_within == 0:
+        return {'detail': "FAIL: within-group variance is 0"}
+
+    f_calc = ms_between / ms_within
+    p_calc = float(sp.f.sf(f_calc, df_between, df_within))
+
+    flags = []
+    if reported_f is not None:
+        f_diff = abs(f_calc - reported_f)
+        if f_diff > max(0.1, 0.1 * reported_f):
+            flags.append(
+                f"F: calculated {f_calc:.3f}, reported {reported_f}"
+            )
+
+    if reported_p is not None:
+        ratio = max(p_calc, 1e-20) / max(reported_p, 1e-20)
+        if not (0.1 < ratio < 10):
+            flags.append(
+                f"p: calculated {p_calc:.2e}, reported {reported_p} "
+                f"(ratio {ratio:.1f}x)"
+            )
+
+    result = {
+        'consistent': len(flags) == 0,
+        'f_calculated': round(f_calc, 4),
+        'p_calculated': p_calc,
+        'df_between': df_between,
+        'df_within': df_within,
+        'flags': flags,
+    }
+    if flags:
+        result['detail'] = f"FLAG: {'; '.join(flags)}"
+    else:
+        result['detail'] = (
+            f"PASS: F({df_between},{df_within}) = {f_calc:.3f}, "
+            f"p = {p_calc:.2e}"
+        )
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 13. Chi-squared recalculation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def check_chi_squared(
+    observed: List[List[int]],
+    reported_chi2: Optional[float] = None,
+    reported_p: Optional[float] = None,
+    label: str = "",
+) -> dict:
+    """
+    Recalculate chi-squared from a contingency table.
+
+    Args:
+        observed: 2D list of observed counts (rows x cols)
+        reported_chi2: reported chi-squared statistic
+        reported_p: reported p-value
+
+    Ref: Heathers (2025) ch. "Chi-squared"
+    """
+    import numpy as np
+    obs = np.array(observed)
+    row_totals = obs.sum(axis=1)
+    col_totals = obs.sum(axis=0)
+    n_total = obs.sum()
+
+    if n_total == 0:
+        return {'detail': "FAIL: table sums to 0"}
+
+    # Expected frequencies
+    expected = np.outer(row_totals, col_totals) / n_total
+
+    # Chi-squared
+    chi2_calc = float(np.sum((obs - expected)**2 / expected))
+    df = (obs.shape[0] - 1) * (obs.shape[1] - 1)
+    p_calc = float(sp.chi2.sf(chi2_calc, df))
+
+    flags = []
+    if reported_chi2 is not None:
+        diff = abs(chi2_calc - reported_chi2)
+        if diff > max(0.1, 0.05 * reported_chi2):
+            flags.append(
+                f"chi2: calculated {chi2_calc:.3f}, reported {reported_chi2}"
+            )
+
+    if reported_p is not None:
+        ratio = max(p_calc, 1e-20) / max(reported_p, 1e-20)
+        if not (0.1 < ratio < 10):
+            flags.append(
+                f"p: calculated {p_calc:.2e}, reported {reported_p}"
+            )
+
+    result = {
+        'consistent': len(flags) == 0,
+        'chi2_calculated': round(chi2_calc, 4),
+        'p_calculated': p_calc,
+        'df': df,
+        'flags': flags,
+    }
+    if flags:
+        result['detail'] = (
+            f"FLAG: {label + ': ' if label else ''}{'; '.join(flags)}"
+        )
+    else:
+        result['detail'] = (
+            f"PASS: {label + ': ' if label else ''}"
+            f"chi2({df}) = {chi2_calc:.3f}, p = {p_calc:.2e}"
+        )
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 14. SD/SE confusion detector
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def check_sd_se_confusion(
+    reported_sd: float, n: int, label: str = "",
+    known_range: Optional[Tuple[float, float]] = None,
+) -> dict:
+    """
+    Check whether a reported "SD" might actually be an SE (or vice versa).
+
+    If the reported SD seems implausibly small for the data range,
+    it may be an SE (SD / sqrt(n)). Conversely, an implausibly large
+    "SE" may be an SD.
+
+    Ref: Heathers (2025) ch. "Confusing SD and SE"
+
+    Args:
+        reported_sd: the value reported as SD
+        n: sample size
+        label: variable label
+        known_range: (min, max) of the variable if known
+    """
+    implied_se = reported_sd / math.sqrt(n)
+    implied_sd_from_se = reported_sd * math.sqrt(n)
+
+    flags = []
+
+    if known_range is not None:
+        data_range = known_range[1] - known_range[0]
+        # SD should be < range. If "SD" > range, suspicious.
+        if reported_sd > data_range:
+            flags.append(
+                f"reported SD ({reported_sd}) exceeds data range "
+                f"({data_range}) — may be mislabeled"
+            )
+        # If SD is very small relative to range and n is large,
+        # it might be an SE
+        if n > 10 and reported_sd < data_range * 0.05:
+            flags.append(
+                f"reported SD ({reported_sd}) is very small relative to "
+                f"range ({data_range}) — might be SE. "
+                f"If SE, true SD ~ {implied_sd_from_se:.2f}"
+            )
+
+    result = {
+        'reported_sd': reported_sd,
+        'n': n,
+        'implied_se_if_sd': round(implied_se, 4),
+        'implied_sd_if_se': round(implied_sd_from_se, 4),
+        'flags': flags,
+    }
+    if flags:
+        result['detail'] = (
+            f"FLAG: {label + ': ' if label else ''}{'; '.join(flags)}"
+        )
+    else:
+        result['detail'] = (
+            f"PASS: {label + ': ' if label else ''}"
+            f"SD={reported_sd} (implies SE={implied_se:.4f} for n={n})"
+        )
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 15. Quick SD check (SD vs range plausibility)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def quick_sd_check(
+    sd: float, n: int, lo: float, hi: float, label: str = ""
+) -> dict:
+    """
+    Heathers' 'quick SD check': is the reported SD plausible given the
+    possible range of the data?
+
+    For bounded data, SD <= range / 2 always. For most real data,
+    SD << range / 2. If SD > range / 2, the data is impossible.
+
+    Also: for integer data, there's a minimum achievable SD > 0 for
+    any given n and sum — if the reported SD is below this, flag it.
+
+    Ref: Heathers (2025) ch. "The 'quick' SD check"
+    """
+    data_range = hi - lo
+    max_possible_sd = data_range / 2  # theoretical max (half at each extreme)
+
+    # More realistic upper bound: SD of a uniform distribution = range / sqrt(12)
+    uniform_sd = data_range / math.sqrt(12)
+
+    flags = []
+    if sd > max_possible_sd:
+        flags.append(
+            f"SD ({sd}) exceeds theoretical maximum ({max_possible_sd:.2f}) "
+            f"for range [{lo}, {hi}] — IMPOSSIBLE"
+        )
+    elif sd > uniform_sd * 1.5:
+        flags.append(
+            f"SD ({sd}) exceeds 1.5x uniform SD ({uniform_sd:.2f}) "
+            f"— data must be heavily bimodal or contain outliers"
+        )
+
+    result = {
+        'sd': sd,
+        'data_range': data_range,
+        'max_possible_sd': round(max_possible_sd, 4),
+        'uniform_sd': round(uniform_sd, 4),
+        'flags': flags,
+    }
+    if flags:
+        result['detail'] = (
+            f"FLAG: {label + ': ' if label else ''}{'; '.join(flags)}"
+        )
+    else:
+        result['detail'] = (
+            f"PASS: {label + ': ' if label else ''}"
+            f"SD={sd} within plausible range for [{lo}, {hi}]"
+        )
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 16. Contingency table reconstruction
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def check_contingency_table(
+    row_totals: List[int],
+    col_totals: List[int],
+    reported_total: Optional[int] = None,
+    label: str = "",
+) -> dict:
+    """
+    Check whether reported row and column marginal totals of a
+    contingency table are internally consistent.
+
+    Ref: Heathers (2025) ch. "Reconstructing contingency tables"
+    """
+    row_sum = sum(row_totals)
+    col_sum = sum(col_totals)
+
+    flags = []
+    if row_sum != col_sum:
+        flags.append(
+            f"Row totals sum to {row_sum}, column totals sum to {col_sum} "
+            f"— must be equal"
+        )
+
+    if reported_total is not None:
+        if row_sum != reported_total:
+            flags.append(
+                f"Row totals sum to {row_sum}, reported N = {reported_total}"
+            )
+        if col_sum != reported_total:
+            flags.append(
+                f"Column totals sum to {col_sum}, reported N = {reported_total}"
+            )
+
+    result = {
+        'consistent': len(flags) == 0,
+        'row_sum': row_sum,
+        'col_sum': col_sum,
+        'reported_total': reported_total,
+        'flags': flags,
+    }
+    if flags:
+        result['detail'] = (
+            f"FAIL: {label + ': ' if label else ''}{'; '.join(flags)}"
+        )
+    else:
+        result['detail'] = (
+            f"PASS: {label + ': ' if label else ''}"
+            f"marginals consistent (N={row_sum})"
+        )
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 17. Carlisle-Stouffer-Fisher test (Table 1 baseline p-values)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def carlisle_stouffer_fisher(p_values: List[float], label: str = "") -> dict:
+    """
+    Test whether a set of baseline comparison p-values (typically from
+    Table 1 of an RCT) are suspiciously well-balanced.
+
+    In a properly randomized trial, baseline p-values should be
+    uniformly distributed on [0, 1]. If they cluster too high
+    (everything is perfectly balanced), the randomization may be
+    fabricated.
+
+    Uses the Stouffer method: Z = sum(Phi_inv(1 - p_i)) / sqrt(k),
+    then tests whether combined Z is significantly extreme.
+
+    Ref: Carlisle (2017) doi:10.1111/anae.13938
+    Ref: Heathers (2025) ch. "Analyzing multiple Table 1 p-values"
+
+    Args:
+        p_values: list of p-values from baseline comparisons
+        label: optional label
+    """
+    k = len(p_values)
+    if k < 3:
+        return {
+            'sufficient_data': False,
+            'detail': f"SKIP: need >= 3 p-values for Carlisle test (got {k})"
+        }
+
+    # Stouffer's method: convert p-values to z-scores and combine
+    z_scores = [float(sp.norm.ppf(1 - p)) for p in p_values]
+    combined_z = sum(z_scores) / math.sqrt(k)
+
+    # Two-tailed: suspicious if combined Z is very high (too balanced)
+    # or very low (too unbalanced — less common but worth flagging)
+    p_combined = float(sp.norm.sf(abs(combined_z)) * 2)
+
+    # Also check: are p-values suspiciously uniform?
+    # Kolmogorov-Smirnov test against U(0,1)
+    ks_stat, ks_p = sp.kstest(p_values, 'uniform')
+
+    # Are p-values too high? (suspiciously good balance)
+    mean_p = sum(p_values) / k
+    median_p = sorted(p_values)[k // 2]
+
+    flags = []
+    if p_combined < 0.05 and combined_z > 0:
+        flags.append(
+            f"Stouffer combined Z = {combined_z:.3f} (p = {p_combined:.4f}) — "
+            f"baseline variables are suspiciously well-balanced"
+        )
+    if p_combined < 0.05 and combined_z < 0:
+        flags.append(
+            f"Stouffer combined Z = {combined_z:.3f} (p = {p_combined:.4f}) — "
+            f"baseline variables are suspiciously unbalanced"
+        )
+    if ks_p < 0.05:
+        flags.append(
+            f"KS test: p-values are not uniformly distributed "
+            f"(D = {ks_stat:.3f}, p = {ks_p:.4f})"
+        )
+
+    result = {
+        'suspicious': len(flags) > 0,
+        'combined_z': round(combined_z, 4),
+        'p_combined_stouffer': round(p_combined, 6),
+        'ks_statistic': round(float(ks_stat), 4),
+        'ks_p_value': round(float(ks_p), 6),
+        'mean_p': round(mean_p, 4),
+        'median_p': round(median_p, 4),
+        'n_pvalues': k,
+        'flags': flags,
+    }
+    if flags:
+        result['detail'] = (
+            f"FLAG: {label + ': ' if label else ''}{'; '.join(flags)}"
+        )
+    else:
+        result['detail'] = (
+            f"PASS: {label + ': ' if label else ''}"
+            f"Table 1 p-values appear consistent with randomization "
+            f"(Stouffer Z = {combined_z:.3f}, p = {p_combined:.4f}; "
+            f"mean p = {mean_p:.3f})"
+        )
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

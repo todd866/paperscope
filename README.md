@@ -135,18 +135,27 @@ print(correlation_bound(0.13, 0.27, 0.03))  # impossible r
 "
 ```
 
-**Available checks:**
+**Available checks (19 functions):**
+
+Based on techniques from Heathers (2025) [*An Introduction to Forensic Metascience*](https://jamesheathers.curve.space/) (DOI: [10.5281/zenodo.14871843](https://doi.org/10.5281/zenodo.14871843)).
 
 | Check | Detects |
 |-------|---------|
 | `grim()` | Impossible means for integer-valued instruments (BDI, Likert, counts) |
+| `grimmer()` | Impossible SDs for integer data (extends GRIM to standard deviations) |
 | `debit()` | Impossible percentages from discrete counts |
 | `sprite()` | Whether any valid dataset can produce the reported mean + SD |
 | `correlation_bound()` | Impossible pre/post/change SD combinations (implied \|r\| > 1) |
 | `check_ttest_paired()` | Recalculates paired t-test p-values from reported statistics |
 | `check_ttest_independent()` | Recalculates independent t-test p-values |
+| `check_anova_oneway()` | Recalculates one-way ANOVA F and p from group statistics |
+| `check_chi_squared()` | Recalculates chi-squared from contingency tables |
 | `sample_size_from_t()` | Back-calculates n from reported t and p |
 | `effect_size_consistency()` | Cross-checks Cohen's d, p-values, and confidence intervals |
+| `carlisle_stouffer_fisher()` | Tests whether Table 1 baseline p-values are too well-balanced |
+| `check_sd_se_confusion()` | Flags likely SD/SE mix-ups given data range |
+| `quick_sd_check()` | Checks SD plausibility against data range bounds |
+| `check_contingency_table()` | Verifies row/column marginal totals are consistent |
 | `benfords_law()` | Tests first-digit distribution against Benford's law |
 | `variance_ratio_test()` | Flags suspiciously similar or divergent group variances |
 | `check_change_arithmetic()` | Verifies End - Baseline = reported Change |
