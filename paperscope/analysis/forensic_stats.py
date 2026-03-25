@@ -1370,7 +1370,7 @@ def demo_magnesium_paper():
         (15.2, 9.3, 27, "Placebo end"),
     ]
     for mean, sd, n, label in sprite_tests:
-        r = sprite(mean, sd, n, lo=0, hi=63, max_iter=50_000, n_solutions=3)
+        r = sprite(mean, sd, n, lo=0, hi=63, max_iter=50_000, n_seeds=3)
         tally(r)
         status = "PASS" if r['possible'] else "FLAG"
         print(f"  [{status}] {label}: mean={mean}, SD={sd}, n={n}")
@@ -1479,6 +1479,80 @@ def demo_magnesium_paper():
     print(f"  Calculated: d={r['calculated_d']:.3f}, "
           f"p={r['calculated_p']:.4f}, "
           f"95% CI {r['calculated_ci']}")
+
+    # ── 10. GRIMMER on BDI ──
+    print("\n--- 10. GRIMMER: Are BDI SDs possible for integer data? ---\n")
+
+    grimmer_tests = [
+        (26.9, 7.1, 26, "Mg baseline"),
+        (11.26, 6.9, 26, "Mg end"),
+        (25.6, 6.1, 27, "Placebo baseline"),
+        (15.2, 9.3, 27, "Placebo end"),
+    ]
+    for mean, sd, n, label in grimmer_tests:
+        dp_m = len(str(mean).split('.')[-1]) if '.' in str(mean) else 0
+        dp_s = len(str(sd).split('.')[-1]) if '.' in str(sd) else 0
+        r = grimmer(mean, sd, n, dp_mean=dp_m, dp_sd=dp_s)
+        tally(r)
+        status = "PASS" if r['possible'] else "FAIL"
+        print(f"  [{status}] {label}: mean={mean}, SD={sd}, n={n}")
+        if not r['possible']:
+            print(f"         {r['detail']}")
+
+    # ── 11. Chi-squared on Table 1 ──
+    print("\n--- 11. CHI-SQUARED RECALCULATION: Table 1 ---\n")
+
+    # Sex: Mg 19F/7M, Placebo 20F/7M, reported p=0.93
+    r = check_chi_squared([[19, 7], [20, 7]], reported_p=0.93, label="Sex")
+    tally(r)
+    print(f"  {r['detail']}")
+
+    # Marital status: Mg 7S/19M, Placebo 11S/16M, reported p=0.28
+    r = check_chi_squared([[7, 19], [11, 16]], reported_p=0.28, label="Marital")
+    tally(r)
+    print(f"  {r['detail']}")
+
+    # ── 12. Carlisle-Stouffer-Fisher on Table 1 p-values ──
+    print("\n--- 12. CARLISLE TEST: Are Table 1 p-values too well-balanced? ---\n")
+
+    # Table 1 p-values: Sex 0.93, Marital 0.28, Education 0.80, Occupation 0.67
+    # Plus BMI baseline between-group p=0.89 (from Table 2)
+    r = carlisle_stouffer_fisher(
+        [0.93, 0.28, 0.80, 0.67, 0.89],
+        label="Table 1 + BMI"
+    )
+    tally(r)
+    print(f"  {r['detail']}")
+
+    # ── 13. SD/SE confusion ──
+    print("\n--- 13. SD/SE CONFUSION CHECK ---\n")
+
+    r = check_sd_se_confusion(
+        reported_sd=0.03, n=27,
+        label="Placebo serum Mg change",
+        known_range=(0, 3),
+    )
+    tally(r)
+    print(f"  {r['detail']}")
+
+    r = check_sd_se_confusion(
+        reported_sd=0.29, n=26,
+        label="Mg group serum Mg change",
+        known_range=(0, 3),
+    )
+    tally(r)
+    print(f"  {r['detail']}")
+
+    # ── 14. Quick SD check on BDI ──
+    print("\n--- 14. QUICK SD CHECK: BDI range [0, 63] ---\n")
+
+    for mean, sd, n, label in grimmer_tests:
+        r = quick_sd_check(sd=sd, n=n, lo=0, hi=63, label=label)
+        tally(r)
+        if r['flags']:
+            print(f"  {r['detail']}")
+        else:
+            print(f"  [PASS] {label}: SD={sd}")
 
     # ── Summary ──
     print(f"\n{'=' * 72}")
