@@ -193,8 +193,12 @@ scorecard.append(("Paired p-values", "4 mismatches (orders of magnitude)",
 # OUR RESULT:
 #   Using typed input (auto-split), continuous p-values give
 #   Z=0.69, p=0.49. This does NOT match Gideon's claim of ~0.01.
-#   The discrepancy is unresolved — may reflect a different formula
-#   or different set of p-values. We flag this honestly.
+#   We tested 9 formula variants (Stouffer both directions, Fisher,
+#   one-tailed, chi-squared sum, ISF, dropping BMI) — none produce
+#   p≈0.01 or p≈0.023 for these 5 p-values. The discrepancy is
+#   unresolved and may reflect different p-values or a non-standard
+#   method. We flag this honestly rather than presenting either
+#   result as settled.
 
 print("\n--- 6. Carlisle test: baseline randomization ---\n")
 

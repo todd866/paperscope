@@ -1509,7 +1509,7 @@ def demo_magnesium_paper():
     print("Magnesium supplementation and depression")
     print("=" * 72)
 
-    findings = {'FAIL': 0, 'FLAG': 0, 'PASS': 0}
+    findings = {'FAIL': 0, 'FLAG': 0, 'PASS': 0, 'SKIP': 0}
 
     def tally(result):
         d = result.get('detail', '')
@@ -1517,6 +1517,8 @@ def demo_magnesium_paper():
             findings['FAIL'] += 1
         elif d.startswith('FLAG'):
             findings['FLAG'] += 1
+        elif d.startswith('SKIP'):
+            findings['SKIP'] += 1
         else:
             findings['PASS'] += 1
 
@@ -1708,7 +1710,11 @@ def demo_magnesium_paper():
           f"95% CI {r['calculated_ci']}")
 
     # ── 10. GRIMMER on BDI ──
-    print("\n--- 10. GRIMMER: Are BDI SDs possible for integer data? ---\n")
+    # Use column-level dp for the mean (same as GRIM section) so that
+    # GRIMMER is consistent: if 26.9 is treated as 2dp for GRIM, it
+    # must also be 2dp for GRIMMER.
+    print("\n--- 10. GRIMMER: Are BDI SDs possible for integer data? ---")
+    print("(using column-level dp for mean precision)\n")
 
     grimmer_tests = [
         (26.9, 7.1, 26, "Mg baseline"),
@@ -1716,13 +1722,14 @@ def demo_magnesium_paper():
         (25.6, 6.1, 27, "Placebo baseline"),
         (15.2, 9.3, 27, "Placebo end"),
     ]
+    grimmer_dp_m = infer_column_dp([m for m, _, _, _ in grimmer_tests])
     for mean, sd, n, label in grimmer_tests:
-        dp_m = len(str(mean).split('.')[-1]) if '.' in str(mean) else 0
         dp_s = len(str(sd).split('.')[-1]) if '.' in str(sd) else 0
-        r = grimmer(mean, sd, n, dp_mean=dp_m, dp_sd=dp_s)
+        r = grimmer(mean, sd, n, dp_mean=grimmer_dp_m, dp_sd=dp_s)
         tally(r)
         status = "PASS" if r['possible'] else "FAIL"
-        print(f"  [{status}] {label}: mean={mean}, SD={sd}, n={n}")
+        print(f"  [{status}] {label}: mean={mean}, SD={sd}, n={n}, "
+              f"dp_mean={grimmer_dp_m}")
         if not r['possible']:
             print(f"         {r['detail']}")
 
@@ -1796,6 +1803,8 @@ def demo_magnesium_paper():
     print(f"  FAILURES (impossible):  {findings['FAIL']}")
     print(f"  FLAGS (suspicious):     {findings['FLAG']}")
     print(f"  PASSES:                 {findings['PASS']}")
+    if findings['SKIP'] > 0:
+        print(f"  SKIPPED (superseded):   {findings['SKIP']}")
     total_issues = findings['FAIL'] + findings['FLAG']
     if total_issues > 5:
         print(f"\n  VERDICT: SEVERE data integrity concerns ({total_issues} issues).")
