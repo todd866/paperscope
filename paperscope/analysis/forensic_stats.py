@@ -22,7 +22,7 @@ In practice, import the functions and feed in extracted table data:
         quick_sd_check, check_contingency_table,
         benfords_law, variance_ratio_test,
         check_change_arithmetic, check_sd_positive,
-        infer_column_dp,
+        check_frozen_sds, infer_column_dp,
     )
 
 References:
@@ -965,8 +965,10 @@ def check_sd_positive(sd: float, label: str = "") -> dict:
 # 11. GRIMMER (SD consistency for integer data)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def grimmer(mean: float, sd: float, n: int, scale: int = 1,
-            dp_mean: int = 2, dp_sd: int = 2) -> dict:
+def grimmer(mean: Union[str, float], sd: Union[str, float], n: int,
+            scale: int = 1,
+            dp_mean: Optional[int] = None,
+            dp_sd: Optional[int] = None) -> dict:
     """
     GRIMMER test: is this SD possible for n integer-valued observations
     with the given mean?
@@ -978,13 +980,26 @@ def grimmer(mean: float, sd: float, n: int, scale: int = 1,
     Ref: Heathers & Brown (2019) doi:10.31234/osf.io/6cn2h
 
     Args:
-        mean:    reported mean
-        sd:      reported standard deviation
+        mean:    reported mean (string preserves trailing zeros)
+        sd:      reported SD (string preserves trailing zeros)
         n:       sample size
         scale:   granularity (1 for integers)
-        dp_mean: decimal places of the mean
-        dp_sd:   decimal places of the SD
+        dp_mean: decimal places of the mean (inferred from string if None)
+        dp_sd:   decimal places of the SD (inferred from string if None)
     """
+    if isinstance(mean, str):
+        if dp_mean is None:
+            dp_mean = _dp_from_str(mean)
+        mean = float(mean)
+    elif dp_mean is None:
+        dp_mean = _dp_from_str(f"{mean}")
+
+    if isinstance(sd, str):
+        if dp_sd is None:
+            dp_sd = _dp_from_str(sd)
+        sd = float(sd)
+    elif dp_sd is None:
+        dp_sd = _dp_from_str(f"{sd}")
     # First check GRIM
     grim_result = grim(mean, n, scale=scale, dp=dp_mean)
     if not grim_result['possible']:
@@ -1363,7 +1378,77 @@ def check_contingency_table(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 17. Carlisle-Stouffer-Fisher test (Table 1 baseline p-values)
+# 17. Frozen SDs (constant variance across timepoints)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def check_frozen_sds(
+    sds: List[List[float]],
+    labels: Optional[List[str]] = None,
+    group_labels: Optional[List[str]] = None,
+) -> dict:
+    """
+    Check whether SDs are suspiciously constant across timepoints.
+
+    In real longitudinal data, standard deviations naturally fluctuate
+    across measurement occasions due to dropout, treatment effects,
+    regression to the mean, and measurement noise.  Perfectly constant
+    SDs across 3+ timepoints for many variables is a hallmark of
+    fabricated data.
+
+    Args:
+        sds: list of SD series, each a list of SDs across timepoints
+             for one variable/group combination.
+             E.g., [[2.97, 2.97, 3.02], [3.20, 3.20, 3.20], ...]
+        labels: optional label for each SD series
+        group_labels: optional labels for timepoints (e.g., ["Baseline", "Week 6", "Week 12"])
+
+    Returns:
+        dict with 'n_frozen', 'n_total', 'frozen_fraction',
+        'frozen_series' (which ones are frozen), and 'detail'.
+    """
+    if labels is None:
+        labels = [f"series_{i}" for i in range(len(sds))]
+
+    frozen = []
+    for sd_series, label in zip(sds, labels):
+        if len(sd_series) >= 2 and len(set(sd_series)) == 1:
+            frozen.append(label)
+
+    n_frozen = len(frozen)
+    n_total = len(sds)
+    frac = n_frozen / n_total if n_total > 0 else 0
+
+    flags = []
+    if frac > 0.5:
+        flags.append(
+            f"{n_frozen}/{n_total} ({frac:.0%}) SD series are perfectly "
+            f"constant across all timepoints"
+        )
+    if n_frozen >= 5:
+        flags.append(
+            "5+ frozen SD series is extremely unlikely in real "
+            "longitudinal data"
+        )
+
+    result = {
+        'n_frozen': n_frozen,
+        'n_total': n_total,
+        'frozen_fraction': round(frac, 4),
+        'frozen_series': frozen,
+        'flags': flags,
+    }
+    if flags:
+        result['detail'] = f"FLAG: {'; '.join(flags)}"
+    else:
+        result['detail'] = (
+            f"PASS: {n_frozen}/{n_total} SD series are constant "
+            f"({frac:.0%}) — within normal range"
+        )
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 18. Carlisle-Stouffer-Fisher test (Table 1 baseline p-values)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def carlisle_stouffer_fisher(
