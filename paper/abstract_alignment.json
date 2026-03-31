@@ -1,0 +1,96 @@
+{
+  "abstract_text": "Paperscope is a Python toolkit that applies sentence-level embedding analysis to academic papers during the writing process. Given a LaTeX manuscript and a corpus of reference texts, it embeds both into a shared vector space and measures distances to answer questions that previously required manual reading: do citations actually support the claims they are attached to? Which claims are most novel? What would a reviewer likely object to? Is the abstract covering all sections? Which journals are t",
+  "abstract_word_count": 121,
+  "sections": [
+    {
+      "title": "Analysis Tools",
+      "word_count": 31,
+      "abstract_similarity": 0.09931628035379653
+    },
+    {
+      "title": "Introduction",
+      "word_count": 214,
+      "abstract_similarity": 0.0929018152814016
+    },
+    {
+      "title": "Related Work",
+      "word_count": 108,
+      "abstract_similarity": 0.08125765739582648
+    },
+    {
+      "title": "Implementation",
+      "word_count": 145,
+      "abstract_similarity": 0.07977837657953449
+    },
+    {
+      "title": "New Tools",
+      "word_count": 207,
+      "abstract_similarity": 0.0735534407232932
+    },
+    {
+      "title": "Availability",
+      "word_count": 27,
+      "abstract_similarity": 0.07292024908822112
+    },
+    {
+      "title": "Architecture",
+      "word_count": 190,
+      "abstract_similarity": 0.0725104525529227
+    },
+    {
+      "title": "Usage Context",
+      "word_count": 141,
+      "abstract_similarity": 0.06400125533711545
+    },
+    {
+      "title": "AI Workflow Disclosure",
+      "word_count": 98,
+      "abstract_similarity": 0.0626745105483441
+    },
+    {
+      "title": "Reviewer Probes and Response Preparation",
+      "word_count": 61,
+      "abstract_similarity": 0.05201390733356933
+    },
+    {
+      "title": "Novelty Detection",
+      "word_count": 57,
+      "abstract_similarity": 0.04485257605828548
+    },
+    {
+      "title": "Citation Alignment",
+      "word_count": 153,
+      "abstract_similarity": 0.02474810588804617
+    },
+    {
+      "title": "Embedding with Fallback",
+      "word_count": 48,
+      "abstract_similarity": 0.022059735045482087
+    },
+    {
+      "title": "Text Processing",
+      "word_count": 72,
+      "abstract_similarity": 0.02181535949771585
+    },
+    {
+      "title": "Argument Flow",
+      "word_count": 57,
+      "abstract_similarity": 0.014717934162565751
+    },
+    {
+      "title": "Self-Overlap and Cross-Paper Consistency",
+      "word_count": 56,
+      "abstract_similarity": 0.013368002992459858
+    }
+  ],
+  "overall_coverage": 0.055780603677411264,
+  "median_coverage": 0.06333788294272977,
+  "underrepresented": [],
+  "backend": {
+    "backend": "tfidf",
+    "vocabulary_size": 1683,
+    "n_items": 17,
+    "dim": 1683,
+    "fallback_reason": "Cannot send a request, as the client has been closed."
+  }
+}

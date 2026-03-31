@@ -1,0 +1,148 @@
+{
+  "section_diffs": [
+    {
+      "old_title": "Analysis Tools",
+      "new_title": "Analysis Tools",
+      "semantic_shift": 2.000177801164682e-12,
+      "word_count_change": 0,
+      "old_words": 31,
+      "new_words": 31
+    },
+    {
+      "old_title": "Implementation",
+      "new_title": "Implementation",
+      "semantic_shift": 2.000177801164682e-12,
+      "word_count_change": 0,
+      "old_words": 145,
+      "new_words": 145
+    },
+    {
+      "old_title": "Usage Context",
+      "new_title": "Usage Context",
+      "semantic_shift": 2.000177801164682e-12,
+      "word_count_change": 0,
+      "old_words": 141,
+      "new_words": 141
+    },
+    {
+      "old_title": "Introduction",
+      "new_title": "Introduction",
+      "semantic_shift": 2.0000667788622195e-12,
+      "word_count_change": 0,
+      "old_words": 214,
+      "new_words": 214
+    },
+    {
+      "old_title": "Architecture",
+      "new_title": "Architecture",
+      "semantic_shift": 2.0000667788622195e-12,
+      "word_count_change": 0,
+      "old_words": 190,
+      "new_words": 190
+    },
+    {
+      "old_title": "Citation Alignment",
+      "new_title": "Citation Alignment",
+      "semantic_shift": 2.0000667788622195e-12,
+      "word_count_change": 0,
+      "old_words": 153,
+      "new_words": 153
+    },
+    {
+      "old_title": "Novelty Detection",
+      "new_title": "Novelty Detection",
+      "semantic_shift": 2.0000667788622195e-12,
+      "word_count_change": 0,
+      "old_words": 57,
+      "new_words": 57
+    },
+    {
+      "old_title": "Reviewer Probes and Response Preparation",
+      "new_title": "Reviewer Probes and Response Preparation",
+      "semantic_shift": 2.0000667788622195e-12,
+      "word_count_change": 0,
+      "old_words": 61,
+      "new_words": 61
+    },
+    {
+      "old_title": "Self-Overlap and Cross-Paper Consistency",
+      "new_title": "Self-Overlap and Cross-Paper Consistency",
+      "semantic_shift": 2.0000667788622195e-12,
+      "word_count_change": 0,
+      "old_words": 56,
+      "new_words": 56
+    },
+    {
+      "old_title": "Text Processing",
+      "new_title": "Text Processing",
+      "semantic_shift": 1.999955756559757e-12,
+      "word_count_change": 0,
+      "old_words": 72,
+      "new_words": 72
+    },
+    {
+      "old_title": "Argument Flow",
+      "new_title": "Argument Flow",
+      "semantic_shift": 1.999955756559757e-12,
+      "word_count_change": 0,
+      "old_words": 57,
+      "new_words": 57
+    },
+    {
+      "old_title": "AI Workflow Disclosure",
+      "new_title": "AI Workflow Disclosure",
+      "semantic_shift": 1.999955756559757e-12,
+      "word_count_change": 0,
+      "old_words": 98,
+      "new_words": 98
+    },
+    {
+      "old_title": "Related Work",
+      "new_title": "Related Work",
+      "semantic_shift": 1.999955756559757e-12,
+      "word_count_change": 0,
+      "old_words": 108,
+      "new_words": 108
+    },
+    {
+      "old_title": "Availability",
+      "new_title": "Availability",
+      "semantic_shift": 1.999955756559757e-12,
+      "word_count_change": 0,
+      "old_words": 27,
+      "new_words": 27
+    },
+    {
+      "old_title": "Embedding with Fallback",
+      "new_title": "Embedding with Fallback",
+      "semantic_shift": 1.9998447342572945e-12,
+      "word_count_change": 0,
+      "old_words": 48,
+      "new_words": 48
+    },
+    {
+      "old_title": "New Tools",
+      "new_title": "New Tools",
+      "semantic_shift": 1.9998447342572945e-12,
+      "word_count_change": 0,
+      "old_words": 207,
+      "new_words": 207
+    }
+  ],
+  "added_sections": [],
+  "summary": {
+    "n_sections_compared": 16,
+    "n_sections_added": 0,
+    "mean_shift": 2.000025145498796e-12,
+    "max_shift": 2.000177801164682e-12,
+    "most_changed": "Analysis Tools"
+  },
+  "literature_direction": null,
+  "backend": {
+    "backend": "tfidf",
+    "vocabulary_size": 1615,
+    "n_items": 32,
+    "dim": 1615,
+    "fallback_reason": "Cannot send a request, as the client has been closed."
+  }
+}

@@ -1,0 +1,478 @@
+{
+  "backend": {
+    "backend": "tfidf",
+    "vocabulary_size": 1621,
+    "n_items": 56,
+    "dim": 1621,
+    "fallback_reason": "Cannot send a request, as the client has been closed."
+  },
+  "summary": {
+    "n_contexts": 5,
+    "n_claims": 8,
+    "n_paragraphs": 43,
+    "n_refs": 0,
+    "n_chunks": 0,
+    "top3_rate": 0.0,
+    "mean_cited_sim": 0.0,
+    "weak_paragraphs": 43
+  },
+  "citation_alignment": [
+    {
+      "id": "CTX01",
+      "line": 71,
+      "text": "Extracts citations from .tex and .bib files, resolves missing DOIs via the CrossRef API , and verifies resolved DOIs against metadata.",
+      "cited_keys": [
+        "crossref2024"
+      ],
+      "top_matches": [],
+      "cited_similarities": {
+        "crossref2024": 0.0
+      },
+      "best_cited_sim": 0.0,
+      "any_cited_in_top3": false
+    },
+    {
+      "id": "CTX02",
+      "line": 73,
+      "text": "Discovers new papers from OpenAlex , arXiv, and bioRxiv matching a configurable research profile.",
+      "cited_keys": [
+        "priem2022openalex"
+      ],
+      "top_matches": [],
+      "cited_similarities": {
+        "priem2022openalex": 0.0
+      },
+      "best_cited_sim": 0.0,
+      "any_cited_in_top3": false
+    },
+    {
+      "id": "CTX03",
+      "line": 75,
+      "text": "LaTeX is cleaned to plain text, split into overlapping chunks ( MATH 200 words, 50-word overlap), and encoded using sentence-transformers with the all-MiniLM-L6-v2 model (384 dimensions).",
+      "cited_keys": [
+        "reimers2019sentence"
+      ],
+      "top_matches": [],
+      "cited_similarities": {
+        "reimers2019sentence": 0.0
+      },
+      "best_cited_sim": 0.0,
+      "any_cited_in_top3": false
+    },
+    {
+      "id": "CTX04",
+      "line": 196,
+      "text": "Semantic Scholar provides a citation graph and paper recommendations but does not operate at the intra-paper level (individual sentences and claims).",
+      "cited_keys": [
+        "kinney2023semantic"
+      ],
+      "top_matches": [],
+      "cited_similarities": {
+        "kinney2023semantic": 0.0
+      },
+      "best_cited_sim": 0.0,
+      "any_cited_in_top3": false
+    },
+    {
+      "id": "CTX05",
+      "line": 196,
+      "text": "citation.js manages bibliography formatting but does not perform semantic analysis.",
+      "cited_keys": [
+        "willighagen2019citationjs"
+      ],
+      "top_matches": [],
+      "cited_similarities": {
+        "willighagen2019citationjs": 0.0
+      },
+      "best_cited_sim": 0.0,
+      "any_cited_in_top3": false
+    }
+  ],
+  "novelty": [
+    {
+      "id": "CLM01",
+      "line": 49,
+      "text": "Blind spots in coverage.",
+      "type": "bold_claim",
+      "max_literature_similarity": 0.0,
+      "nearest_refs": [],
+      "novelty_flag": true
+    },
+    {
+      "id": "CLM02",
+      "line": 71,
+      "text": "Layer 1: Bibliography management",
+      "type": "bold_claim",
+      "max_literature_similarity": 0.0,
+      "nearest_refs": [],
+      "novelty_flag": true
+    },
+    {
+      "id": "CLM03",
+      "line": 73,
+      "text": "Layer 2: Literature ingestion",
+      "type": "bold_claim",
+      "max_literature_similarity": 0.0,
+      "nearest_refs": [],
+      "novelty_flag": true
+    },
+    {
+      "id": "CLM04",
+      "line": 75,
+      "text": "Layer 3: Embedding analysis",
+      "type": "bold_claim",
+      "max_literature_similarity": 0.0,
+      "nearest_refs": [],
+      "novelty_flag": true
+    },
+    {
+      "id": "CLM05",
+      "line": 102,
+      "text": "top-3 citation alignment rate",
+      "type": "bold_claim",
+      "max_literature_similarity": 0.0,
+      "nearest_refs": [],
+      "novelty_flag": true
+    },
+    {
+      "id": "CLM06",
+      "line": 118,
+      "text": "Reviewer response preparation",
+      "type": "bold_claim",
+      "max_literature_similarity": 0.0,
+      "nearest_refs": [],
+      "novelty_flag": true
+    },
+    {
+      "id": "CLM07",
+      "line": 186,
+      "text": "Claude Opus 4",
+      "type": "bold_claim",
+      "max_literature_similarity": 0.0,
+      "nearest_refs": [],
+      "novelty_flag": true
+    },
+    {
+      "id": "CLM08",
+      "line": 187,
+      "text": "GPT-4.5 / Codex",
+      "type": "bold_claim",
+      "max_literature_similarity": 0.0,
+      "nearest_refs": [],
+      "novelty_flag": true
+    }
+  ],
+  "uncited_relevance": [],
+  "strength_heatmap": {
+    "paragraphs": [
+      {
+        "line": 34,
+        "text_preview": "Paperscope is a Python toolkit that applies sentence-level embedding analysis to academic papers dur",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 40,
+        "text_preview": "AI-assisted academic writing is accelerating. Large language models can draft manuscripts, suggest f",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.032212653372191515
+      },
+      {
+        "line": 44,
+        "text_preview": "Citation misalignment. A sentence cites a reference for a claim that the reference does not actually",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.013501305569882018
+      },
+      {
+        "line": 47,
+        "text_preview": "Undetected novelty. The author cannot easily tell which claims in their paper are genuinely new (req",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.007210253181293635
+      },
+      {
+        "line": 49,
+        "text_preview": "Blind spots in coverage. The bibliography may be missing highly relevant work, or the abstract may f",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.03429170075273451
+      },
+      {
+        "line": 52,
+        "text_preview": "Paperscope addresses these problems by embedding the paper and its literature into a shared vector s",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0056455067160768885
+      },
+      {
+        "line": 58,
+        "text_preview": "[H] 0.9 LaTeX project MATH bib/ MATH bibliography.json MATH DOI resolution\\\\[2pt] OpenAlex/arXiv MAT",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.021857195562007208
+      },
+      {
+        "line": 71,
+        "text_preview": "Layer 1: Bibliography management ( bib/ ). Extracts citations from .tex and .bib files, resolves mis",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.04061705710207757
+      },
+      {
+        "line": 73,
+        "text_preview": "Layer 2: Literature ingestion ( harvest/ , ingest/ ). Discovers new papers from OpenAlex , arXiv, an",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.020863143015500824
+      },
+      {
+        "line": 75,
+        "text_preview": "Layer 3: Embedding analysis ( text/ , embed/ , analysis/ ). The core contribution. LaTeX is cleaned ",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.04424543999628927
+      },
+      {
+        "line": 79,
+        "text_preview": "The text/ module provides three shared utilities. clean\\ latex() strips LaTeX commands, math environ",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.11105113235189484
+      },
+      {
+        "line": 85,
+        "text_preview": "try: model = SentenceTransformer(\"all-MiniLM-L6-v2\") embeddings = model.encode(texts) except Excepti",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 94,
+        "text_preview": "This ensures the tools run in any environment. The TF-IDF fallback produces lower-quality embeddings",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.03357480108677381
+      },
+      {
+        "line": 98,
+        "text_preview": "Paperscope includes 12 analysis tools organized into two groups: 6 consolidated from per-paper analy",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.031700669195499166
+      },
+      {
+        "line": 102,
+        "text_preview": "For each sentence containing a cite\\ \\ command, citation alignment computes cosine similarity betwee",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 104,
+        "text_preview": "Formally, let MATH be the embedding of citation context MATH , and let MATH be the embedding of chun",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.09350460367193025
+      },
+      {
+        "line": 106,
+        "text_preview": "aligned i = 1 [ \\, k K i : k top-3 ( j c i r k,j | c i|| r k,j | ) ]",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 110,
+        "text_preview": "In practice, alignment rates of 60–80\\ are typical for well-cited papers. Contexts with low alignmen",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 114,
+        "text_preview": "Each claim extracted from the paper (bold assertions, numbered predictions) is embedded and compared",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.015295484186648788
+      },
+      {
+        "line": 118,
+        "text_preview": "Two tools address reviewer preparation. Reviewer probes embed hypothetical reviewer questions and fi",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.019007998656151808
+      },
+      {
+        "line": 122,
+        "text_preview": "For authors with multiple publications, self-overlap detects high-similarity passages between the cu",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.030637530252800936
+      },
+      {
+        "line": 126,
+        "text_preview": "Argument flow tracks the paper's trajectory through embedding space paragraph by paragraph. Using PC",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0682873581724404
+      },
+      {
+        "line": 132,
+        "text_preview": "[Abstract alignment] embeds each section and the abstract, computing a coverage matrix. Sections wit",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.008017241415369867
+      },
+      {
+        "line": 135,
+        "text_preview": "[Strength heatmap] computes per-paragraph scores for citation support (max similarity to any literat",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.04151433420145009
+      },
+      {
+        "line": 137,
+        "text_preview": "[Journal targeting] fetches recent abstracts from candidate journals via OpenAlex, embeds them, and ",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.01840398411825444
+      },
+      {
+        "line": 139,
+        "text_preview": "[Revision diff] embeds two versions of a paper, matches sections by title similarity, and measures t",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0436261352507476
+      },
+      {
+        "line": 141,
+        "text_preview": "[Related radar] extracts keywords from the paper, searches OpenAlex, filters out papers already in t",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.02452905981231006
+      },
+      {
+        "line": 143,
+        "text_preview": "[Argument graph] scans a directory of papers, extracts conclusions and premises from each, embeds th",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.04786082499281468
+      },
+      {
+        "line": 148,
+        "text_preview": "Paperscope is implemented in Python (3.8+) with minimal dependencies: numpy for array operations, re",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 150,
+        "text_preview": "All 15 commands are accessible via a single CLI entry point:",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 152,
+        "text_preview": "python3 -m paperscope analyze paper.tex –literature text/ python3 -m paperscope abstract-check paper",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 160,
+        "text_preview": "Analysis commands produce both structured JSON output and human-readable console summaries. The JSON",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 162,
+        "text_preview": "External APIs (CrossRef, OpenAlex, Unpaywall) are used in their free tiers with polite rate limiting",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 166,
+        "text_preview": "Paperscope was developed for the Coherence Dynamics research program ( ), which has produced 30+ pap",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.0
+      },
+      {
+        "line": 168,
+        "text_preview": "The typical workflow integrates Paperscope with an AI coding assistant:",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.019305679448833192
+      },
+      {
+        "line": 170,
+        "text_preview": "Write the paper (with AI assistance for drafting, derivations, and literature search). Run analyze t",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.040543754951018
+      },
+      {
+        "line": 179,
+        "text_preview": "This workflow treats the AI assistant as a collaborator that can read structured analysis output and",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.053713252655091526
+      },
+      {
+        "line": 183,
+        "text_preview": "This paper and the Paperscope software were developed with extensive use of AI tools:",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.022233087073104372
+      },
+      {
+        "line": 185,
+        "text_preview": "Claude Opus 4 (Anthropic, via Claude Code): Primary development environment. Used for code generatio",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.006924880337163427
+      },
+      {
+        "line": 190,
+        "text_preview": "The human contribution consists of: problem identification (recognizing the need for embedding-based",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.042082806473569864
+      },
+      {
+        "line": 196,
+        "text_preview": "Semantic Scholar provides a citation graph and paper recommendations but does not operate at the int",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.024727902256812935
+      },
+      {
+        "line": 198,
+        "text_preview": "Paperscope differs in operating at the sentence-chunk level rather than the paper level, working wit",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.09725673039591959
+      },
+      {
+        "line": 202,
+        "text_preview": "Paperscope is available at under the MIT license. Requirements: Python 3.8+, numpy , requests , and ",
+        "citation_support": 0.0,
+        "best_supporting_ref": null,
+        "argument_continuity": 0.02314743043990819
+      }
+    ],
+    "summary": {
+      "mean_citation_support": 0.0,
+      "min_citation_support": 0.0,
+      "mean_continuity": 0.027080736587251457,
+      "weak_paragraphs": 43,
+      "note": "No literature corpus loaded — all paragraphs scored 0"
+    }
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "sections_found": [
+    "full_text"
+  ],
+  "methods_detected": [
+    "PCA",
+    "ADMIXTURE / STRUCTURE"
+  ],
+  "author_profile": {
+    "skipped": true,
+    "authors_provided": [
+      "Sydney",
+      "NSW",
+      "Australia\\\\"
+    ]
+  },
+  "resolution_analysis": {
+    "error": "No method sentences extracted"
+  },
+  "missing_methods": {
+    "methods_identified": [
+      {
+        "name": "PCA",
+        "matched_from": "PCA",
+        "ecosystem": "sklearn",
+        "resolution": [
+          "aggregate"
+        ]
+      },
+      {
+        "name": "ADMIXTURE / STRUCTURE",
+        "matched_from": "ADMIXTURE / STRUCTURE",
+        "ecosystem": "population_genetics",
+        "resolution": [
+          "aggregate",
+          "individual"
+        ]
+      }
+    ],
+    "missing_complementary": [
+      {
+        "name": "Clustering (k-means, DBSCAN, etc.)",
+        "ecosystem": "sklearn",
+        "method_key": "clustering",
+        "resolution": [
+          "aggregate"
+        ],
+        "detects": "Group structure in data",
+        "limitations": [
+          "Sensitive to distance metric and hyperparameters"
+        ],
+        "why_relevant": "Same ecosystem (scikit-learn); adds aggregate resolution",
+        "priority": "medium"
+      },
+      {
+        "name": "EHH / iHS",
+        "ecosystem": "population_genetics",
+        "method_key": "ehh_ihs",
+        "resolution": [
+          "site_specific",
+          "genome_wide"
+        ],
+        "detects": "Extended haplotype homozygosity (recent sweeps)",
+        "limitations": [
+          "Requires phased haplotype data"
+        ],
+        "why_relevant": "Same ecosystem (Population Genetics Ecosystem); adds site_specific, genome_wide resolution",
+        "priority": "medium"
+      },
+      {
+        "name": "Fst / Hudson Fst",
+        "ecosystem": "population_genetics",
+        "method_key": "fst",
+        "resolution": [
+          "aggregate",
+          "genome_wide"
+        ],
+        "detects": "Population differentiation",
+        "limitations": [
+          "Sensitive to sample size",
+          "Cannot distinguish selection from drift"
+        ],
+        "why_relevant": "Same ecosystem (Population Genetics Ecosystem); adds aggregate, genome_wide resolution",
+        "priority": "medium"
+      },
+      {
+        "name": "Random Forest / Gradient Boosting",
+        "ecosystem": "sklearn",
+        "method_key": "random_forest",
+        "resolution": [
+          "individual"
+        ],
+        "detects": "Predictive patterns, feature importance",
+        "limitations": [
+          "Black box, overfitting risk"
+        ],
+        "why_relevant": "Same ecosystem (scikit-learn); adds individual resolution",
+        "priority": "medium"
+      },
+      {
+        "name": "Site Frequency Spectrum (SFS) methods",
+        "ecosystem": "population_genetics",
+        "method_key": "sfs",
+        "resolution": [
+          "aggregate",
+          "genome_wide"
+        ],
+        "detects": "Demographic history, selection signatures",
+        "limitations": [
+          "Requires many unrelated samples",
+          "Sensitive to ascertainment bias"
+        ],
+        "why_relevant": "Same ecosystem (Population Genetics Ecosystem); adds aggregate, genome_wide resolution",
+        "priority": "medium"
+      },
+      {
+        "name": "Tajima's D",
+        "ecosystem": "population_genetics",
+        "method_key": "tajima_d",
+        "resolution": [
+          "genome_wide",
+          "gene_wide"
+        ],
+        "detects": "Deviations from neutral evolution",
+        "limitations": [
+          "Confounded by demography",
+          "Low resolution"
+        ],
+        "why_relevant": "Same ecosystem (Population Genetics Ecosystem); adds genome_wide, gene_wide resolution",
+        "priority": "medium"
+      },
+      {
+        "name": "UMAP / t-SNE",
+        "ecosystem": "sklearn",
+        "method_key": "umap_tsne",
+        "resolution": [
+          "aggregate"
+        ],
+        "detects": "Non-linear low-dimensional embeddings",
+        "limitations": [
+          "Distances not preserved globally",
+          "Hyperparameter-sensitive"
+        ],
+        "why_relevant": "Same ecosystem (scikit-learn); adds aggregate resolution",
+        "priority": "medium"
+      }
+    ],
+    "resolution_coverage": {
+      "required": [],
+      "covered": [
+        "aggregate",
+        "individual"
+      ],
+      "gaps": []
+    }
+  },
+  "overclaiming": {
+    "hedge_analysis": {
+      "by_section": {},
+      "escalation_flags": []
+    },
+    "scope_analysis": {
+      "conclusion_result_gaps": [],
+      "mean_conclusion_support": 0.0
+    },
+    "overall_overclaiming_score": 0.0,
+    "flags": []
+  },
+  "verdict": {
+    "overall_severity": "incomplete",
+    "flags": [
+      "incomplete analysis (1 modules failed)"
+    ],
+    "n_flags": 1
+  }
+}
