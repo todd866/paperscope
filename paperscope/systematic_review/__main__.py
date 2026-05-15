@@ -100,6 +100,60 @@ def _cmd_acquire(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_browser_harvest(args: argparse.Namespace) -> int:
+    """Playwright-driven harvest of the paywalled tail.
+
+    Walks the included.jsonl (or a custom queue), navigates each paper's
+    EZProxy URL, dispatches to the matching publisher adapter, and saves
+    PDFs to `<corpus>/papers/<pmid>.pdf`. Outcomes append to
+    harvest-log.jsonl; a strategy cache learns from each run.
+    """
+    import asyncio
+    import json as _json
+    from paperscope.systematic_review.acquire.browser_driver import harvest_records
+
+    corpus = Path(args.corpus) if args.corpus else None
+    if args.config and not corpus:
+        cfg = ReviewConfig.from_yaml(args.config)
+        corpus = Path(cfg.corpus_dir)
+    if corpus is None:
+        print("error: --corpus or --config must be provided")
+        return 2
+
+    # Records source: explicit path, sample-100.json, or included.jsonl.
+    if args.records:
+        path = Path(args.records)
+        if path.suffix == ".json":
+            records = _json.loads(path.read_text())
+        else:
+            records = [_json.loads(l) for l in path.open()]
+    else:
+        for cand in (corpus / "included.jsonl", corpus / "records.jsonl"):
+            if cand.exists():
+                records = [_json.loads(l) for l in cand.open()]
+                break
+        else:
+            print(f"error: no records source found under {corpus}; pass --records")
+            return 2
+
+    if args.limit:
+        records = records[: args.limit]
+
+    asyncio.run(
+        harvest_records(
+            records,
+            corpus_dir=corpus,
+            ezproxy_host=args.ezproxy_host,
+            concurrency=args.concurrency,
+            headless=args.headless,
+            skip_already_have=not args.no_skip_existing,
+            warmup_doi=args.warmup_doi,
+            verbose=True,
+        )
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="paperscope.systematic_review")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -143,6 +197,21 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--upload-b2", action="store_true", help="upload acquired PDFs to Backblaze B2")
     s.add_argument("--limit", type=int, default=0, help="cap OA fetches (0 = all)")
     s.set_defaults(fn=_cmd_acquire)
+
+    s = sub.add_parser(
+        "browser-harvest",
+        help="Playwright-driven institutional-access PDF harvest of the paywalled tail",
+    )
+    s.add_argument("--config", help="path to review config YAML (optional if --corpus given)")
+    s.add_argument("--corpus", help="corpus dir")
+    s.add_argument("--records", help="JSON/JSONL records source (default: <corpus>/included.jsonl)")
+    s.add_argument("--ezproxy-host", default="ezproxy.library.usyd.edu.au", help="institutional EZProxy host")
+    s.add_argument("--concurrency", type=int, default=4, help="parallel pages (default: 4)")
+    s.add_argument("--headless", action="store_true", help="run headless (after initial warmup)")
+    s.add_argument("--limit", type=int, default=0, help="cap records (0 = all)")
+    s.add_argument("--no-skip-existing", action="store_true", help="re-attempt papers already in papers/")
+    s.add_argument("--warmup-doi", help="warmup DOI for the first headed-mode auth flow")
+    s.set_defaults(fn=_cmd_browser_harvest)
 
     args = p.parse_args(argv)
     return args.fn(args)
