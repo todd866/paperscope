@@ -93,6 +93,7 @@ def acquire_oa_pdfs(
     session: Optional[requests.Session] = None,
     limit: int = 0,
     verbose: bool = True,
+    stats: Optional[Dict[str, int]] = None,
 ) -> Dict[str, str]:
     """Acquire open access PDFs for references with DOIs.
 
@@ -102,22 +103,31 @@ def acquire_oa_pdfs(
     paper-fetcher UAs. Falls through silently when no URL works — the paper
     just stays in the EZProxy queue for institutional-auth retrieval.
 
+    Downloads stream to `<cite_key>.pdf.part`, magic-byte verify, then atomic
+    rename to `<cite_key>.pdf`. A failed stream leaves no `.pdf` behind, so a
+    re-run won't mistake a truncated download for a cache hit.
+
     Args:
         refs: list of reference dicts with `doi` and `cite_key` fields
         output_dir: directory to save PDFs (as `<cite_key>.pdf`)
         session: optional `requests.Session`
         limit: max refs to process (0 = all)
         verbose: print progress
+        stats: optional dict the function will populate with `oa_found`,
+            `checked`, and `oa_downloaded` counters. `oa_found` counts DOIs
+            for which Unpaywall returned at least one candidate URL,
+            independent of whether the publisher served the PDF.
 
     Returns:
         Dict mapping cite_key -> local PDF path (only successfully downloaded).
     """
     s = session or requests.Session()
-    s.headers.setdefault("User-Agent", _BROWSER_UA)
-    s.headers.setdefault(
-        "Accept", "application/pdf,application/octet-stream,*/*;q=0.8"
-    )
-    s.headers.setdefault("Accept-Language", "en-US,en;q=0.5")
+    # Assignment, not setdefault: requests.Session() pre-populates a default
+    # `python-requests/X.Y` UA, so setdefault would never replace it and our
+    # bot-block bypass would be a no-op.
+    s.headers["User-Agent"] = _BROWSER_UA
+    s.headers["Accept"] = "application/pdf,application/octet-stream,*/*;q=0.8"
+    s.headers["Accept-Language"] = "en-US,en;q=0.5"
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -150,6 +160,8 @@ def acquire_oa_pdfs(
             acquired[cite_key] = str(pdf_path)
             continue
 
+        pdf_part = pdf_path.with_suffix(".pdf.part")
+
         # Try each candidate URL in priority order until one yields a PDF.
         for pdf_url in candidate_urls:
             try:
@@ -177,22 +189,35 @@ def acquire_oa_pdfs(
                 if not is_pdf_like:
                     continue
 
-                with open(pdf_path, "wb") as f:
-                    for chunk in resp.iter_content(chunk_size=8192):
-                        f.write(chunk)
+                # Stream into a .part file so an interrupted download never
+                # lands at the canonical .pdf path. Only an intact, verified
+                # PDF gets atomically renamed into place.
+                try:
+                    with open(pdf_part, "wb") as f:
+                        for chunk in resp.iter_content(chunk_size=8192):
+                            f.write(chunk)
 
-                # Magic-byte verify — content-type lies sometimes.
-                with open(pdf_path, "rb") as f:
-                    header = f.read(5)
-                if header != b"%PDF-":
-                    pdf_path.unlink(missing_ok=True)
+                    with open(pdf_part, "rb") as f:
+                        header = f.read(5)
+                    if header != b"%PDF-":
+                        pdf_part.unlink(missing_ok=True)
+                        continue
+
+                    pdf_part.replace(pdf_path)  # atomic on POSIX
+                    acquired[cite_key] = str(pdf_path)
+                    break  # got one; move to next ref
+                except (requests.RequestException, OSError):
+                    pdf_part.unlink(missing_ok=True)
                     continue
 
-                acquired[cite_key] = str(pdf_path)
-                break  # got one; move to next ref
-
             except requests.RequestException:
+                pdf_part.unlink(missing_ok=True)
                 continue
+
+    if stats is not None:
+        stats["checked"] = checked
+        stats["oa_found"] = found_oa
+        stats["oa_downloaded"] = len(acquired)
 
     if verbose:
         print(f"\n  Checked: {checked}")

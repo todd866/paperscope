@@ -165,18 +165,23 @@ def acquire(
         refs_for_ingest = [r for r in refs_for_ingest if r["cite_key"] and r["doi"]]
         if verbose:
             print(f"=== Unpaywall OA acquisition ({len(refs_for_ingest)} candidates) ===")
+        oa_stats: dict[str, int] = {}
         acquired_paths = acquire_oa_pdfs(
             refs_for_ingest,
             pdf_dir,
             limit=oa_limit,
             verbose=verbose,
+            stats=oa_stats,
         )
+        # oa_found = DOIs Unpaywall gave us a URL for (may exceed downloads
+        # when publishers bot-block the actual PDF — important distinction
+        # for coverage reporting).
+        report.oa_found = oa_stats.get("oa_found", 0)
         report.oa_downloaded = sum(
             1
-            for k, _ in acquired_paths.items()
+            for k in acquired_paths
             if k not in cached_keys
         )
-        report.oa_found = len(acquired_paths)
 
     # --- Phase 2: EZProxy queue for the paywalled tail ------------------
     have_pdf_keys = {p.stem for p in pdf_dir.glob("*.pdf")}

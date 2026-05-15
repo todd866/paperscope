@@ -68,5 +68,3 @@ def embed_texts(
             "dim": int(embeddings.shape[1]),
             "fallback_reason": str(exc),
         }
-
-

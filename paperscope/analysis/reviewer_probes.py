@@ -41,5 +41,3 @@ def reviewer_probes(
         ]
         results.append({"label": label, "probe": text, "matches": matches})
     return results
-
-
