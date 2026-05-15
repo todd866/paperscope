@@ -216,6 +216,8 @@ async def harvest_records(
     skip_already_have: bool = True,
     state_path: Path | None = None,
     warmup_doi: Optional[str] = None,
+    user_data_dir: Optional[str] = None,
+    profile_directory: Optional[str] = None,
     verbose: bool = True,
 ) -> BrowserHarvestReport:
     """Run the browser-driven harvest. Returns a BrowserHarvestReport.
@@ -227,6 +229,12 @@ async def harvest_records(
     headed browser, navigates to that DOI, and waits for institutional
     login to complete before starting the queue. Pick a DOI known to be
     paywalled for the institution; that exposes the auth chooser.
+
+    `user_data_dir`: path to a real Chrome profile (e.g. macOS default at
+    `~/Library/Application Support/Google/Chrome`). When set, Playwright
+    launches Chrome with that profile via persistent_context — cookies,
+    passwords, extensions, and any live OpenAthens session are all
+    inherited. Chrome must not be running against the same profile.
     """
     corpus_dir = Path(corpus_dir)
     papers_dir = corpus_dir / "papers"
@@ -255,9 +263,19 @@ async def harvest_records(
 
     session = Session(Path(state_path))
 
-    # Warmup: if no usable state exists or caller insists, open headed first.
-    needs_warmup = warmup_doi and not Session.state_exists(Path(state_path))
-    await session.open(headless=False if needs_warmup else headless)
+    # Warmup runs whenever caller passes a warmup_doi. In persistent-context
+    # mode this lets the user click through OpenAthens once if their existing
+    # session has lapsed; in fresh-launch mode it's the only way to bootstrap
+    # institutional cookies. Skipped only if the storage state already looks warm.
+    needs_warmup = bool(
+        warmup_doi
+        and (user_data_dir or not Session.state_exists(Path(state_path)))
+    )
+    await session.open(
+        headless=False if needs_warmup else headless,
+        user_data_dir=user_data_dir,
+        profile_directory=profile_directory,
+    )
 
     try:
         if needs_warmup:

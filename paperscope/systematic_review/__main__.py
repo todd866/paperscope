@@ -148,6 +148,8 @@ def _cmd_browser_harvest(args: argparse.Namespace) -> int:
             headless=args.headless,
             skip_already_have=not args.no_skip_existing,
             warmup_doi=args.warmup_doi,
+            user_data_dir=args.user_data_dir,
+            profile_directory=args.profile_directory,
             verbose=True,
         )
     )
@@ -211,6 +213,15 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--limit", type=int, default=0, help="cap records (0 = all)")
     s.add_argument("--no-skip-existing", action="store_true", help="re-attempt papers already in papers/")
     s.add_argument("--warmup-doi", help="warmup DOI for the first headed-mode auth flow")
+    s.add_argument(
+        "--user-data-dir",
+        help="path to a real Chrome profile (e.g. ~/Library/Application Support/Google/Chrome). "
+        "Inherits cookies + saved passwords + live SSO. Chrome must not be running with that profile.",
+    )
+    s.add_argument(
+        "--profile-directory",
+        help="profile subdir under user-data-dir (e.g. 'Default', 'Profile 1'). Optional.",
+    )
     s.set_defaults(fn=_cmd_browser_harvest)
 
     args = p.parse_args(argv)
