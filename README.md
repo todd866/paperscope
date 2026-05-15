@@ -15,6 +15,7 @@ Paperscope is a Python toolkit for academic paper analysis. Every tool works on 
 - **Forensic statistics** — 19 data-integrity checks (GRIM, GRIMMER, SPRITE, correlation bounds, p-value recalculation, Carlisle test, and more) based on Heathers (2025) [*An Introduction to Forensic Metascience*](https://jamesheathers.curve.space/)
 - **Critical read** — author profiling, method-resolution mismatch detection, overclaiming analysis
 - **Bibliography pipeline** — citation extraction, DOI resolution, retraction detection, literature discovery
+- **Systematic literature reviews** — JBI / PRISMA-ScR pipeline (harvest → screen → extract → synthesise) for AI-accelerated scoping reviews, with a human audit layer and a static-HTML review site. Reviews are protocol-as-data: one YAML defines PCC, search query blocks, screening rubric, charting schema, and aggregation rules. See [`paperscope/systematic_review/`](paperscope/systematic_review/) and [`docs/systematic-review.md`](docs/systematic-review.md).
 
 ## Install
 
@@ -118,6 +119,28 @@ python3 -m paperscope ingest /path/to/literature/
 # Pre-submission citation check
 python3 -m paperscope pre-submit paper.tex --bib bibliography.json
 ```
+
+### Systematic literature reviews
+
+```bash
+# Show the composed Boolean query / per-block counts (sanity-check the strategy)
+python3 -m paperscope.systematic_review search myreview.yaml --show-query
+python3 -m paperscope.systematic_review search myreview.yaml --block-counts
+
+# Harvest MEDLINE into records.jsonl
+python3 -m paperscope.systematic_review search myreview.yaml
+
+# Aggregate charted JSONL into synthesis tables
+python3 -m paperscope.systematic_review aggregate myreview.yaml
+
+# PRISMA-ScR flow from records + screening JSONL
+python3 -m paperscope.systematic_review prisma --config myreview.yaml
+
+# Static HTML review site (Covidence-style record pages, no JS)
+python3 -m paperscope.systematic_review build-site --config myreview.yaml --out ./review-site
+```
+
+Module README: [`paperscope/systematic_review/README.md`](paperscope/systematic_review/README.md). Design + roadmap: [`docs/systematic-review.md`](docs/systematic-review.md).
 
 ## Forensic Statistics Reference
 

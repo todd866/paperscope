@@ -85,6 +85,24 @@ python3 -m paperscope ingest /path/to/literature/
 python3 -m paperscope depth2 /path/to/literature/
 ```
 
+### Systematic literature reviews
+
+```bash
+# Show composed Boolean / per-block counts (sanity-check the search)
+python3 -m paperscope.systematic_review search myreview.yaml --show-query
+python3 -m paperscope.systematic_review search myreview.yaml --block-counts
+
+# Harvest MEDLINE → records.jsonl
+python3 -m paperscope.systematic_review search myreview.yaml
+
+# Aggregate charted JSONL → synthesis tables; PRISMA flow; static review site
+python3 -m paperscope.systematic_review aggregate myreview.yaml
+python3 -m paperscope.systematic_review prisma --config myreview.yaml
+python3 -m paperscope.systematic_review build-site --config myreview.yaml --out ./review-site
+```
+
+Module README: `paperscope/systematic_review/README.md`. Design: `docs/systematic-review.md`.
+
 ## Architecture
 
 ```
@@ -121,7 +139,8 @@ paperscope/
 ├── bib/        # Bibliography management (extract, resolve, verify)
 ├── harvest/    # Paper discovery (OpenAlex, arXiv, bioRxiv)
 ├── ingest/     # PDF acquisition + text extraction
-└── read/       # Structured reading prompts
+├── read/       # Structured reading prompts
+└── systematic_review/  # JBI/PRISMA-ScR pipeline (harvest → screen → extract → synthesise + HITL HTML site)
 ```
 
 ## Key Design Decisions
