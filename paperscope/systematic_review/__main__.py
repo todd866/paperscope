@@ -74,6 +74,32 @@ def _cmd_search(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_acquire(args: argparse.Namespace) -> int:
+    """Pull PDFs for the review's included set: OA via Unpaywall, plus an
+    EZProxy queue for the paywalled tail. The paywalled queue is JSON for any
+    browser-automation tool (or human hand) to walk — paperscope deliberately
+    stops at queue generation rather than embedding its own browser driver."""
+    from paperscope.systematic_review.acquire import acquire
+
+    cfg = ReviewConfig.from_yaml(args.config)
+    corpus = Path(args.corpus or cfg.corpus_dir)
+    records_path = Path(args.records) if args.records else None
+
+    report = acquire(
+        review_name=cfg.name,
+        corpus_dir=corpus,
+        records_path=records_path,
+        ezproxy_host=args.ezproxy_host,
+        fetch_oa=not args.no_oa,
+        extract_text_pdfs=not args.no_extract,
+        upload_b2=args.upload_b2,
+        oa_limit=args.limit,
+        verbose=True,
+    )
+    # `acquire` prints its own pretty report.
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="paperscope.systematic_review")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -103,6 +129,20 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--show-query", action="store_true", help="print composed full Boolean and exit")
     s.add_argument("--block-counts", action="store_true", help="print per-block counts and exit")
     s.set_defaults(fn=_cmd_search)
+
+    s = sub.add_parser(
+        "acquire",
+        help="pull PDFs for the included set (OA via Unpaywall + EZProxy queue for the paywalled tail)",
+    )
+    s.add_argument("config", help="path to review config YAML")
+    s.add_argument("--corpus", help="corpus dir (default: config.corpus_dir)")
+    s.add_argument("--records", help="path to records JSONL (default: <corpus>/included.jsonl, fallback records.jsonl)")
+    s.add_argument("--ezproxy-host", default="ezproxy.library.usyd.edu.au", help="institutional EZProxy hostname")
+    s.add_argument("--no-oa", action="store_true", help="skip Unpaywall, just generate the EZProxy queue")
+    s.add_argument("--no-extract", action="store_true", help="skip PyMuPDF text extraction")
+    s.add_argument("--upload-b2", action="store_true", help="upload acquired PDFs to Backblaze B2")
+    s.add_argument("--limit", type=int, default=0, help="cap OA fetches (0 = all)")
+    s.set_defaults(fn=_cmd_acquire)
 
     args = p.parse_args(argv)
     return args.fn(args)

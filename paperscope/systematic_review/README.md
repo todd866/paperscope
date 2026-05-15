@@ -115,6 +115,8 @@ the spec schemas of each aggregation type.
 | `screen.ai_screen` | 🪝 | Interface + stub; wire your agent SDK |
 | `extract.schema` | ✅ | Markdown schema parser |
 | `extract.ai_extract` | 🪝 | Interface + stub; wire your agent SDK |
+| `acquire.pipeline` | ✅ | OA PDF pull (Unpaywall via `paperscope.ingest`) + EZProxy queue for the paywalled tail + coverage report. Idempotent re-runs. CLI: `acquire`. |
+| `acquire.browser` | ⊘ | Deliberately not embedded — paperscope writes the queue; whatever browser-automation you use (or AI agent driving Chrome) walks it. Drop PDFs into `<corpus>/papers/<cite_key>.pdf` and re-run `acquire` to extract text. |
 | `ui.build_review_site` | ✅ | Static HTML with Covidence-style record pages. v0 is PubMed-shaped: keys records by `pmid` and writes filenames from it — fine for MEDLINE, needs a generic `record_id` for Embase/CINAHL accession strings. |
 | `ui.serve` | 🚧 | Live-edit server, designed not built |
 
