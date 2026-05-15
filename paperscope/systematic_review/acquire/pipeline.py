@@ -142,13 +142,29 @@ def acquire(
     # --- Phase 1: Open-access acquisition via Unpaywall -----------------
     acquired_paths: dict[str, str] = {}
     if fetch_oa and with_doi:
+        # Unpaywall requires a real email for its polite pool. Paperscope's
+        # default fallback ("paperscope@example.com") is rejected upstream
+        # and silently returns 0 OA hits — warn loudly so this doesn't look
+        # like "this corpus has no OA papers" when it's actually a config bug.
+        import os as _os
+
+        mailto = _os.environ.get("PAPERSCOPE_EMAIL", "").strip()
+        if not mailto or mailto.endswith("example.com"):
+            print(
+                "\n⚠️  PAPERSCOPE_EMAIL is not set (or is the fake default).\n"
+                "    Unpaywall rejects requests without a real email; the OA stage\n"
+                "    will return 0 hits. Set it before re-running:\n"
+                "        export PAPERSCOPE_EMAIL=your@email.tld\n"
+                "    The EZProxy queue will still be generated correctly.\n"
+            )
+
         # Lazy import — only require `requests` if we're actually fetching.
         from paperscope.ingest.open_access import acquire_oa_pdfs
 
         refs_for_ingest = [record_to_ref(r) for r in with_doi]
         refs_for_ingest = [r for r in refs_for_ingest if r["cite_key"] and r["doi"]]
         if verbose:
-            print(f"\n=== Unpaywall OA acquisition ({len(refs_for_ingest)} candidates) ===")
+            print(f"=== Unpaywall OA acquisition ({len(refs_for_ingest)} candidates) ===")
         acquired_paths = acquire_oa_pdfs(
             refs_for_ingest,
             pdf_dir,
