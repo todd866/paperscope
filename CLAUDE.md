@@ -109,15 +109,12 @@ Module README: `paperscope/systematic_review/README.md`. Design: `docs/systemati
 paperscope/
 ├── text/       # Shared text processing (LaTeX cleaning, chunking, parsing)
 ├── embed/      # Embedding infrastructure (sentence-transformers + TF-IDF fallback)
-├── analysis/   # 18 modules (embedding, critical read, forensic)
+├── analysis/   # 15 modules (embedding, critical read, forensic)
 │   │
 │   │  # Embedding-powered (your papers)
 │   ├── citation_alignment.py    # Do citations match the citing sentence?
 │   ├── novelty.py               # Which claims are furthest from literature?
 │   ├── reviewer_probes.py       # Anticipate reviewer objections
-│   ├── self_overlap.py          # Detect overlap with your other papers
-│   ├── argument_flow.py         # Track argument trajectory, detect jumps/loops
-│   ├── cross_paper.py           # Check consistency across papers
 │   ├── abstract_alignment.py    # Does the abstract cover all sections?
 │   ├── journal_targeting.py     # Which journal fits best? (via OpenAlex)
 │   ├── strength_heatmap.py      # Per-paragraph citation support strength
@@ -139,7 +136,6 @@ paperscope/
 ├── bib/        # Bibliography management (extract, resolve, verify)
 ├── harvest/    # Paper discovery (OpenAlex, arXiv, bioRxiv)
 ├── ingest/     # PDF acquisition + text extraction
-├── read/       # Structured reading prompts
 └── systematic_review/  # JBI/PRISMA-ScR pipeline (harvest → screen → extract → synthesise + HITL HTML site)
 ```
 
@@ -166,7 +162,7 @@ pip install -r requirements.txt
 python3 -m paperscope <command> [args]
 ```
 
-The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 18 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity). Each tool is a standalone module with a main function that returns structured results.
+The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 15 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity). Each tool is a standalone module with a main function that returns structured results.
 
 ### Bug fix workflow
 
