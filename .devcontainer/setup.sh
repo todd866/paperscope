@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Setting up Research Engine development environment..."
+echo "Setting up Paperscope development environment..."
 
 # Install Python dependencies
 pip install --upgrade pip

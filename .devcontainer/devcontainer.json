@@ -1,5 +1,5 @@
 {
-  "name": "Research Engine",
+  "name": "Paperscope",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "customizations": {

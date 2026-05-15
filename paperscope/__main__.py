@@ -440,7 +440,6 @@ def _run_analyze(args) -> int:
     )
     from .analysis.citation_alignment import citation_alignment, uncited_relevance
     from .analysis.novelty import novelty_analysis
-    from .analysis.reviewer_probes import reviewer_probes
     from .analysis.strength_heatmap import strength_heatmap, plot_strength_heatmap
     from .text.parsing import extract_citation_contexts, extract_claims
     from .embed import embed_texts

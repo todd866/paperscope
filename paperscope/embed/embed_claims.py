@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, Sequence, Tuple
 
 import numpy as np
 
@@ -72,77 +70,3 @@ def embed_texts(
         }
 
 
-def embed_groups(
-    groups: Sequence[Tuple[str, Sequence[str]]],
-    model=None,
-    model_name: str = "all-MiniLM-L6-v2",
-) -> Tuple[Dict[str, np.ndarray], Dict]:
-    """Embed multiple named groups in a single batch.
-
-    Args:
-        groups: ``[(name, texts), ...]`` pairs.
-        model: Pre-loaded model (optional).
-        model_name: Model to load if not provided.
-
-    Returns:
-        ``(outputs, backend_info)`` where *outputs* maps group names
-        to embedding arrays.
-    """
-    sizes = {name: len(texts) for name, texts in groups}
-    all_texts = [text for _, texts in groups for text in texts]
-    embeddings, backend = embed_texts(
-        all_texts, model=model, model_name=model_name, show_progress=False
-    )
-
-    outputs: Dict[str, np.ndarray] = {}
-    start = 0
-    for name, _ in groups:
-        size = sizes[name]
-        outputs[name] = embeddings[start : start + size]
-        start += size
-    return outputs, backend
-
-
-def embed_claims(
-    claims: List[Dict],
-    model=None,
-    model_name: str = "all-MiniLM-L6-v2",
-) -> np.ndarray:
-    """Embed a list of claim dicts (must have ``"text"`` field).
-
-    Returns numpy array of shape ``(n_claims, dim)``.
-    """
-    texts = [c["text"] for c in claims]
-    embeddings, _ = embed_texts(texts, model=model, model_name=model_name)
-    return embeddings
-
-
-def save_embeddings(
-    embeddings: np.ndarray,
-    claims: List[Dict],
-    embeddings_path: Path,
-    index_path: Path,
-) -> None:
-    """Save embeddings and their index."""
-    embeddings_path.parent.mkdir(parents=True, exist_ok=True)
-    np.save(str(embeddings_path), embeddings)
-
-    index = {
-        "model": "all-MiniLM-L6-v2",
-        "n_claims": len(claims),
-        "embedding_dim": embeddings.shape[1],
-        "claims": claims,
-    }
-    with open(index_path, "w", encoding="utf-8") as f:
-        json.dump(index, f, indent=2, ensure_ascii=False)
-
-
-def load_embeddings(embeddings_path: Path, index_path: Path) -> tuple:
-    """Load embeddings and index.
-
-    Returns ``(embeddings_array, index_dict)``.
-    """
-    embeddings = np.load(str(embeddings_path))
-    with open(index_path) as f:
-        index = json.load(f)
-    return embeddings, index

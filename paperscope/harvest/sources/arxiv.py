@@ -21,7 +21,7 @@ class ArxivSource(DiscoverySource):
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
-            "User-Agent": "ResearchEngine/0.1 (academic research tool)"
+            "User-Agent": "paperscope/1.0.0 (academic research toolkit; mailto: see PAPERSCOPE_EMAIL env var)"
         })
         self._last_request_time = 0.0
 
