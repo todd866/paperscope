@@ -22,9 +22,21 @@ AI-assisted writing has a specific failure mode: citing real papers for claims t
    ```
    This catches: title mismatches, year discrepancies, retracted papers.
 
-4. **Acquire paper texts** — download OA papers and extract text for cited works.
+4. **Acquire paper texts** — download OA papers and extract text for cited works:
+   ```bash
+   python3 -m paperscope ingest /path/to/literature/
+   ```
 
-5. **Run citation audit** — for each citation in your manuscript, compare the claimed use against the actual paper content.
+5. **Check citation alignment** — for each citation context, compare it semantically against the cited paper's content:
+   ```bash
+   python3 -m paperscope analyze your_paper.tex --literature literature/text/
+   ```
+   The `citation_alignment` block flags citations whose context is semantically distant from anything in the cited paper. Low scores are candidates for misattribution; check those by hand.
+
+6. **Pre-submit checklist** — final pass over the bibliography:
+   ```bash
+   python3 -m paperscope pre-submit your_paper.tex --bib literature/bibliography.json
+   ```
 
 ## What to Look For
 

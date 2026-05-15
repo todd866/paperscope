@@ -58,7 +58,7 @@ from paperscope.analysis.forensic_stats import correlation_bound, check_ttest_pa
 from paperscope.analysis.forensic_stats import carlisle_stouffer_fisher, check_chi_squared
 ```
 
-19 checks based on Heathers (2025) *An Introduction to Forensic Metascience*: GRIM, GRIMMER, DEBIT, SPRITE, correlation bounds, t-test/ANOVA/chi-squared recalculation, Carlisle-Stouffer-Fisher, SD/SE confusion, Benford's law, variance ratios, effect size consistency, and more. See `FORENSIC_METASCIENCE_REFERENCE.md` in the parent `peer_review/` directory for the full technique inventory.
+19 checks based on Heathers (2025) *An Introduction to Forensic Metascience*: GRIM, GRIMMER, DEBIT, SPRITE, correlation bounds, t-test/ANOVA/chi-squared recalculation, Carlisle-Stouffer-Fisher, SD/SE confusion, Benford's law, variance ratios, effect size consistency, and more.
 
 ### Bibliography pipeline
 

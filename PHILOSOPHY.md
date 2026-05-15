@@ -26,8 +26,8 @@ No single model excels at both. The failure modes are complementary:
 | Low-D (Codex) | Catches specific errors | Can miss the forest for the trees |
 
 The toolchain supports both:
-- **Discovery tools** (harvest, embed, query) feed the high-D system with raw material
-- **Audit tools** (verify, pre_submit, audit_usage) enable the low-D system to check the output
+- **Discovery tools** (harvest, ingest, embed, analysis) feed the high-D system with raw material
+- **Audit tools** (verify, pre_submit, critical_read, forensic_stats) enable the low-D system to check the output
 
 ## How to Tell If a Paper Is Close
 
@@ -35,7 +35,7 @@ A paper is ready for submission when:
 
 1. **The math is independently verifiable.** Every derivation can be checked by a different model without context about "what we're trying to show."
 
-2. **Citations actually support the claims.** The audit tool (`audit_usage.py`) compares what you cited a paper for against what that paper actually says. Misattributions are the most common AI-assisted failure mode.
+2. **Citations actually support the claims.** `verify` and `pre-submit` catch ghost citations and metadata mismatches (paper exists? title/year correct? retracted?). The deeper claim-content audit — confirming a cited paper actually says what you quoted it for — is the highest-value next analysis pass; today it's a manual / model-in-the-loop step on top of the extracted text. Misattributions are the most common AI-assisted failure mode.
 
 3. **The framework survives hostile reading.** Give the paper to a model with the prompt "find everything wrong with this" — not "improve this." The distinction matters.
 
@@ -57,8 +57,9 @@ AI-assisted writing has a specific failure mode with citations: models generate 
 Paperscope addresses this at every stage:
 1. **Extract** — pull actual citations from your LaTeX, not from model memory
 2. **Resolve** — verify DOIs against CrossRef (the authoritative registry)
-3. **Verify** — cross-check your citation claims against the actual paper content
-4. **Audit** — before submission, confirm every cited claim matches the source
+3. **Verify** — cross-check resolved DOIs against CrossRef metadata; catches title mismatches, year discrepancies, retractions
+4. **Pre-submit** — checklist for DOI coverage, broken refs, duplicate citations, missing fields
+5. **Critical read** — for external papers, runs the same checks plus method/resolution mismatch and overclaiming detection
 
 This is the difference between "I used AI" and "I used AI responsibly."
 

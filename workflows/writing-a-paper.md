@@ -12,12 +12,11 @@
    python3 -m paperscope harvest
    ```
 
-3. **Query the embedding space** (if built) for papers related to your topic:
+3. **Find related work** you may have missed:
    ```bash
-   # In Python
-   from paperscope.embed.query import find_gaps
-   result = find_gaps("your claim here", embeddings, index)
+   python3 -m paperscope related your_draft.tex
    ```
+   Queries OpenAlex for papers semantically near your draft's claims that aren't yet in your bibliography.
 
 ## During Writing
 
@@ -42,4 +41,7 @@
    python3 -m paperscope verify /path/to/bibliography.json
    ```
 
-4. **Audit citation usage** — compare what you cited papers for against what they actually say.
+4. **Run the analysis suite** — `analyze` runs citation alignment + novelty + strength heatmap in one pass. Anything below the alignment / novelty / support thresholds is worth a manual look against the source paper before submitting:
+   ```bash
+   python3 -m paperscope analyze your_paper.tex --literature text/
+   ```

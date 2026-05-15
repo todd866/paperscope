@@ -2,7 +2,12 @@
 
 ## System Overview
 
-Paperscope is a pipeline with three layers: bibliography management, literature ingestion, and semantic analysis.
+Paperscope is four layers:
+
+1. **Bibliography** — citation extraction, DOI resolution, retraction detection
+2. **Harvest + Ingest** — paper discovery, OA acquisition, text extraction
+3. **Embed + Analysis** — claim/text embedding and the analysis suite that runs on top
+4. **Systematic Reviews** — JBI/PRISMA-ScR pipeline for AI-accelerated scoping reviews
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -22,25 +27,45 @@ Paperscope is a pipeline with three layers: bibliography management, literature 
 │                      HARVEST + INGEST LAYER                         │
 │                                                                     │
 │  OpenAlex ─┐                                                        │
-│  arXiv    ─┼──→ discover ──→ digest.md + PDFs                       │
+│  arXiv    ─┼──→ discover ──→ digest.md + DOIs                       │
 │  bioRxiv  ─┘         │                                              │
 │                      ▼                                              │
-│              Unpaywall ──→ OA PDFs ──→ B2 cloud storage             │
-│                                │                                    │
-│                          PyMuPDF ──→ extracted text ──→ git         │
+│              Unpaywall ──→ OA PDFs ──→ B2 cloud (optional)          │
+│                      │       │                                      │
+│              EZProxy queue   │                                      │
+│              (paywalled)     ▼                                      │
+│                       PyMuPDF ──→ extracted text ──→ git            │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      READ + EMBED LAYER                             │
+│                      EMBED + ANALYSIS LAYER                         │
 │                                                                     │
-│  text ──→ read_paper.py ──→ structured summary (claims, methods)    │
-│                                    │                                │
-│                             embed_claims.py ──→ claim vectors       │
-│                                    │                                │
-│                             query.py ──→ neighbors, conflicts, gaps │
-│                                    │                                │
-│                             audit_usage.py ──→ citation audit       │
+│  extracted text  ──→ text/  (LaTeX cleaning, chunking)              │
+│                       │                                             │
+│                       ▼                                             │
+│                  embed/  (sentence-transformers + TF-IDF fallback)  │
+│                       │                                             │
+│                       ▼                                             │
+│                 analysis/  (15 modules: citation alignment,         │
+│                  novelty, journal fit, critical read, forensic …)   │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    SYSTEMATIC REVIEW LAYER                          │
+│                                                                     │
+│  YAML config ──→ search/medline ──→ records.jsonl                   │
+│                      │                                              │
+│  Ovid/EBSCO exports ─┘                                              │
+│                                                                     │
+│  records.jsonl ──→ screen/ (AI + audit) ──→ screening.jsonl         │
+│  included.jsonl ──→ extract/ (AI + audit) ──→ extraction.jsonl      │
+│                                                                     │
+│  acquire/ ──→ OA PDFs + EZProxy queue + coverage report             │
+│                                                                     │
+│  synthesise/ ──→ synthesis-tables.json + prisma-flow.json           │
+│  ui/ ──→ static HTML review site (Covidence-style record pages)     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -54,68 +79,74 @@ Output: bibliography.json — structured, deduplicated, DOI-resolved
 ```
 
 1. **Extract** (`bib/extract.py`): Walks a directory tree, parses both `\bibitem{}` blocks and `.bib` files, deduplicates by cite key and fuzzy title match.
-
 2. **Resolve** (`bib/resolve.py`): For each reference without a DOI, queries CrossRef API. Confidence scoring (title similarity + year match). Only accepts matches above 0.80 threshold.
-
 3. **Verify** (`bib/verify.py`): Cross-checks resolved DOIs against CrossRef metadata. Detects title mismatches, year discrepancies, retracted papers.
-
 4. **Pre-submit** (`bib/pre_submit.py`): Pre-submission checklist. Checks DOI coverage, broken references, duplicate citations, missing fields.
+5. **Depth-2** (`bib/depth2.py`): Optional — for each DOI in bibliography.json, query CrossRef for its `reference` field; add new references as depth-2 entries. Captures the extended intellectual neighborhood (~10–15k refs typically).
 
-### Phase 2: Harvest + Ingest (harvest implemented, ingest in progress)
+### Phase 2: Harvest + Ingest (implemented)
 
 ```
-Input:  Research profile (keywords, authors, categories)
+Input:  Research profile (keywords, authors, categories) OR a list of DOIs
 Output: digest.md + downloaded PDFs + extracted text
 ```
 
-1. **Discover** (`harvest/`): Queries OpenAlex, arXiv, bioRxiv for papers matching the research profile. Deduplicates, filters unseen papers, generates markdown digest.
+1. **Discover** (`harvest/`): Queries OpenAlex, arXiv, bioRxiv for papers matching the research profile. Deduplicates, filters unseen papers, generates a markdown digest.
+2. **Acquire** (`ingest/open_access.py`): For each DOI, asks Unpaywall for every candidate OA URL and tries them in priority order until one yields a PDF. Uses a browser-like User-Agent + `https://doi.org/{doi}` Referer to defeat publisher bot blocks. Magic-byte verifies every download.
+3. **Extract** (`ingest/extract_text.py`): Uses PyMuPDF to pull plain text from PDFs. Outputs `.txt` files suitable for LLM consumption.
+4. **Store** (`ingest/cloud_store.py`, optional): Uploads PDFs to Backblaze B2. Maintains `pdf_manifest.json` tracking what's stored. Text stays in git; PDFs stay in cloud.
+5. **EZProxy queue** (`ingest/browser_queue.py`): For paywalled papers, generates `https://doi-org.<ezproxy_host>/<doi>` URLs that whatever browser-automation you use can walk through institutional auth.
 
-2. **Acquire** (`ingest/open_access.py`): For each DOI, checks Unpaywall for open-access PDF URLs. Downloads OA papers. Generates EZProxy queue for paywalled papers.
-
-3. **Extract** (`ingest/extract_text.py`): Uses PyMuPDF to extract text from PDFs. Outputs clean `.txt` files suitable for LLM consumption.
-
-4. **Store** (`ingest/cloud_store.py`): Uploads PDFs to Backblaze B2. Maintains `pdf_manifest.json` tracking what's stored. Text stays in git; PDFs stay in cloud.
-
-### Phase 3: Read + Embed + Analyze (implemented)
+### Phase 3: Embed + Analysis (implemented)
 
 ```
-Input:  Extracted text from papers + literature corpus
-Output: Structured analysis (citation alignment, novelty, reviewer prep, etc.)
+Input:  Extracted text from papers + a literature corpus
+Output: Structured JSON analysis per command + console summary
 ```
 
-1. **Text Processing** (`text/`): LaTeX cleaning, text chunking, citation context extraction. Shared utilities used by all analysis tools.
+1. **Text Processing** (`text/`): LaTeX cleaning, paragraph chunking, citation-context extraction. Shared utilities used by all analysis tools.
+2. **Embed** (`embed/`): Encodes text as vectors using sentence-transformers (all-MiniLM-L6-v2, 384-dim). Falls back to TF-IDF if the model isn't installed.
+3. **Analysis** (`analysis/`), 15 modules in three groups:
 
-2. **Embed** (`embed/`): Encodes text as vectors using sentence-transformers (all-MiniLM-L6-v2, 384-dim). Falls back to TF-IDF if model unavailable. Includes cosine similarity, batch encoding, and caching.
+   *Embedding-powered (your own papers)*
+   - `citation_alignment` — do cited references match the citing sentence?
+   - `novelty` — which claims are furthest from existing literature?
+   - `reviewer_probes` — anticipate reviewer objections, map to evidence
+   - `abstract_alignment` — does the abstract cover all major sections?
+   - `journal_targeting` — rank journals by semantic fit (via OpenAlex)
+   - `strength_heatmap` — per-paragraph citation support and continuity
+   - `revision_diff` — semantic diff between paper revisions
+   - `argument_graph` — cross-paper dependency graph
+   - `related_radar` — find missing related work (via OpenAlex)
 
-3. **Analysis** (`analysis/`): 18 modules in three groups:
+   *Critical read (external papers)*
+   - `critical_read` — orchestrator combining the four checks below
+   - `author_profile` — author COI and self-validation detection
+   - `method_resolution` — method/conclusion resolution mismatch
+   - `missing_methods` — complementary methods from same ecosystem
+   - `overclaiming` — hedge erosion and scope expansion
 
-   *Embedding-powered (your own papers):*
-   - `citation_alignment` — Do cited references match the citing sentence?
-   - `novelty` — Which claims are furthest from existing literature?
-   - `reviewer_probes` — Anticipate objections, map to evidence
-   - `self_overlap` — Detect high-similarity passages with your other papers
-   - `argument_flow` — Track argument trajectory, detect jumps and loops
-   - `cross_paper` — Check consistency across your paper program
-   - `abstract_alignment` — Does the abstract cover all major sections?
-   - `journal_targeting` — Rank journals by semantic fit (via OpenAlex)
-   - `strength_heatmap` — Per-paragraph citation support and continuity
-   - `revision_diff` — Semantic diff between paper revisions
-   - `argument_graph` — Cross-paper dependency graph
-   - `related_radar` — Find missing related work (via OpenAlex)
+   *Forensic statistics (data integrity)*
+   - `forensic_stats` — 19 checks based on Heathers (2025): GRIM, GRIMMER, DEBIT, SPRITE, correlation bounds, t-test/ANOVA/chi-squared recalculation, Carlisle-Stouffer-Fisher, SD/SE confusion, Benford's law, variance ratios, effect size consistency, and more.
 
-   *Critical read (external papers):*
-   - `critical_read` — Orchestrator combining the four checks below
-   - `author_profile` — Author COI and self-validation detection
-   - `method_resolution` — Method-conclusion resolution mismatch
-   - `missing_methods` — Complementary methods from same ecosystem
-   - `overclaiming` — Hedge erosion and scope expansion
+### Phase 4: Systematic Reviews (implemented)
 
-   *Forensic statistics (data integrity):*
-   - `forensic_stats` — 19 checks based on Heathers (2025): GRIM, GRIMMER, DEBIT, SPRITE, correlation bounds, t-test/ANOVA/chi-squared recalculation, Carlisle-Stouffer-Fisher, SD/SE confusion, Benford's law, variance ratios, effect size consistency, and more
+```
+Input:  A review YAML (PCC, query blocks, rubric path, schema path, aggregation config)
+Output: records.jsonl, screening.jsonl, extraction.jsonl,
+        synthesis-tables.json, prisma-flow.json, static HTML review site
+```
 
-4. **Read** (`read/`): Structured reading prompt generation for LLM-based paper analysis.
+`paperscope/systematic_review/` is a generalised JBI/PRISMA-ScR pipeline for AI-accelerated scoping reviews. Reviews are protocol-as-data: a single YAML defines the question, search strategy, screening rubric, charting schema, and aggregation rules; the same code serves any review.
 
-5. **Query** (`embed/query.py`): Nearest-neighbor search over claim vectors. Detects similar claims, contradictions, gaps.
+1. **Search** (`search/`): MEDLINE via E-utilities is fully automated; Ovid (Embase) and EBSCO (CINAHL) ingest external RIS exports.
+2. **Screen** (`screen/`): Markdown rubric loader + SDK-agnostic AI-screen interface. The reviewer is an AI agent (or several in parallel) executing the rubric; the human audits a sample and resolves "maybe"s.
+3. **Extract** (`extract/`): Charting schema loader + SDK-agnostic AI-extract interface. Same two-stage shape as screening.
+4. **Acquire** (`acquire/`): For the included set, pulls OA PDFs via `ingest/open_access` and writes an EZProxy queue for the paywalled tail. Paperscope deliberately stops at queue generation — paywalled access needs institutional auth (a human gate), so whatever drives the browser handles that.
+5. **Synthesise** (`synthesise/`): Declarative aggregator (`aggregate.py`) + PRISMA-ScR flow (`prisma.py`) + cross-database dedup. Regression-verified against a working MND review.
+6. **UI** (`ui/`): Static HTML review site with Covidence-style record pages. No JS dependency — publishable as a `gh-pages` artefact.
+
+See `docs/systematic-review.md` for the design + roadmap and `paperscope/systematic_review/README.md` for the quickstart.
 
 ## Storage Strategy
 
@@ -123,36 +154,12 @@ Output: Structured analysis (citation alignment, novelty, reviewer prep, etc.)
 |-----------|---------|-----|
 | `bibliography.json` | Git | Small (~2MB), needs versioning |
 | Extracted text (`.txt`) | Git | Small per paper, Claude-readable |
-| Structured readings (`.json`) | Git | Small, needs versioning |
 | Claim embeddings (`.npy`) | Git | ~50MB for 10k claims, acceptable |
-| PDFs | Backblaze B2 | Large (~5GB for 1000 papers), not text |
+| PDFs | Backblaze B2 (optional) or local | Large (~5GB for 1000 papers), not text |
 | `pdf_manifest.json` | Git | Tracks what's in B2 |
+| SR `records.jsonl` / `screening.jsonl` / `extraction.jsonl` | Per-review corpus dir | One JSON object per line; git-diff-friendly |
 
-### Why Not All in Git?
-
-PDFs are binary blobs that don't diff well and bloat the repo. A research library of 1000+ papers would make the repo unusable. B2 costs $0.005/GB/month — effectively free for academic scale.
-
-### Why Not All in Cloud?
-
-Text, metadata, and embeddings should be version-controlled and accessible without network access. They're small enough that git handles them fine.
-
-## Depth-2 Harvesting
-
-The bibliography database enables a specific strategy: **depth-2 reference harvesting**.
-
-```
-Your papers (depth 0)
-  └── Their references (depth 1) ← bibliography.json has these
-        └── References of references (depth 2) ← harvested via CrossRef
-```
-
-For each reference with a DOI:
-1. Query CrossRef `works/{doi}` for its `reference` field
-2. Add new references to the bibliography as depth-2
-3. Resolve DOIs for depth-2 references
-4. Acquire and extract depth-2 papers
-
-Expected scale: ~10,000-15,000 additional references at depth 2. This captures the extended intellectual neighborhood of the research program.
+PDFs are binary blobs that don't diff well and bloat the repo. B2 (or a local cache) keeps them out of git. Text, metadata, and embeddings are small enough that git handles them fine.
 
 ## Configuration
 
@@ -164,30 +171,30 @@ research_profile:
     - intrinsic dimensionality
     - information geometry
     - neural manifold
-    - participation ratio
     # ...
-
   authors:
     - Igamberdiev
     - Friston
     - Tononi
     # ...
-
   arxiv_categories:
     - q-bio.NC
     - cond-mat.stat-mech
     - cs.IT
 ```
 
+The systematic_review module uses a different YAML format (PCC + query_blocks + aggregation). See `paperscope/systematic_review/examples/mnd-pilot.yaml` for a worked example.
+
 ## API Dependencies
 
 | API | Rate limit | Auth | Used by |
 |-----|-----------|------|---------|
-| CrossRef | 50 req/s (polite pool) | mailto header | `resolve.py`, `verify.py` |
-| OpenAlex | 10 req/s (polite pool) | email param | `harvest/sources/openalex.py` |
+| CrossRef | 50 req/s (polite pool) | mailto header | `bib/resolve.py`, `bib/verify.py`, `bib/depth2.py` |
+| OpenAlex | 10 req/s (polite pool) | email param | `harvest/sources/openalex.py`, `analysis/journal_targeting.py`, `analysis/related_radar.py` |
 | arXiv | 1 req/3s | None | `harvest/sources/arxiv.py` |
 | bioRxiv | ~1 req/s | None | `harvest/sources/biorxiv.py` |
-| Unpaywall | 100k/day | email param | `ingest/open_access.py` |
-| Backblaze B2 | Generous | API key | `ingest/cloud_store.py` |
+| Unpaywall | 100k/day | email param (`PAPERSCOPE_EMAIL`) | `ingest/open_access.py` |
+| NCBI E-utilities (PubMed) | 3 req/s anonymous | None | `systematic_review/search/medline.py` |
+| Backblaze B2 | Generous | API key (`B2_APPLICATION_KEY*`) | `ingest/cloud_store.py` (optional) |
 
-All APIs are used in their free tiers with polite rate limiting.
+All APIs are used in their free tiers with polite rate limiting. `PAPERSCOPE_EMAIL` must be set to a real address — Unpaywall rejects the polite-pool with an empty/placeholder email.

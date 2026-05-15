@@ -2,44 +2,47 @@
 
 ## Discovery
 
-1. **Run paper harvester** to find new papers:
-   ```bash
-   python3 -m paperscope harvest
-   ```
+Find new papers matching your research profile:
 
-2. **Review the digest** at `~/Papers/harvester/inbox/YYYY-MM-DD/digest.md`
+```bash
+python3 -m paperscope harvest --config config.yaml
+```
 
-3. **Triage**: Keep relevant papers, archive the rest.
+Outputs a markdown digest at `~/Papers/harvester/inbox/YYYY-MM-DD/digest.md` summarising recent papers from OpenAlex / arXiv / bioRxiv. Triage there — keep what's relevant, archive the rest.
 
-## Structured Reading
+## Acquisition + text extraction
 
-For papers you keep:
+Once you have a `bibliography.json` (built by `extract` + `resolve`), pull PDFs and extract text in one pass:
 
-1. **Extract text** from the PDF:
-   ```python
-   from paperscope.ingest.extract_text import extract_text
-   text = extract_text(Path("paper.pdf"), Path("text/paper.txt"))
-   ```
+```bash
+python3 -m paperscope ingest /path/to/literature/
+```
 
-2. **Generate structured reading** using an LLM:
-   ```python
-   from paperscope.read.read_paper import create_reading_prompt
-   prompt = create_reading_prompt(text, context="Relevant to information geometry work")
-   # Feed prompt to Claude/GPT, save the structured output
-   ```
+This:
+1. Asks Unpaywall for open-access PDFs for every DOI and downloads what it can
+2. Generates an EZProxy queue (`browser-queue.json`) for the paywalled tail — whatever browser automation you use walks it through institutional auth
+3. Runs PyMuPDF on every PDF to produce `text/<cite_key>.txt`
+4. Optionally uploads PDFs to B2 if `--upload-b2` and `B2_APPLICATION_KEY*` are set
 
-3. **Embed claims** for later querying:
-   ```python
-   from paperscope.embed.embed_claims import embed_claims
-   claims = [{"text": claim, "cite_key": key, "source": "paper_title"} for claim in extracted_claims]
-   embeddings = embed_claims(claims)
-   ```
+You need a real `PAPERSCOPE_EMAIL` env var (Unpaywall rejects polite-pool calls without one).
 
-## Depth-2 Harvesting
+## Depth-2 harvesting
 
-Once your bibliography is built, harvest references-of-references:
+Once your bibliography is built, you can harvest references-of-references:
 
-1. For each DOI in bibliography.json, query CrossRef for its reference list
-2. Add new references as depth-2 entries
-3. Resolve DOIs, acquire papers, extract text
-4. This captures the extended intellectual neighborhood
+```bash
+python3 -m paperscope depth2 /path/to/literature/
+```
+
+For each DOI in `bibliography.json`, queries CrossRef for its reference list, adds new references as depth-2 entries, resolves their DOIs, and queues them for acquisition. Captures the extended intellectual neighbourhood (~10–15k refs for a typical paper program).
+
+## Systematic-review reading
+
+If you're running a scoping/systematic review rather than reading-for-a-paper, see `paperscope/systematic_review/`:
+
+```bash
+# For an SR with an included.jsonl set:
+python3 -m paperscope.systematic_review acquire myreview.yaml
+```
+
+That runs the same OA pull + EZProxy queue logic but keyed on the SR's PMID-based identifiers, and slots PDFs/text into the review's corpus directory.
