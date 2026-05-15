@@ -6,6 +6,7 @@ the first whose `can_handle(doi, current_url)` returns True.
 """
 
 from .base import HarvestAttempt, Outcome, PublisherAdapter, magic_bytes_ok, sha256_of, utc_now
+from .bmj import BMJAdapter
 from .elsevier import ElsevierAdapter
 from .generic import GenericAdapter
 from .jama_network import JamaNetworkAdapter
@@ -29,6 +30,7 @@ ALL_ADAPTERS: tuple[type[PublisherAdapter], ...] = (
     KargerAdapter,
     ThiemeAdapter,
     LippincottAdapter,
+    BMJAdapter,
     GenericAdapter,
 )
 
@@ -44,6 +46,7 @@ def pick_adapter(doi: str, current_url: str) -> PublisherAdapter:
 
 __all__ = [
     "ALL_ADAPTERS",
+    "BMJAdapter",
     "ElsevierAdapter",
     "GenericAdapter",
     "HarvestAttempt",
