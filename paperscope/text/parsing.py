@@ -8,6 +8,49 @@ from typing import Dict, List, Tuple
 from .latex import clean_latex, extract_cite_keys
 
 
+def extract_abstract(tex_text: str, clean: bool = False) -> str:
+    """Pull the abstract from a LaTeX document.
+
+    Args:
+        tex_text: Raw LaTeX source.
+        clean: If True, run the body through ``clean_latex`` before returning.
+            ``method_resolution`` wants the raw markup (the rest of its
+            section extractors return raw, and cleaning happens downstream);
+            ``abstract_alignment`` wants the cleaned plain text.
+    """
+    m = re.search(
+        r"\\begin\{abstract\}(.*?)\\end\{abstract\}",
+        tex_text,
+        re.DOTALL,
+    )
+    if not m:
+        return ""
+    body = m.group(1)
+    return clean_latex(body) if clean else body
+
+
+def extract_sections(tex_text: str, min_words: int = 10) -> List[Dict]:
+    """Split a LaTeX body into ``\\section`` / ``\\subsection`` chunks.
+
+    Returns ``[{"title": ..., "text": ...}]`` with the cleaned text. Section
+    bodies shorter than ``min_words`` are dropped (table-of-contents stubs,
+    "see appendix" pointers, etc.). Bibliography is stripped before splitting.
+    """
+    body = re.split(
+        r"\\bibliography\{|\\begin\{thebibliography\}", tex_text, maxsplit=1
+    )[0]
+    parts = re.split(r"\\(?:section|subsection)\*?\{([^}]+)\}", body)
+    sections: List[Dict] = []
+    # parts[0] is the preamble/intro before the first section. Then the regex
+    # captures alternating (title, body) pairs.
+    for i in range(1, len(parts) - 1, 2):
+        title = clean_latex(parts[i])
+        text = clean_latex(parts[i + 1])
+        if len(text.split()) >= min_words:
+            sections.append({"title": title, "text": text})
+    return sections
+
+
 def split_sentences(paragraph: str) -> List[str]:
     """Split a paragraph into sentence-like units.
 

@@ -9,25 +9,10 @@ from typing import Dict, List, Optional
 import numpy as np
 
 from ..text import clean_latex
-from ..text.parsing import extract_paragraphs
+from ..text.parsing import extract_paragraphs, extract_sections
 from ..embed import embed_texts
 from ..embed.similarity import cosine_sim
 from ._common import load_reference_texts, prepare_reference_chunks
-
-
-def _extract_sections_with_text(tex_text: str) -> List[Dict]:
-    """Split into sections with title and cleaned body text."""
-    body = re.split(
-        r"\\bibliography\{|\\begin\{thebibliography\}", tex_text, maxsplit=1
-    )[0]
-    parts = re.split(r"\\(?:section|subsection)\*?\{([^}]+)\}", body)
-    sections: List[Dict] = []
-    for i in range(1, len(parts) - 1, 2):
-        title = clean_latex(parts[i])
-        text = clean_latex(parts[i + 1])
-        if len(text.split()) >= 10:
-            sections.append({"title": title, "text": text})
-    return sections
 
 
 def revision_diff(
@@ -52,8 +37,8 @@ def revision_diff(
     Returns:
         Dict with per-section diffs and summary statistics.
     """
-    old_sections = _extract_sections_with_text(old_tex)
-    new_sections = _extract_sections_with_text(new_tex)
+    old_sections = extract_sections(old_tex)
+    new_sections = extract_sections(new_tex)
 
     if not old_sections or not new_sections:
         # Fall back to paragraph-level comparison

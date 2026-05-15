@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import numpy as np
 
 from ..text import clean_latex, split_sentences
+from ..text.parsing import extract_abstract
 from ..embed import embed_texts
 from ..embed.similarity import cosine_sim
 
@@ -313,14 +314,6 @@ def _extract_section(text: str, heading_patterns: List[str]) -> str:
     return ""
 
 
-def _extract_abstract(text: str) -> str:
-    """Extract abstract from LaTeX source."""
-    m = re.search(
-        r"\\begin\{abstract\}(.*?)\\end\{abstract\}", text, re.DOTALL
-    )
-    return m.group(1) if m else ""
-
-
 def _extract_methods(text: str) -> str:
     """Extract methods/methodology section."""
     return _extract_section(text, [
@@ -491,7 +484,7 @@ def check_resolution_from_tex(
         Same dict as :func:`check_resolution_match`, with an additional
         ``sections_found`` field listing which sections were located.
     """
-    abstract = _extract_abstract(tex_text)
+    abstract = extract_abstract(tex_text)  # raw LaTeX — matches the other section extractors here
     methods = _extract_methods(tex_text)
     conclusions = _extract_conclusions(tex_text)
     results = _extract_results(tex_text)

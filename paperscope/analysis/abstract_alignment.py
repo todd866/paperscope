@@ -2,46 +2,13 @@
 
 from __future__ import annotations
 
-import re
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 
-from ..text import clean_latex
+from ..text.parsing import extract_abstract, extract_sections
 from ..embed import embed_texts
 from ..embed.similarity import cosine_sim
-
-
-def _extract_abstract(tex_text: str) -> str:
-    """Pull the abstract from a LaTeX document."""
-    m = re.search(
-        r"\\begin\{abstract\}(.*?)\\end\{abstract\}",
-        tex_text,
-        re.DOTALL,
-    )
-    if m:
-        return clean_latex(m.group(1))
-    return ""
-
-
-def _extract_sections(tex_text: str) -> List[Dict]:
-    """Split document into named sections with cleaned text."""
-    # Remove bibliography
-    body = re.split(
-        r"\\bibliography\{|\\begin\{thebibliography\}", tex_text, maxsplit=1
-    )[0]
-    # Split on section commands
-    parts = re.split(
-        r"\\(?:section|subsection)\*?\{([^}]+)\}", body
-    )
-    sections: List[Dict] = []
-    # parts[0] is preamble/intro, then alternating (title, body)
-    for i in range(1, len(parts) - 1, 2):
-        title = clean_latex(parts[i])
-        text = clean_latex(parts[i + 1])
-        if len(text.split()) >= 20:
-            sections.append({"title": title, "text": text})
-    return sections
 
 
 def abstract_alignment(
@@ -61,11 +28,11 @@ def abstract_alignment(
         Dict with ``abstract_text``, ``sections`` (with coverage scores),
         ``overall_coverage``, ``underrepresented`` (sections below threshold).
     """
-    abstract = _extract_abstract(tex_text)
+    abstract = extract_abstract(tex_text, clean=True)
     if not abstract:
         return {"error": "No abstract found"}
 
-    sections = _extract_sections(tex_text)
+    sections = extract_sections(tex_text, min_words=20)
     if not sections:
         return {"error": "No sections found"}
 
