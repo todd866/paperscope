@@ -63,6 +63,7 @@ except ImportError:
 # Mirror rotation — Anna's Archive uses several domains; if the primary
 # is rate-limited or temporarily down, fall through to the others.
 SCIDB_BASES = [
+    "https://annas-archive.gl/scidb",
     "https://annas-archive.org/scidb",
     "https://annas-archive.se/scidb",
     "https://annas-archive.li/scidb",
@@ -150,6 +151,51 @@ def resolve_doi_to_md5(
     return None
 
 
+def _extract_libgen_id(html: str) -> Optional[str]:
+    """Find a libgen.li file ID on an Anna's Archive MD5 landing page."""
+    m = re.search(r"libgen\.li/file\.php\?id=(\d+)", html)
+    return m.group(1) if m else None
+
+
+def _follow_libgen_chain(s: "requests.Session", libgen_id: str,
+                         timeout: float = 60.0) -> Optional[bytes]:
+    """libgen.li file.php → ads.php → get.php → PDF bytes.
+
+    Anna's Archive's `/fast_download/` requires membership for anonymous
+    clients (redirects to `/fast_download_not_member`). The libgen.li chain
+    is the public no-account path: each step embeds the URL to the next as
+    an href, and the final get.php returns application/octet-stream PDF.
+
+    Single-IP concurrency: libgen.li throttles aggressively; keep
+    fetchers at 1-2 concurrent workers and 2-3s pacing for stable hits.
+    """
+    try:
+        url1 = f"https://libgen.li/file.php?id={libgen_id}"
+        r1 = s.get(url1, timeout=30)
+        if r1.status_code != 200:
+            return None
+        m = re.search(r'href="(/ads\.php\?[^"]+)"', r1.text)
+        if not m:
+            return None
+        url2 = "https://libgen.li" + m.group(1).replace("&amp;", "&")
+        r2 = s.get(url2, timeout=30, headers={"Referer": url1})
+        if r2.status_code != 200:
+            return None
+        m2 = re.search(r'href="(get\.php\?[^"]+|/get\.php\?[^"]+)"', r2.text)
+        if not m2:
+            return None
+        get_path = m2.group(1).replace("&amp;", "&")
+        if not get_path.startswith("/"):
+            get_path = "/" + get_path
+        url3 = "https://libgen.li" + get_path
+        r3 = s.get(url3, timeout=timeout, headers={"Referer": url2})
+        if r3.status_code == 200 and r3.content[:5] == b"%PDF-":
+            return r3.content
+    except requests.RequestException:
+        pass
+    return None
+
+
 def fetch_pdf_by_md5(
     md5: str,
     dest: Path,
@@ -158,9 +204,15 @@ def fetch_pdf_by_md5(
 ) -> tuple[bool, str]:
     """Download the PDF for the given MD5 to `dest`. Returns (ok, note).
 
-    Tries `<MD5_BASE>/<md5>/get` first (the direct-download endpoint),
-    then falls back to scraping the `/md5/<md5>` landing page for a
-    `.pdf` href. Walks mirror domains in `MD5_BASES`.
+    Walks `MD5_BASES`. Per mirror:
+      1. Get the Anna's Archive `/md5/<hash>` landing page.
+      2. Extract a libgen.li file ID, then walk the libgen chain
+         (file.php → ads.php → get.php → PDF).
+      3. Fall back to scraping the landing page for any direct `.pdf` href.
+
+    Anna's `/md5/<hash>/get` returns 404 on .gl as of 2026-05; the libgen
+    chain is the working public path. `/fast_download/` requires
+    membership; covered as an explicit alternative if you have credentials.
     """
     if not md5:
         return False, "no md5"
@@ -169,15 +221,17 @@ def fetch_pdf_by_md5(
         s.headers.update(_HEADERS)
     for base in MD5_BASES:
         try:
-            r = s.get(f"{base}/{md5}/get", timeout=timeout)
-            if r.status_code == 200 and r.content[:5] == b"%PDF-":
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_bytes(r.content)
-                return True, f"{len(r.content):,}B via {base}"
-
             page = s.get(f"{base}/{md5}", timeout=timeout)
             if page.status_code != 200:
                 continue
+            libgen_id = _extract_libgen_id(page.text)
+            if libgen_id:
+                pdf_bytes = _follow_libgen_chain(s, libgen_id, timeout=timeout)
+                if pdf_bytes:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    dest.write_bytes(pdf_bytes)
+                    return True, f"{len(pdf_bytes):,}B via libgen.li/{libgen_id}"
+            # Fallback to a direct .pdf href on the MD5 page (rare path)
             m = re.search(r'href="(/[^"]+\.pdf[^"]*)"', page.text)
             if not m:
                 continue
