@@ -39,5 +39,13 @@ from paperscope.systematic_review.methodological_audit.score import (
     ingest_jsonl,
     VALID_RATINGS,
 )
+from paperscope.systematic_review.methodological_audit.paper_metadata import (
+    generate_metadata_corpus,
+    write_index,
+)
+from paperscope.systematic_review.methodological_audit.browser import build_browser
 
-__all__ = ["init_db", "rate_paper", "ingest_jsonl", "VALID_RATINGS"]
+__all__ = [
+    "init_db", "rate_paper", "ingest_jsonl", "VALID_RATINGS",
+    "generate_metadata_corpus", "write_index", "build_browser",
+]
