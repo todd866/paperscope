@@ -115,8 +115,9 @@ the spec schemas of each aggregation type.
 | `screen.ai_screen` | 🪝 | Interface + stub; wire your agent SDK |
 | `extract.schema` | ✅ | Markdown schema parser |
 | `extract.ai_extract` | 🪝 | Interface + stub; wire your agent SDK |
-| `acquire.pipeline` | ✅ | OA PDF pull (Unpaywall via `paperscope.ingest`) + EZProxy queue for the paywalled tail + coverage report. Idempotent re-runs. CLI: `acquire`. |
+| `acquire.pipeline` | ✅ | OA PDF pull (Unpaywall via `paperscope.ingest`) + opt-in Anna's Archive Stage 3 (`enable_shadow_library=True`) + EZProxy queue for the paywalled tail + coverage report. Idempotent re-runs. CLI: `acquire`. |
 | `acquire.browser` | ⊘ | Deliberately not embedded — paperscope writes the queue; whatever browser-automation you use (or AI agent driving Chrome) walks it. Drop PDFs into `<corpus>/papers/<cite_key>.pdf` and re-run `acquire` to extract text. |
+| `ingest.shadow_library` | ✅ | Anna's Archive resolver + fetcher. Off by default in the pipeline; explicit `enable_shadow_library=True` flag turns it on. Documented as the boundary-crossing Stage 3 — operator's call whether their deployment context warrants it. |
 | `ui.build_review_site` | ✅ | Static HTML with Covidence-style record pages. v0 is PubMed-shaped: keys records by `pmid` and writes filenames from it — fine for MEDLINE, needs a generic `record_id` for Embase/CINAHL accession strings. |
 | `ui.serve` | 🚧 | Live-edit server, designed not built |
 

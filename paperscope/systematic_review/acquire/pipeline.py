@@ -36,6 +36,9 @@ class AcquireResult:
     oa_found: int = 0
     oa_downloaded: int = 0
     already_cached: int = 0
+    shadow_fetched: int = 0          # Phase 1.5 (opt-in): Anna's Archive hits
+    shadow_no_md5: int = 0           # DOI not in Anna's Archive
+    shadow_no_pdf: int = 0           # found in archive but download failed
     queued_for_ezproxy: int = 0
     text_extracted: int = 0
     text_already_present: int = 0
@@ -45,7 +48,7 @@ class AcquireResult:
     def coverage_pct(self) -> float:
         if not self.with_doi:
             return 0.0
-        have = self.oa_downloaded + self.already_cached
+        have = self.oa_downloaded + self.shadow_fetched + self.already_cached
         return 100.0 * have / self.with_doi
 
     def to_dict(self) -> dict:
@@ -54,6 +57,14 @@ class AcquireResult:
         return d
 
     def pretty(self) -> str:
+        shadow_line = (
+            f"  Shadow library (opt-in): "
+            f"fetched={self.shadow_fetched:,}, "
+            f"no_md5={self.shadow_no_md5:,}, "
+            f"no_pdf={self.shadow_no_pdf:,}\n"
+            if (self.shadow_fetched + self.shadow_no_md5 + self.shadow_no_pdf) > 0
+            else ""
+        )
         return (
             f"Acquire report — {self.review_name}\n"
             f"  Corpus dir:           {self.corpus_dir}\n"
@@ -63,6 +74,7 @@ class AcquireResult:
             f"  OA found (Unpaywall): {self.oa_found:,}\n"
             f"  OA downloaded:        {self.oa_downloaded:,}\n"
             f"  Already cached:       {self.already_cached:,}\n"
+            f"{shadow_line}"
             f"  Queued for EZProxy:   {self.queued_for_ezproxy:,}\n"
             f"  Text extracted:       {self.text_extracted:,}\n"
             f"  Text already present: {self.text_already_present:,}\n"
@@ -92,6 +104,9 @@ def acquire(
     records_path: str | Path | None = None,
     ezproxy_host: str = "ezproxy.library.usyd.edu.au",
     fetch_oa: bool = True,
+    enable_shadow_library: bool = False,
+    shadow_library_pace_s: float = 2.0,
+    shadow_library_limit: int = 0,
     extract_text_pdfs: bool = True,
     upload_b2: bool = False,
     oa_limit: int = 0,
@@ -182,6 +197,43 @@ def acquire(
             for k in acquired_paths
             if k not in cached_keys
         )
+
+    # --- Phase 1.5: Shadow library (opt-in, off by default) --------------
+    # Anna's Archive as a third acquisition path. See
+    # paperscope/ingest/shadow_library.py for the boundary discussion.
+    # Only runs for records the OA phase didn't satisfy; records that land
+    # here drop out of Phase 2's EZProxy queue automatically.
+    if enable_shadow_library:
+        from paperscope.ingest.shadow_library import acquire_shadow_pdfs
+
+        have_pdf_keys = {p.stem for p in pdf_dir.glob("*.pdf")}
+        still_missing = [
+            r for r in with_doi if str(r["pmid"]) not in have_pdf_keys
+        ]
+        if verbose:
+            print(
+                f"\n=== Shadow library (opt-in) — "
+                f"{len(still_missing)} records still missing ==="
+            )
+        log_path = corpus_dir / "shadow-fetch-log.jsonl"
+        shadow_report = acquire_shadow_pdfs(
+            still_missing[:shadow_library_limit] if shadow_library_limit
+                                                else still_missing,
+            pdf_dir,
+            id_key="pmid",
+            pace_s=shadow_library_pace_s,
+            log_path=log_path,
+        )
+        report.shadow_fetched = shadow_report.fetched
+        report.shadow_no_md5 = shadow_report.no_md5
+        report.shadow_no_pdf = shadow_report.no_pdf
+        if verbose:
+            print(
+                f"  fetched={shadow_report.fetched}, "
+                f"no_md5={shadow_report.no_md5}, "
+                f"no_pdf={shadow_report.no_pdf}, "
+                f"already_have={shadow_report.already_have}"
+            )
 
     # --- Phase 2: EZProxy queue for the paywalled tail ------------------
     have_pdf_keys = {p.stem for p in pdf_dir.glob("*.pdf")}
