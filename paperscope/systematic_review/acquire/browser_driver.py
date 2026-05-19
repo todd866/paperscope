@@ -102,6 +102,9 @@ async def _harvest_one(
     nav_timeout_ms: int = 45000,
     settle_timeout_s: int = 12,
     respect_cache: bool = True,
+    inter_paper_delay_s: float = 0.0,
+    start_lock: Optional[asyncio.Lock] = None,
+    start_state: Optional[dict[str, float]] = None,
 ) -> HarvestAttempt:
     """Open a fresh page, navigate, dispatch to the right adapter."""
     pmid = str(record.get("pmid", "")).strip()
@@ -135,6 +138,16 @@ async def _harvest_one(
             return attempt
 
     async with semaphore:
+        if inter_paper_delay_s > 0 and start_lock is not None and start_state is not None:
+            # Space actual navigation starts globally across concurrent tasks.
+            async with start_lock:
+                loop = asyncio.get_event_loop()
+                last = start_state.get("last_start")
+                if last is not None:
+                    wait_s = inter_paper_delay_s - (loop.time() - last)
+                    if wait_s > 0:
+                        await asyncio.sleep(wait_s)
+                start_state["last_start"] = loop.time()
         page: Optional["Page"] = None
         try:
             page = await context.new_page()
@@ -218,6 +231,8 @@ async def harvest_records(
     warmup_doi: Optional[str] = None,
     user_data_dir: Optional[str] = None,
     profile_directory: Optional[str] = None,
+    inter_paper_delay_s: float = 0.0,
+    group_by_publisher: bool = False,
     verbose: bool = True,
 ) -> BrowserHarvestReport:
     """Run the browser-driven harvest. Returns a BrowserHarvestReport.
@@ -255,6 +270,15 @@ async def harvest_records(
         records_to_run = records
         skipped = 0
 
+    if group_by_publisher:
+        # Sort so consecutive papers from the same publisher batch together —
+        # one SAML / OAuth handshake per publisher then cached cookies do the
+        # rest. Massive reduction in IDP traffic.
+        def _pub_key(r):
+            doi = (r.get("doi") or "").strip().lower()
+            return doi.split("/", 1)[0] if "/" in doi else doi
+        records_to_run.sort(key=_pub_key)
+
     report = BrowserHarvestReport(total=len(records_to_run), skipped_already_have=skipped)
     if not records_to_run:
         if verbose:
@@ -284,9 +308,21 @@ async def harvest_records(
                 print("[driver] warmup did not complete; proceeding anyway")
 
         sem = asyncio.Semaphore(concurrency)
+        start_lock = asyncio.Lock() if inter_paper_delay_s > 0 else None
+        start_state: dict[str, float] = {}
         tasks = [
             asyncio.create_task(
-                _harvest_one(session.context, rec, ezproxy_host, papers_dir, sem, cache)
+                _harvest_one(
+                    session.context,
+                    rec,
+                    ezproxy_host,
+                    papers_dir,
+                    sem,
+                    cache,
+                    inter_paper_delay_s=inter_paper_delay_s,
+                    start_lock=start_lock,
+                    start_state=start_state,
+                )
             )
             for rec in records_to_run
         ]

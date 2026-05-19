@@ -69,6 +69,14 @@ python -m paperscope.systematic_review search myreview.yaml
 python -m paperscope.systematic_review aggregate myreview.yaml
 python -m paperscope.systematic_review prisma --config myreview.yaml
 python -m paperscope.systematic_review build-site --config myreview.yaml --out ./review-site
+
+# Optional: walk the paywalled tail with a real browser profile
+python -m paperscope.systematic_review browser-harvest \
+  --config myreview.yaml \
+  --user-data-dir "$HOME/Library/Application Support/Google/Chrome" \
+  --profile-directory Default \
+  --group-by-publisher \
+  --inter-paper-delay 5
 ```
 
 ## Configuration
@@ -116,12 +124,13 @@ the spec schemas of each aggregation type.
 | `extract.schema` | ✅ | Markdown schema parser |
 | `extract.ai_extract` | 🪝 | Interface + stub; wire your agent SDK |
 | `acquire.pipeline` | ✅ | OA PDF pull (Unpaywall via `paperscope.ingest`) + opt-in Anna's Archive Stage 3 (`enable_shadow_library=True`) + EZProxy queue for the paywalled tail + coverage report. Idempotent re-runs. CLI: `acquire`. |
-| `acquire.browser` | ⊘ | Deliberately not embedded — paperscope writes the queue; whatever browser-automation you use (or AI agent driving Chrome) walks it. Drop PDFs into `<corpus>/papers/<cite_key>.pdf` and re-run `acquire` to extract text. |
+| `acquire.browser_driver` | ✅ | Playwright-driven institutional-access harvester for the paywalled tail. Supports real Chrome profiles, warmup DOI, publisher grouping, strategy cache, and inter-paper pacing. CLI: `browser-harvest`. |
 | `ingest.shadow_library` | ✅ | Anna's Archive resolver + fetcher. Off by default in the pipeline; explicit `enable_shadow_library=True` flag turns it on. Documented as the boundary-crossing Stage 3 — operator's call whether their deployment context warrants it. |
 | `ui.build_review_site` | ✅ | Static HTML with Covidence-style record pages. v0 is PubMed-shaped: keys records by `pmid` and writes filenames from it — fine for MEDLINE, needs a generic `record_id` for Embase/CINAHL accession strings. |
 | `ui.serve` | 🚧 | Live-edit server, designed not built |
 | `methodological_audit` | ✅ | Per-paper rubric-based audit pipeline (cluster, sample, score, exclusions). Extracted from the MND demo (2,210 papers audited, 13,058 ratings, blind-recheck 67.5% exact / 96.7% within-one-grade calibration). See `methodological_audit/README.md`. |
 | `forensic_scan` | ✅ | Corpus-scale forensic data-quality scan (p-curve, last-digit, positivity, industry-bias, salami). Uses `paperscope.analysis.forensic_stats` for per-paper verification. See `forensic_scan/README.md`. Documents known false-positive modes for medical literature (statcheck ~95% FP, GRIM ~100% FP on continuous data). |
+| `knowledge_base` | 🧭 | Roadmap stage: paper cards, clusters, source manifests, public summaries, private source links, and rater-family disagreement reports. See `../../docs/corpus-knowledge-base.md`. |
 
 ## Companion modules: methodological audit + forensic scan
 
@@ -133,6 +142,12 @@ Beyond screening/charting/synthesising the records, paperscope ships two **audit
 | `forensic_scan` | Do each paper's *reported numbers behave like honestly-generated numbers*? | p-curve (Simonsohn); last-digit (Newcomb-Benford check); result-positivity (publication bias); industry × positivity; salami screen |
 
 Both are corpus-scale; both use AI sub-agent reading where applicable; both are documented with their known failure modes so users don't repeat the false-positive overcounts the MND demo had to discover.
+
+## Knowledge-base direction
+
+The static HTML review site is the v0 audit surface. The next product layer is a corpus knowledge base: paper cards, cluster pages, quality flags, source-object manifests, and field-level rater disagreement. This keeps large AI-assisted reviews navigable for humans after the bulk extraction has finished.
+
+The design is in `../../docs/corpus-knowledge-base.md`. The key boundary is that Paperscope supplies the mechanics; project-specific rubrics, labels, disease claims, and synthesis arguments stay in the caller repo.
 
 ## Regression test
 

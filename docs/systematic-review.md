@@ -10,6 +10,12 @@ This is a *generalised* version of a working MND scoping-review pipeline. The
 MND review remains its first user and its regression dogfood; everything about
 the MND question lives in `examples/mnd-pilot.yaml`, not in the code.
 
+The design target is now broader than "screen, extract, aggregate." At larger
+scales the useful output is a review knowledge base: paper cards, cluster
+pages, source-object manifests, quality flags, rater-family disagreement, and
+public/private access boundaries. See `corpus-knowledge-base.md` for that
+roadmap.
+
 ## Why not just use Covidence
 
 Covidence is excellent for **human** reviewers clicking include/exclude in a
@@ -40,6 +46,16 @@ search    → records.jsonl       (per database, then deduped)
 screen    → screening.jsonl     (one decision per record)
 extract   → extraction.jsonl    (one charted row per included study)
 synthesise → synthesis-tables.json + prisma-flow.json + review-site/
+```
+
+The next layer adds:
+
+```
+rich metadata → paper-cards.jsonl + quality-flags.jsonl
+cluster map   → clusters.json + claim-to-paper links
+source store  → source-manifest.jsonl
+rater compare → disagreement reports
+export        → static site or app-ready knowledge-base package
 ```
 
 Why JSONL everywhere: small, streamable, append-friendly, line-diffable in git,
@@ -141,6 +157,11 @@ Embase/CINAHL accession strings (which may contain slashes, dots, or
 non-filesystem-safe characters). Generalising to a `record_id` field that
 each search adapter normalises into is a follow-up.
 
+The static site is intentionally only one consumer. The same review data should
+also export cleanly into a richer web portal where public users can inspect
+summaries, clusters, and synthesis claims, while authenticated collaborators can
+follow private links to source PDFs or extracted text held outside Git.
+
 ## What's not built yet
 
 - **`search/ovid_import` and `search/ebsco_import`** — Embase via Ovid and
@@ -156,6 +177,12 @@ each search adapter normalises into is a follow-up.
   title/abstract screening, just a second pass on the "maybe" pile. The
   `prisma_flow` function already accepts `full_text_screening=`; the agent
   glue is the only missing piece.
+- **Corpus knowledge-base export** — paper cards, clusters, source manifests,
+  public summaries, private source access, and app-ready JSON bundles.
+- **Rich metadata framework** — schema-versioned per-paper markdown/YAML
+  extraction with validation, repair, batch manifests, and resumable dispatch.
+- **Rater-family comparison** — field-level agreement and disagreement reports
+  across AI and human rater families without forcing every signal into kappa.
 
 ## What the regression test proves
 
@@ -192,6 +219,10 @@ Specifically, 15 assertions pass:
   apply to individual papers in an SR's included set; a future bridge could
   surface their results in the static review site (e.g. flag included papers
   with forensic issues, or rank them by topical fit).
+- **Knowledge-base layer** — future SR outputs should reuse embedding clusters,
+  paper-card summaries, quality flags, source manifests, and rater-comparison
+  outputs so a large review can be browsed as an evidence base rather than a
+  pile of JSONL files.
 - **`text/`** — shared text utilities; the SR module uses none of these
   directly today but `chunking` and `latex` would matter for a future
   full-text-driven extraction stage.

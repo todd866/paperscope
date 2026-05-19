@@ -2,12 +2,13 @@
 
 ## System Overview
 
-Paperscope is four layers:
+Paperscope is five layers:
 
 1. **Bibliography** — citation extraction, DOI resolution, retraction detection
 2. **Harvest + Ingest** — paper discovery, OA acquisition, text extraction
 3. **Embed + Analysis** — claim/text embedding and the analysis suite that runs on top
 4. **Systematic Reviews** — JBI/PRISMA-ScR pipeline for AI-accelerated scoping reviews
+5. **Corpus Knowledge Bases** — paper cards, clusters, quality flags, source manifests, and review portals
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -66,6 +67,21 @@ Paperscope is four layers:
 │                                                                     │
 │  synthesise/ ──→ synthesis-tables.json + prisma-flow.json           │
 │  ui/ ──→ static HTML review site (Covidence-style record pages)     │
+└─────────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    CORPUS KNOWLEDGE-BASE LAYER                      │
+│                                                                     │
+│  extraction.jsonl + text/ ──→ rich metadata ──→ paper-cards.jsonl   │
+│                                                                     │
+│  embeddings / caller taxonomy ──→ clusters.json + cluster pages     │
+│                                                                     │
+│  PDF/text cache ──→ source-manifest.jsonl ──→ private object store  │
+│                                                                     │
+│  rater outputs ──→ field-level disagreement reports                 │
+│                                                                     │
+│  export/ ──→ static site or app-ready knowledge-base package        │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -142,11 +158,31 @@ Output: records.jsonl, screening.jsonl, extraction.jsonl,
 1. **Search** (`search/`): MEDLINE via E-utilities is fully automated; Ovid (Embase) and EBSCO (CINAHL) ingest external RIS exports.
 2. **Screen** (`screen/`): Markdown rubric loader + SDK-agnostic AI-screen interface. The reviewer is an AI agent (or several in parallel) executing the rubric; the human audits a sample and resolves "maybe"s.
 3. **Extract** (`extract/`): Charting schema loader + SDK-agnostic AI-extract interface. Same two-stage shape as screening.
-4. **Acquire** (`acquire/`): For the included set, pulls OA PDFs via `ingest/open_access` and writes an EZProxy queue for the paywalled tail. Paperscope deliberately stops at queue generation — paywalled access needs institutional auth (a human gate), so whatever drives the browser handles that.
+4. **Acquire** (`acquire/`): For the included set, pulls OA PDFs via `ingest/open_access`, writes an EZProxy queue for the paywalled tail, and can optionally walk that tail through a Playwright browser driver using an authenticated local profile. Paywalled access remains an operator-controlled boundary because institutional authentication and licensing constraints vary by deployment.
 5. **Synthesise** (`synthesise/`): Declarative aggregator (`aggregate.py`) + PRISMA-ScR flow (`prisma.py`) + cross-database dedup. Regression-verified against a working MND review.
 6. **UI** (`ui/`): Static HTML review site with Covidence-style record pages. No JS dependency — publishable as a `gh-pages` artefact.
 
 See `docs/systematic-review.md` for the design + roadmap and `paperscope/systematic_review/README.md` for the quickstart.
+
+### Phase 5: Corpus Knowledge Bases (roadmap)
+
+```
+Input:  Review outputs + extracted text + source manifests + optional rater outputs
+Output: paper-cards.jsonl, clusters.json, source-manifest.jsonl,
+        disagreement reports, static/app-ready knowledge-base package
+```
+
+The knowledge-base layer is the natural product for large reviews. A user should be able to browse a corpus by paper, claim, cluster, evidence quality, source availability, and rater disagreement without reading raw JSONL.
+
+Planned modules:
+
+1. **Paper cards**: Stable per-paper summaries with relevance, methods, populations, limitations, and claim links.
+2. **Source manifests**: Provider-neutral object metadata for PDFs and extracted text, with checksums and public/private access flags.
+3. **Cluster maps**: Embedding- or caller-supplied clusters, representative papers, and cluster-level summaries.
+4. **Rater comparison**: Field-level agreement/disagreement across AI and human rater families.
+5. **Export**: Static HTML and app-ready JSON packages for richer review portals.
+
+See `docs/corpus-knowledge-base.md` for the detailed roadmap.
 
 ## Storage Strategy
 
@@ -155,11 +191,12 @@ See `docs/systematic-review.md` for the design + roadmap and `paperscope/systema
 | `bibliography.json` | Git | Small (~2MB), needs versioning |
 | Extracted text (`.txt`) | Git | Small per paper, Claude-readable |
 | Claim embeddings (`.npy`) | Git | ~50MB for 10k claims, acceptable |
-| PDFs | Backblaze B2 (optional) or local | Large (~5GB for 1000 papers), not text |
-| `pdf_manifest.json` | Git | Tracks what's in B2 |
+| PDFs | S3-compatible object store, Backblaze B2, or local | Large (~5GB for 1000 papers), not text |
+| `pdf_manifest.json` / `source-manifest.jsonl` | Git | Tracks source objects, checksums, access status |
 | SR `records.jsonl` / `screening.jsonl` / `extraction.jsonl` | Per-review corpus dir | One JSON object per line; git-diff-friendly |
+| Paper cards / clusters / quality flags | Per-review export dir | Small enough for git; useful public review surface |
 
-PDFs are binary blobs that don't diff well and bloat the repo. B2 (or a local cache) keeps them out of git. Text, metadata, and embeddings are small enough that git handles them fine.
+PDFs are binary blobs that don't diff well and bloat the repo. Object storage or a local cache keeps them out of git. Text, metadata, paper cards, and many embeddings are small enough that git handles them fine.
 
 ## Configuration
 

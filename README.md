@@ -1,6 +1,6 @@
 # Paperscope
 
-**A toolkit for writing and reviewing academic papers.**
+**An AI-assisted toolkit for academic paper analysis, systematic reviews, corpus-scale evidence mapping, and review knowledge bases.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -9,13 +9,26 @@
 
 ## What This Does
 
-Paperscope is a Python toolkit for academic paper analysis. Every tool works on both sides of peer review — check your own work before submission, or audit someone else's manuscript.
+Paperscope is a Python toolkit for working with academic papers at both manuscript and corpus scale. It supports pre-submission checks on your own work, critical reads of someone else's manuscript, and AI-assisted scoping reviews where a review corpus becomes a queryable evidence base rather than a spreadsheet dump.
 
 - **Semantic analysis** — embeds a manuscript and its literature into a shared vector space to catch citation misalignment, unsupported claims, abstract gaps, and missing related work
 - **Forensic statistics** — 19 data-integrity checks (GRIM, GRIMMER, SPRITE, correlation bounds, p-value recalculation, Carlisle test, and more) based on Heathers (2025) [*An Introduction to Forensic Metascience*](https://jamesheathers.curve.space/)
 - **Critical read** — author profiling, method-resolution mismatch detection, overclaiming analysis
 - **Bibliography pipeline** — citation extraction, DOI resolution, retraction detection, literature discovery
 - **Systematic literature reviews** — JBI / PRISMA-ScR pipeline (harvest → screen → extract → synthesise) for AI-accelerated scoping reviews, with a human audit layer and a static-HTML review site. Reviews are protocol-as-data: one YAML defines PCC, search query blocks, screening rubric, charting schema, and aggregation rules. See [`paperscope/systematic_review/`](paperscope/systematic_review/) and [`docs/systematic-review.md`](docs/systematic-review.md).
+- **Review knowledge bases** — emerging tooling for turning large review corpora into paper cards, cluster pages, quality flags, private source-object links, and public summaries. See [`docs/corpus-knowledge-base.md`](docs/corpus-knowledge-base.md).
+
+## Current Dogfood Case
+
+Paperscope is being stress-tested against a large motor neurone disease / amyotrophic lateral sclerosis review corpus: thousands of records, a 1,800+ paper working evidence base, AI-assisted charting, paper-card generation, quality flags, rich metadata, dual-rater comparison, and a searchable collaborator portal. That project is deliberately treated as a dogfood case rather than Paperscope's hard-coded identity. Generic pieces are being pulled back into Paperscope; disease-specific rubrics, claims, and synthesis outputs stay in the caller project.
+
+The dogfood work has made the next frontier clear: Paperscope should not stop at "screen and aggregate." For large reviews, the useful product is a corpus knowledge base that lets a reader ask questions such as:
+
+- What is this cluster of papers about?
+- Which papers support this claim?
+- Which studies are externally validated?
+- Which papers are likely off-scope, mismatched, or methodologically weak?
+- Where are the source PDFs or text extracts, and what can be shared publicly?
 
 ## Install
 
@@ -138,9 +151,18 @@ python3 -m paperscope.systematic_review prisma --config myreview.yaml
 
 # Static HTML review site (Covidence-style record pages, no JS)
 python3 -m paperscope.systematic_review build-site --config myreview.yaml --out ./review-site
+
+# Optional institutional-access browser harvest for the paywalled tail
+python3 -m paperscope.systematic_review browser-harvest \
+  --config myreview.yaml \
+  --user-data-dir "$HOME/Library/Application Support/Google/Chrome" \
+  --profile-directory Default \
+  --group-by-publisher \
+  --inter-paper-delay 5
 ```
 
 Module README: [`paperscope/systematic_review/README.md`](paperscope/systematic_review/README.md). Design + roadmap: [`docs/systematic-review.md`](docs/systematic-review.md).
+Corpus knowledge-base roadmap: [`docs/corpus-knowledge-base.md`](docs/corpus-knowledge-base.md).
 
 ## Forensic Statistics Reference
 

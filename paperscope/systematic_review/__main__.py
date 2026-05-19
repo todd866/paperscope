@@ -150,6 +150,8 @@ def _cmd_browser_harvest(args: argparse.Namespace) -> int:
             warmup_doi=args.warmup_doi,
             user_data_dir=args.user_data_dir,
             profile_directory=args.profile_directory,
+            inter_paper_delay_s=args.inter_paper_delay,
+            group_by_publisher=args.group_by_publisher,
             verbose=True,
         )
     )
@@ -221,6 +223,19 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument(
         "--profile-directory",
         help="profile subdir under user-data-dir (e.g. 'Default', 'Profile 1'). Optional.",
+    )
+    s.add_argument(
+        "--inter-paper-delay",
+        type=float,
+        default=0.0,
+        help="seconds to sleep between papers (after acquiring concurrency slot). "
+        "Use 5-10 for IDPs that rate-limit (e.g. Sydney via Google).",
+    )
+    s.add_argument(
+        "--group-by-publisher",
+        action="store_true",
+        help="sort the queue by DOI prefix so consecutive papers share a publisher domain — "
+        "minimises SAML/OAuth handshakes (one per publisher instead of one per paper).",
     )
     s.set_defaults(fn=_cmd_browser_harvest)
 
