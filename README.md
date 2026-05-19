@@ -11,6 +11,8 @@
 
 Paperscope is a Python toolkit for working with academic papers at both manuscript and corpus scale. It supports pre-submission checks on your own work, critical reads of someone else's manuscript, and AI-assisted scoping reviews where a review corpus becomes a queryable evidence base rather than a spreadsheet dump.
 
+The core premise is that paper-level evaluation and corpus-level evaluation are inseparable. A paper is only meaningful relative to the literature it claims to extend, cite, contradict, ignore, or compress. Paperscope therefore treats "evaluate this paper" as a local view into "evaluate this corpus": citation checks, novelty, method resolution, overclaiming, forensic flags, and review synthesis all depend on knowing what the surrounding corpus looks like.
+
 - **Semantic analysis** — embeds a manuscript and its literature into a shared vector space to catch citation misalignment, unsupported claims, abstract gaps, and missing related work
 - **Forensic statistics** — 19 data-integrity checks (GRIM, GRIMMER, SPRITE, correlation bounds, p-value recalculation, Carlisle test, and more) based on Heathers (2025) [*An Introduction to Forensic Metascience*](https://jamesheathers.curve.space/)
 - **Critical read** — author profiling, method-resolution mismatch detection, overclaiming analysis

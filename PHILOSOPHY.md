@@ -1,6 +1,20 @@
-# Philosophy: Two-System Methodology
+# Philosophy: Paper-Corpus Evaluation and Two-System Methodology
 
 ## The Core Insight
+
+No paper is self-contained.
+
+A paper can only be evaluated against the corpus it enters: the work it cites, the work it omits, the methods it inherits, the claims it repeats, the claims it contradicts, and the field-level patterns it compresses into its own framing. A single-paper review without corpus context can catch local errors, but it cannot answer the deeper questions:
+
+- Is the claim novel, or only locally unfamiliar?
+- Does the cited literature actually support the argument?
+- Are the methods adequate by the standards of this subfield?
+- Is the paper an outlier, a representative example, or a symptom of a broader literature pattern?
+- Are suspicious statistics paper-specific, or part of a corpus-level reporting signature?
+
+Paperscope therefore treats "evaluate this paper" and "evaluate this corpus" as the same task at different resolutions. A paper-level critique is a local slice through a corpus map. A corpus-level review is the global context that makes paper-level critique meaningful.
+
+## The Two-System Method
 
 AI-assisted research works best as a two-system process, analogous to how the brain uses different modes for different cognitive demands.
 
@@ -25,9 +39,10 @@ No single model excels at both. The failure modes are complementary:
 | High-D (Claude) | Finds deep structural connections | Can construct beautiful but wrong theories |
 | Low-D (Codex) | Catches specific errors | Can miss the forest for the trees |
 
-The toolchain supports both:
+The toolchain supports both, at both paper and corpus scales:
 - **Discovery tools** (harvest, ingest, embed, analysis) feed the high-D system with raw material
 - **Audit tools** (verify, pre_submit, critical_read, forensic_stats) enable the low-D system to check the output
+- **Review tools** (systematic_review, methodological_audit, forensic_scan, knowledge-base export) turn the corpus into the context needed to judge individual papers
 
 ## How to Tell If a Paper Is Close
 
@@ -65,8 +80,8 @@ This is the difference between "I used AI" and "I used AI responsibly."
 
 ## On Closeness to Truth
 
-The embedding space (`embed/`) serves a specific purpose: detecting when your bibliography has gaps or contradictions.
+The embedding space (`embed/`) serves a specific purpose: detecting when your bibliography or review corpus has gaps, contradictions, or hidden structure.
 
 If you claim X and your own cited literature contains evidence against X, you should know that before reviewers do. If a highly relevant paper exists that you didn't cite, you should know that too.
 
-The tools don't judge whether your theory is correct. They ensure you haven't missed obvious evidence for or against it. The judgment is yours.
+The tools don't judge whether your theory is correct. They ensure you haven't missed obvious evidence for or against it, and they make the field-level background visible enough that individual-paper judgments are not made in isolation. The judgment is yours.

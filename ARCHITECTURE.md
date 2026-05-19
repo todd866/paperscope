@@ -10,6 +10,8 @@ Paperscope is five layers:
 4. **Systematic Reviews** — JBI/PRISMA-ScR pipeline for AI-accelerated scoping reviews
 5. **Corpus Knowledge Bases** — paper cards, clusters, quality flags, source manifests, and review portals
 
+These layers are deliberately connected. Single-paper commands are not a separate product from corpus review commands: they are local queries against the same literature map. Citation alignment, novelty, critical reading, and forensic flags become more meaningful when the surrounding corpus has been harvested, embedded, charted, and made navigable.
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        BIBLIOGRAPHY LAYER                           │
@@ -122,7 +124,7 @@ Output: Structured JSON analysis per command + console summary
 
 1. **Text Processing** (`text/`): LaTeX cleaning, paragraph chunking, citation-context extraction. Shared utilities used by all analysis tools.
 2. **Embed** (`embed/`): Encodes text as vectors using sentence-transformers (all-MiniLM-L6-v2, 384-dim). Falls back to TF-IDF if the model isn't installed.
-3. **Analysis** (`analysis/`), 15 modules in three groups:
+3. **Analysis** (`analysis/`), 15 modules in three groups. These modules can run on one manuscript or one external paper, but their strongest form uses a corpus as context:
 
    *Embedding-powered (your own papers)*
    - `citation_alignment` — do cited references match the citing sentence?
@@ -172,7 +174,7 @@ Output: paper-cards.jsonl, clusters.json, source-manifest.jsonl,
         disagreement reports, static/app-ready knowledge-base package
 ```
 
-The knowledge-base layer is the natural product for large reviews. A user should be able to browse a corpus by paper, claim, cluster, evidence quality, source availability, and rater disagreement without reading raw JSONL.
+The knowledge-base layer is the natural product for large reviews and the missing context for serious single-paper evaluation. A user should be able to browse a corpus by paper, claim, cluster, evidence quality, source availability, and rater disagreement without reading raw JSONL. A paper card is therefore not just a summary of one paper; it is a node in the corpus map.
 
 Planned modules:
 
