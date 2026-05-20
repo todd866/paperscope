@@ -58,6 +58,7 @@ def ingest_main(
     paper_filter: Optional[str] = None,
     skip_download: bool = False,
     upload_b2: bool = False,
+    audit: bool = False,
 ) -> int:
     """Run the ingest pipeline: acquire OA PDFs and extract text.
 
@@ -67,6 +68,9 @@ def ingest_main(
         paper_filter: Only process refs from this paper folder
         skip_download: Skip OA download, only extract text from existing PDFs
         upload_b2: Upload acquired PDFs to B2 after download
+        audit: After extraction, run the type-routed per-paper validity audit
+            (analysis.audit_router) and write ``<stem>.audit.json`` alongside the
+            text. Default off; failures never abort ingest.
     """
     refs = _load_bibliography(data_dir)
     total = len(refs)
@@ -126,6 +130,14 @@ def ingest_main(
     else:
         pdf_candidates = sorted(pdf_dir.glob("*.pdf"))
 
+    audit_model = None
+    if audit:
+        try:
+            from ..embed import load_model
+            audit_model = load_model()
+        except Exception as e:
+            print(f"  [audit] embedding model unavailable, overclaiming will be skipped: {e}")
+
     for pdf_path in pdf_candidates:
         text_path = text_dir / f"{pdf_path.stem}.txt"
         if text_path.exists():
@@ -140,6 +152,17 @@ def ingest_main(
         except Exception as e:
             failed += 1
             print(f"  Failed: {pdf_path.name}: {e}")
+            continue
+        if audit:
+            # Type-routed validity audit on ingest. Best-effort: never abort ingest.
+            try:
+                from ..analysis.audit_router import audit_paper
+                rec = audit_paper(text_path.read_text(encoding="utf-8", errors="ignore"),
+                                  model=audit_model, run_overclaiming=audit_model is not None)
+                (text_dir / f"{pdf_path.stem}.audit.json").write_text(
+                    json.dumps(rec, indent=2))
+            except Exception as e:
+                print(f"  [audit] failed for {pdf_path.stem}: {e}")
 
     print(f"\n  Newly extracted: {extracted}")
     print(f"  Already had text: {skipped}")
