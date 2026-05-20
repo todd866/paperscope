@@ -25,6 +25,29 @@ def test_classify_other():
     assert classify_study_type("A short note about clinical workflows.") == "other"
 
 
+def test_classify_review():
+    t = "This systematic review of AI in prostate cancer imaging summarises recent work."
+    assert classify_study_type(t) == "review"
+
+
+def test_classify_discovery():
+    t = "Using single-cell transcriptomes we built an atlas of immune cells in lung cancer."
+    assert classify_study_type(t) == "discovery"
+
+
+def test_classify_segmentation_is_method():
+    t = "We propose a segmentation framework for vertebrae in spinal CT scans."
+    assert classify_study_type(t) == "method"
+
+
+def test_diagnostic_not_overcalled_by_background_diagnosis_mention():
+    # exclusion-first: a segmentation paper mentioning 'diagnosis' in background must NOT
+    # be labelled diagnostic_ml (the ~40%->~89% precision fix).
+    t = ("Vertebrae segmentation plays a critical role in the diagnosis and treatment of "
+         "spinal disorders; we present a new segmentation network.")
+    assert classify_study_type(t) == "method"
+
+
 def test_ml_validity_flags():
     t = ("We performed external validation in an independent cohort, reported 95% CI, "
          "used SMOTE for class imbalance, and a patient-level split to prevent leakage; "

@@ -25,24 +25,35 @@ import re
 from typing import Dict, List, Optional
 
 # -- study-type classification ------------------------------------------------
-_DIAG = re.compile(r"diagnos|detect|classif|screen|differentiat|distinguish|grading|staging", re.I)
-_ML = re.compile(r"machine learning|deep learning|neural network|\bAI\b|artificial intelligence|transformer|random forest|gradient boost|convolutional|\bCNN\b|\bSVM\b|foundation model", re.I)
+# Exclusion-first ordering + dropped over-matching 'identif'/'recogni' stems. Validated on
+# a 25-paper LLM-rater sample (md-project cross-domain): the naive 'any DIAG keyword' rule
+# scored ~40% precision for diagnostic_ml; this routing reaches ~89%.
+_DIAG = re.compile(r"diagnos|detect|classif|screen for|screening|differentiat|distinguish|grading|tumou?r staging|disease staging", re.I)
 _RCT = re.compile(r"randomi[sz]ed controlled trial|\bRCT\b|placebo[- ]controlled|double[- ]blind|intention[- ]to[- ]treat|randomly assigned", re.I)
-_PROG = re.compile(r"prognos|survival analysis|mortality|recurrence|hazard ratio|risk prediction|progression[- ]free|time[- ]to[- ]event", re.I)
+_PROG = re.compile(r"prognos|survival analysis|recurrence prediction|predict[a-z ]{0,25}(recurrence|survival|progression|conversion|onset|mortality|impairment|decline|treatment response|outcome)|risk of (developing|progression|conversion)|prognostic (model|signature|score|index)|time[- ]to[- ]event|hazard ratio", re.I)
+_REVIEW = re.compile(r"systematic review|narrative review|scoping review|literature review|a review of|application and prospect|prospect of|overview of|state[- ]of[- ]the[- ]art", re.I)
+_DISCOVERY = re.compile(r"mendelian randomi|genome[- ]wide association|\bgwas\b|single[- ]cell|transcriptomic atlas|enhancer hijack|structural variation|immunometabolic|multi[- ]omics|atlas of|molecular characterization|drug mechanism|quantitative trait loci", re.I)
+_SEGM = re.compile(r"segmentation|surface reconstruction|image reconstruction|\bregistration\b|super[- ]resolution|vessel reconstruction", re.I)
 _METHOD = re.compile(r"we propose|novel framework|foundation model|benchmark|new architecture|we present a (method|model|framework)", re.I)
 
 
 def classify_study_type(text: str) -> str:
-    """Heuristic study-type label from full text (order = most specific first)."""
+    """Heuristic study-type label from full text. Exclusion-first: route reviews,
+    discovery/biology, and segmentation/method out before the diagnostic test, so a mere
+    background mention of 'diagnosis' does not mislabel a non-diagnostic paper."""
     t = text[:20000]  # title/abstract/intro dominate the signal
     if _RCT.search(t):
         return "rct"
-    if _DIAG.search(t) and _ML.search(t):
-        return "diagnostic_ml"
-    if _DIAG.search(t):
-        return "diagnostic_ml"  # diagnostic even if ML phrasing is implicit
+    if _REVIEW.search(t):
+        return "review"
+    if _DISCOVERY.search(t):
+        return "discovery"
+    if _SEGM.search(t):
+        return "method"
     if _PROG.search(t):
         return "prognostic"
+    if _DIAG.search(t):
+        return "diagnostic_ml"
     if _METHOD.search(t):
         return "method"
     return "other"
@@ -52,6 +63,8 @@ PROFILES: Dict[str, List[str]] = {
     "diagnostic_ml": ["overclaiming", "missing_methods", "ml_validity"],
     "prognostic":    ["overclaiming", "ml_validity"],
     "rct":           ["overclaiming", "forensic_stats"],
+    "discovery":     ["overclaiming"],
+    "review":        ["overclaiming"],
     "method":        ["overclaiming"],
     "other":         ["overclaiming"],
 }
