@@ -17,7 +17,7 @@ class-imbalance / data-leakage / comparator realism) -- the checks that matter f
 AUC-reporting ML papers, where GRIM does not apply. Heuristic (keyword presence in full
 text = lower bound), pending an LLM refinement.
 
-Prototyped in md-project lit-review/cross-domain/audit_validity.py, generalised here.
+Prototyped in a downstream systematic-review project, generalised here.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 
 # -- study-type classification ------------------------------------------------
 # Exclusion-first ordering + dropped over-matching 'identif'/'recogni' stems. Validated on
-# a 25-paper LLM-rater sample (md-project cross-domain): the naive 'any DIAG keyword' rule
+# a 25-paper LLM-rater sample in a downstream project: the naive 'any DIAG keyword' rule
 # scored ~40% precision for diagnostic_ml; this routing reaches ~89%.
 _DIAG = re.compile(r"diagnos|detect|classif|screen for|screening|differentiat|distinguish|grading|tumou?r staging|disease staging", re.I)
 _RCT = re.compile(r"randomi[sz]ed controlled trial|\bRCT\b|placebo[- ]controlled|double[- ]blind|intention[- ]to[- ]treat|randomly assigned", re.I)
