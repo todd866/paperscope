@@ -133,6 +133,12 @@ def main() -> int:
         action="store_true",
         help="Upload acquired PDFs to Backblaze B2",
     )
+    ingest_parser.add_argument(
+        "--audit",
+        action="store_true",
+        help="Run the type-routed per-paper validity audit after extraction "
+             "(writes <stem>.audit.json; analysis.audit_router)",
+    )
 
     # depth2 command
     depth2_parser = subparsers.add_parser(
@@ -380,6 +386,7 @@ def main() -> int:
             paper_filter=args.paper,
             skip_download=args.skip_download,
             upload_b2=args.upload_b2,
+            audit=args.audit,
         )
 
     elif args.command == "depth2":
