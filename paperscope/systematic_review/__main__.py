@@ -158,6 +158,62 @@ def _cmd_browser_harvest(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_validate_workbook(args: argparse.Namespace) -> int:
+    """Decisions + (optional) self-audit + rubric + local records -> one HTML
+    workbook. Source context comes from the local corpus first; --include-fulltext
+    backfills *open-access* abstracts only (never paywalled full text)."""
+    from paperscope.systematic_review.records import record_id
+    from paperscope.systematic_review.validate.workbook import build_workbook, fetch_oa_abstracts
+    from paperscope.systematic_review.validate.rubric import load_friction_rubric
+
+    decisions = load_jsonl(args.decisions)
+    self_audit: dict[str, dict] = {}
+    if args.self_audit:
+        for a in load_jsonl(args.self_audit):
+            self_audit[str(a.get("record_id") or a.get("pmid") or a.get("id", ""))] = a
+    rubric = load_friction_rubric(args.rubric)
+    corpus = Path(args.corpus) if args.corpus else Path(".")
+    records_path = Path(args.records) if args.records else (corpus / "records.jsonl")
+    recs = load_jsonl(records_path) if records_path.exists() else []
+    rbi = {record_id(r): r for r in recs}
+    if args.include_fulltext:
+        need = [rid for rid in {record_id(d) for d in decisions} if not (rbi.get(rid) or {}).get("abstract")]
+        for rid, ab in fetch_oa_abstracts(need).items():
+            rbi.setdefault(rid, {})["abstract"] = ab
+    html = build_workbook(decisions, rbi, rubric, self_audit,
+                          title=args.title or "Validation workbook", wb_id=args.wb_id or "wb")
+    Path(args.out).write_text(html)
+    nflag = sum(1 for d in decisions if self_audit.get(record_id(d), {}).get("flag"))
+    print(f"wrote {args.out} ({len(decisions)} decisions, {nflag} AI-flagged)")
+    return 0
+
+
+def _cmd_validate_reconcile(args: argparse.Namespace) -> int:
+    """Human export -> append-only validation-overrides + requeue. Never
+    mutates the source decisions."""
+    from paperscope.systematic_review.records import dump_jsonl
+    from paperscope.systematic_review.validate.reconcile import reconcile
+
+    decisions = load_jsonl(args.decisions)
+    human = json.loads(Path(args.human_export).read_text())
+    overrides, requeue = reconcile(decisions, human)
+    dump_jsonl(overrides, args.out)
+    dump_jsonl(requeue, args.requeue)
+    print(f"wrote {args.out} ({len(overrides)} overrides) and {args.requeue} ({len(requeue)} re-queued)")
+    return 0
+
+
+def _cmd_validate_summary(args: argparse.Namespace) -> int:
+    """validation-overrides -> calibration summary (agreement rate, per-dimension)."""
+    from paperscope.systematic_review.validate.reconcile import summarize
+
+    summary = summarize(load_jsonl(args.validation))
+    Path(args.out).write_text(json.dumps(summary, indent=1, ensure_ascii=False))
+    print(json.dumps(summary, indent=2))
+    print(f"wrote {args.out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="paperscope.systematic_review")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -238,6 +294,34 @@ def main(argv: list[str] | None = None) -> int:
         "minimises SAML/OAuth handshakes (one per publisher instead of one per paper).",
     )
     s.set_defaults(fn=_cmd_browser_harvest)
+
+    vp = sub.add_parser("validate", help="human-in-the-loop validation of AI screening/extraction decisions")
+    vsub = vp.add_subparsers(dest="vcmd", required=True)
+
+    w = vsub.add_parser("workbook", help="decisions + self-audit + rubric -> scroll-through HTML workbook")
+    w.add_argument("--decisions", required=True, help="decisions JSONL (screening.jsonl / extraction.jsonl)")
+    w.add_argument("--self-audit", help="self-audit JSONL precomputed by a SelfAuditor (flagged items sort to top)")
+    w.add_argument("--rubric", help="friction-point rubric YAML (default: generic agree/flag)")
+    w.add_argument("--records", help="records JSONL for source context (default: <corpus>/records.jsonl)")
+    w.add_argument("--corpus", help="corpus dir (for records.jsonl)")
+    w.add_argument("--include-fulltext", action="store_true",
+                   help="backfill OPEN-ACCESS abstracts from Europe PMC for records lacking them (never paywalled full text)")
+    w.add_argument("--title", help="workbook title")
+    w.add_argument("--wb-id", help="workbook id (localStorage namespace)")
+    w.add_argument("--out", required=True, help="output HTML path")
+    w.set_defaults(fn=_cmd_validate_workbook)
+
+    r = vsub.add_parser("reconcile", help="human export -> validation-overrides + requeue (append-only)")
+    r.add_argument("--decisions", required=True, help="original decisions JSONL")
+    r.add_argument("--human-export", required=True, help="JSON export from the workbook")
+    r.add_argument("--out", default="validation-overrides.jsonl", help="overrides JSONL out")
+    r.add_argument("--requeue", default="requeue.jsonl", help="requeue JSONL out")
+    r.set_defaults(fn=_cmd_validate_reconcile)
+
+    su = vsub.add_parser("summary", help="validation-overrides -> calibration summary JSON")
+    su.add_argument("--validation", required=True, help="validation-overrides JSONL")
+    su.add_argument("--out", default="validation-summary.json", help="summary JSON out")
+    su.set_defaults(fn=_cmd_validate_summary)
 
     args = p.parse_args(argv)
     return args.fn(args)

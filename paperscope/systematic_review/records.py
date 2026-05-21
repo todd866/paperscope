@@ -50,3 +50,10 @@ def dump_jsonl(
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     return len(rows)
+
+
+def record_id(record: dict) -> str:
+    """The stable identifier for a record/decision. Prefers `record_id`, falling
+    back to `pmid` then `id`, so the pipeline is not bound to MEDLINE/PMID and
+    works for Embase/CINAHL or any source with its own identifier."""
+    return str(record.get("record_id") or record.get("pmid") or record.get("id") or "")
