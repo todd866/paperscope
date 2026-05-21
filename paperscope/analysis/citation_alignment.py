@@ -76,15 +76,20 @@ def uncited_relevance(
 
     sims = cosine_sim(ctx_emb, chunk_emb)
     results: List[Dict] = []
+    if sims.size == 0:
+        return results
     for key in uncited:
         key_indices = [j for j, ck in enumerate(chunk_keys) if ck == key]
         if not key_indices:
             continue
-        max_sim = float(np.max(sims[:, key_indices]))
+        sub = sims[:, key_indices]
+        if sub.size == 0:
+            continue
+        max_sim = float(np.max(sub))
         best_ctx_idx = int(
             np.unravel_index(
-                np.argmax(sims[:, key_indices]),
-                (sims.shape[0], len(key_indices)),
+                np.argmax(sub),
+                (sub.shape[0], len(key_indices)),
             )[0]
         )
         results.append({
