@@ -144,6 +144,7 @@ class ShadowReport:
     no_pdf: int = 0
     error: int = 0
     already_have: int = 0
+    doi_mismatch: int = 0   # SciDB returned MD5(s), but none matched the DOI (collision guard)
 
 
 def fetch_via_scihub(
@@ -231,6 +232,81 @@ def resolve_doi_to_md5(
         except requests.RequestException:
             continue
     return None
+
+
+def doi_core(doi: str) -> str:
+    """Normalise a DOI to a comparable lowercase core for collision checks."""
+    d = (doi or "").lower().strip()
+    d = re.sub(r"^https?://(dx\.)?doi\.org/", "", d)
+    d = re.sub(r"\.pdf$", "", d)
+    d = d.replace("%2f", "/")
+    return d
+
+
+def resolve_doi_to_md5s(
+    doi: str,
+    session: Optional[requests.Session] = None,
+    timeout: float = 15.0,
+) -> list[str]:
+    """Return ALL candidate Anna's MD5s for a DOI from the SciDB page.
+
+    SciDB can list more than one MD5 for a DOI: re-uploads, edition
+    variants, or — the failure this guards against — a wrong-file
+    collision where the *first* hit belongs to a different paper (observed
+    for recent DOIs, where the SciDB index points a DOI at an MD5 whose
+    record is a different article entirely). `resolve_doi_to_md5` returns
+    only the first of these; correctness-sensitive callers should take the
+    full list and filter it with `md5_landing_carries_doi`.
+    """
+    if not doi:
+        return []
+    s = session or requests.Session()
+    if "User-Agent" not in s.headers:
+        s.headers.update(_HEADERS)
+    for base in SCIDB_BASES:
+        try:
+            r = s.get(f"{base}/{doi}", timeout=timeout)
+            if r.status_code != 200:
+                continue
+            md5s = list(dict.fromkeys(re.findall(r"/md5/([a-f0-9]{32})", r.text)))
+            if md5s:
+                return md5s
+        except requests.RequestException:
+            continue
+    return []
+
+
+def md5_landing_carries_doi(
+    md5: str,
+    doi: str,
+    session: Optional[requests.Session] = None,
+    timeout: float = 30.0,
+) -> bool:
+    """QA guard: does the Anna's `/md5/<hash>` landing page reference this DOI?
+
+    The landing page embeds the file's true source DOI (in the stored
+    scimag filename and metadata). A SciDB DOI→MD5 collision shows up here
+    as the requested DOI being *absent* from the page — so this catches a
+    wrong-file hand-off before the PDF is ever downloaded or written.
+    Returns True only when the requested DOI's core appears on the page.
+    """
+    core = doi_core(doi)
+    if not core:
+        return False
+    suffix = core.split("/", 1)[-1]
+    s = session or requests.Session()
+    if "User-Agent" not in s.headers:
+        s.headers.update(_HEADERS)
+    for base in MD5_BASES:
+        try:
+            r = s.get(f"{base}/{md5}", timeout=timeout)
+            if r.status_code != 200:
+                continue
+            text = r.text.lower()
+            return core in text or (len(suffix) >= 6 and suffix in text)
+        except requests.RequestException:
+            continue
+    return False
 
 
 def _extract_libgen_id(html: str) -> Optional[str]:
@@ -345,6 +421,7 @@ def acquire_shadow_pdfs(
     pace_s: float = RATE_LIMIT_DELAY,
     log_path: Optional[str | Path] = None,
     skip_existing: bool = True,
+    verify_doi: bool = True,
 ) -> ShadowReport:
     """Walk a record list, resolve DOI → MD5 → PDF, write to disk.
 
@@ -363,6 +440,14 @@ def acquire_shadow_pdfs(
             doesn't throttle aggressively but be polite.
         log_path: append every attempt as JSONL here. None → no log.
         skip_existing: if the target PDF already exists, skip.
+        verify_doi: when True (default), every Anna's MD5 is checked
+            against its landing page before download and only an MD5 whose
+            page carries the requested DOI is used; if none of the SciDB
+            candidates match, the record is recorded as ``doi_mismatch``
+            and skipped rather than written. This is the collision guard:
+            SciDB occasionally maps a DOI to a wrong file, which would
+            otherwise be saved silently. Sci-Hub (Stage 3a) is keyed on
+            the DOI directly and is not subject to this guard.
 
     Returns:
         ShadowReport with per-record attempts and aggregate counters.
@@ -401,9 +486,9 @@ def acquire_shadow_pdfs(
 
             # Stage 3b: fall back to Anna's Archive libgen.li chain.
             # (DOI presence already guaranteed by the no-doi check above.)
-            md5 = resolve_doi_to_md5(doi, session=sess)
+            md5s = resolve_doi_to_md5s(doi, session=sess)
             time.sleep(pace_s)
-            if not md5:
+            if not md5s:
                 report.no_md5 += 1
                 report.attempts.append(ShadowAttempt(
                     record_id=rid, doi=doi, outcome="no_md5",
@@ -411,6 +496,31 @@ def acquire_shadow_pdfs(
                 ))
                 _log(log_fh, rid, doi, "", "no_md5", "")
                 continue
+
+            if verify_doi:
+                # Collision guard: only use an MD5 whose landing page
+                # actually carries the requested DOI. SciDB sometimes
+                # returns the wrong file first (a different paper).
+                md5 = next(
+                    (m for m in md5s
+                     if md5_landing_carries_doi(m, doi, session=sess)),
+                    None,
+                )
+                time.sleep(pace_s)
+                if md5 is None:
+                    report.doi_mismatch += 1
+                    report.attempts.append(ShadowAttempt(
+                        record_id=rid, doi=doi, md5=md5s[0],
+                        outcome="doi_mismatch",
+                        note=(f"none of {len(md5s)} SciDB candidate(s) carry "
+                              f"the requested DOI on their landing page "
+                              f"(collision guard; not downloaded)"),
+                    ))
+                    _log(log_fh, rid, doi, md5s[0], "doi_mismatch",
+                         "collision guard")
+                    continue
+            else:
+                md5 = md5s[0]
 
             ok, note = fetch_pdf_by_md5(md5, dest, session=sess)
             time.sleep(pace_s)
