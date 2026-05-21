@@ -207,7 +207,7 @@ def related_radar(
             "doi": doi,
             "year": year,
             "authors": _format_authors(work),
-            "source": work.get("primary_location", {}).get("source", {}).get("display_name", ""),
+            "source": _format_source(work),
         })
         candidate_abstracts.append(abstract)
 
@@ -248,12 +248,25 @@ def related_radar(
     }
 
 
+def _format_source(work: dict) -> str:
+    """Null-safely extract the venue name from an OpenAlex work.
+
+    OpenAlex returns ``primary_location`` and/or its nested ``source`` as
+    ``None`` (not an empty dict) for works with no indexed venue, so a
+    chained ``.get(..., {})`` raises ``AttributeError``. Coerce each level
+    to ``{}`` before descending.
+    """
+    primary_location = work.get("primary_location") or {}
+    source = primary_location.get("source") or {}
+    return source.get("display_name") or ""
+
+
 def _format_authors(work: dict) -> str:
     """Format author list from OpenAlex work."""
-    authorships = work.get("authorships", [])
+    authorships = work.get("authorships") or []
     names = []
     for a in authorships[:3]:
-        author = a.get("author", {})
+        author = a.get("author") or {}
         name = author.get("display_name", "")
         if name:
             names.append(name)
