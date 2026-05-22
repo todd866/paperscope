@@ -414,9 +414,27 @@ def fetch_pdf_by_md5(
     return False, "all mirrors failed or no PDF returned"
 
 
+# Short function words to drop so they don't inflate title overlap. Kept small
+# and generic; domain acronyms/genes (ALS, SOD1, C9orf72, TDP-43) are content.
+_TITLE_STOPWORDS = frozenset({
+    "a", "an", "as", "at", "be", "by", "in", "is", "of", "on", "or", "to",
+    "we", "the", "and", "for", "with", "from", "this", "that", "into", "than",
+    "then", "are", "was", "were", "has", "have", "had", "not", "but", "its",
+    "via", "per", "using", "based", "study", "studies", "among", "between",
+    "versus", "vs",
+})
+
+
 def _content_tokens(s: str) -> set[str]:
-    """Word tokens (4+ letters) for title/content overlap scoring."""
-    return set(re.findall(r"[a-z]{4,}", (s or "").lower()))
+    """Alphanumeric tokens for title/content overlap scoring.
+
+    Keeps tokens of length >= 2 (so acronyms, gene/protein symbols, and numbers
+    survive: ``als``, ``sod1``, ``c9orf72``, ``tdp``, ``43``) and drops a small
+    stopword set. A 4+-letters-only rule discarded exactly the tokens that carry
+    a short biomedical title's identity.
+    """
+    toks = re.findall(r"[a-z0-9]{2,}", (s or "").lower())
+    return {t for t in toks if t not in _TITLE_STOPWORDS}
 
 
 def _ocr_pdf_text(pdf_bytes: bytes, max_pages: int = 2, dpi: int = 200) -> str:
@@ -561,12 +579,22 @@ def acquire_shadow_pdfs(
     sess = requests.Session()
     sess.headers.update(_HEADERS)
     log_fh = open(log_path, "a") if log_path else None
+
+    def _terminal_title_mismatch(rid: str, doi: str, md5: str, note: str) -> None:
+        report.title_mismatch += 1
+        report.attempts.append(ShadowAttempt(
+            record_id=rid, doi=doi, md5=md5,
+            outcome="title_mismatch", note=note,
+        ))
+        _log(log_fh, rid, doi, md5, "title_mismatch", note)
+
     try:
         for rec in records:
             rid = str(rec.get(id_key, ""))
             doi = (rec.get("doi") or "").strip()
             title = (rec.get("title") or "").strip()
             dest = output_dir / f"{rid}.pdf"
+            scihub_title_miss = False  # Sci-Hub returned a wrong paper; fell through
 
             if skip_existing and dest.exists():
                 report.already_have += 1
@@ -581,36 +609,46 @@ def acquire_shadow_pdfs(
             time.sleep(pace_s)
             if ok_sh:
                 failed, ratio = _title_gate_failed(dest, title, verify_title)
-                if failed:
-                    report.title_mismatch += 1
+                if not failed:
+                    report.fetched += 1
                     report.attempts.append(ShadowAttempt(
-                        record_id=rid, doi=doi, outcome="title_mismatch",
-                        note=f"sci-hub PDF text does not match title "
-                             f"(ratio={ratio:.2f}; not kept)",
+                        record_id=rid, doi=doi, outcome="fetched_scihub",
+                        note=note_sh, pdf_path=str(dest),
+                        pdf_bytes=dest.stat().st_size,
                     ))
-                    _log(log_fh, rid, doi, "", "title_mismatch",
-                         f"ratio={ratio:.2f}")
+                    _log(log_fh, rid, doi, "", "fetched_scihub", note_sh)
                     continue
-                report.fetched += 1
+                # Sci-Hub returned the wrong paper. Don't abandon the record —
+                # remember it and fall through to Anna's (Stage 3b). It only
+                # becomes a terminal title_mismatch if no route yields the right
+                # paper.
+                scihub_title_miss = True
                 report.attempts.append(ShadowAttempt(
-                    record_id=rid, doi=doi, outcome="fetched_scihub",
-                    note=note_sh, pdf_path=str(dest),
-                    pdf_bytes=dest.stat().st_size,
+                    record_id=rid, doi=doi, outcome="scihub_title_mismatch",
+                    note=f"sci-hub PDF text does not match title "
+                         f"(ratio={ratio:.2f}); trying Anna's",
                 ))
-                _log(log_fh, rid, doi, "", "fetched_scihub", note_sh)
-                continue
+                _log(log_fh, rid, doi, "", "scihub_title_mismatch",
+                     f"ratio={ratio:.2f}")
 
             # Stage 3b: fall back to Anna's Archive libgen.li chain.
             # (DOI presence already guaranteed by the no-doi check above.)
             md5s = resolve_doi_to_md5s(doi, session=sess)
             time.sleep(pace_s)
             if not md5s:
-                report.no_md5 += 1
-                report.attempts.append(ShadowAttempt(
-                    record_id=rid, doi=doi, outcome="no_md5",
-                    note="DOI not in Anna's Archive SciDB",
-                ))
-                _log(log_fh, rid, doi, "", "no_md5", "")
+                if scihub_title_miss:
+                    _terminal_title_mismatch(
+                        rid, doi, "",
+                        "sci-hub returned the wrong paper and the DOI is not in "
+                        "Anna's SciDB (no correct copy found)",
+                    )
+                else:
+                    report.no_md5 += 1
+                    report.attempts.append(ShadowAttempt(
+                        record_id=rid, doi=doi, outcome="no_md5",
+                        note="DOI not in Anna's Archive SciDB",
+                    ))
+                    _log(log_fh, rid, doi, "", "no_md5", "")
                 continue
 
             if verify_doi:
@@ -624,16 +662,23 @@ def acquire_shadow_pdfs(
                 )
                 time.sleep(pace_s)
                 if md5 is None:
-                    report.doi_mismatch += 1
-                    report.attempts.append(ShadowAttempt(
-                        record_id=rid, doi=doi, md5=md5s[0],
-                        outcome="doi_mismatch",
-                        note=(f"none of {len(md5s)} SciDB candidate(s) carry "
-                              f"the requested DOI on their landing page "
-                              f"(collision guard; not downloaded)"),
-                    ))
-                    _log(log_fh, rid, doi, md5s[0], "doi_mismatch",
-                         "collision guard")
+                    if scihub_title_miss:
+                        _terminal_title_mismatch(
+                            rid, doi, md5s[0],
+                            "sci-hub returned the wrong paper and no SciDB "
+                            "candidate carries the DOI (no correct copy found)",
+                        )
+                    else:
+                        report.doi_mismatch += 1
+                        report.attempts.append(ShadowAttempt(
+                            record_id=rid, doi=doi, md5=md5s[0],
+                            outcome="doi_mismatch",
+                            note=(f"none of {len(md5s)} SciDB candidate(s) carry "
+                                  f"the requested DOI on their landing page "
+                                  f"(collision guard; not downloaded)"),
+                        ))
+                        _log(log_fh, rid, doi, md5s[0], "doi_mismatch",
+                             "collision guard")
                     continue
             else:
                 md5 = md5s[0]
@@ -643,29 +688,37 @@ def acquire_shadow_pdfs(
             if ok:
                 failed, ratio = _title_gate_failed(dest, title, verify_title)
                 if failed:
-                    report.title_mismatch += 1
-                    report.attempts.append(ShadowAttempt(
-                        record_id=rid, doi=doi, md5=md5,
-                        outcome="title_mismatch",
-                        note=f"PDF text does not match title "
-                             f"(ratio={ratio:.2f}; not kept)",
-                    ))
-                    _log(log_fh, rid, doi, md5, "title_mismatch",
-                         f"ratio={ratio:.2f}")
+                    _terminal_title_mismatch(
+                        rid, doi, md5,
+                        f"PDF text does not match title "
+                        f"(ratio={ratio:.2f}; not kept)",
+                    )
                     continue
-            attempt = ShadowAttempt(
-                record_id=rid, doi=doi, md5=md5,
-                outcome="fetched" if ok else "no_pdf",
-                note=note,
-                pdf_path=str(dest) if ok else "",
-                pdf_bytes=(dest.stat().st_size if ok and dest.exists() else 0),
-            )
-            report.attempts.append(attempt)
-            if ok:
                 report.fetched += 1
+                report.attempts.append(ShadowAttempt(
+                    record_id=rid, doi=doi, md5=md5, outcome="fetched",
+                    note=note, pdf_path=str(dest),
+                    pdf_bytes=(dest.stat().st_size if dest.exists() else 0),
+                ))
+                _log(log_fh, rid, doi, md5, "fetched", note)
+                continue
+
+            # Anna's download failed. If Sci-Hub had returned a wrong paper,
+            # the record's terminal state is title_mismatch (a wrong paper was
+            # delivered and no correct copy was found); otherwise no_pdf.
+            if scihub_title_miss:
+                _terminal_title_mismatch(
+                    rid, doi, md5,
+                    f"sci-hub returned the wrong paper and the Anna's download "
+                    f"failed ({note}); no correct copy found",
+                )
             else:
                 report.no_pdf += 1
-            _log(log_fh, rid, doi, md5, attempt.outcome, note)
+                report.attempts.append(ShadowAttempt(
+                    record_id=rid, doi=doi, md5=md5, outcome="no_pdf",
+                    note=note, pdf_path="", pdf_bytes=0,
+                ))
+                _log(log_fh, rid, doi, md5, "no_pdf", note)
     finally:
         if log_fh:
             log_fh.close()

@@ -219,6 +219,22 @@ def test_acquire_result_to_dict_includes_coverage():
     assert d["with_doi"] == 50
 
 
+def test_pretty_surfaces_shadow_guard_counters():
+    """The DOI/title collision guards exist to expose wrong-paper failures —
+    they must show up in the human-readable report, not be silently dropped."""
+    r = AcquireResult(
+        review_name="t",
+        corpus_dir="/x",
+        with_doi=10,
+        shadow_fetched=3,
+        shadow_doi_mismatch=2,
+        shadow_title_mismatch=4,
+    )
+    out = r.pretty()
+    assert "doi_mismatch=2" in out
+    assert "title_mismatch=4" in out
+
+
 if __name__ == "__main__":
     # Allow running as a plain script.
     raise SystemExit(pytest.main([__file__, "-v"]))

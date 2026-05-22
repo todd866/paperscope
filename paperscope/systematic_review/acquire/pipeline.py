@@ -39,6 +39,8 @@ class AcquireResult:
     shadow_fetched: int = 0          # Phase 1.5 (opt-in): Anna's Archive hits
     shadow_no_md5: int = 0           # DOI not in Anna's Archive
     shadow_no_pdf: int = 0           # found in archive but download failed
+    shadow_doi_mismatch: int = 0     # SciDB candidates none carried the DOI (collision guard)
+    shadow_title_mismatch: int = 0   # a PDF downloaded but its text didn't match the title
     queued_for_ezproxy: int = 0
     text_extracted: int = 0
     text_already_present: int = 0
@@ -57,12 +59,18 @@ class AcquireResult:
         return d
 
     def pretty(self) -> str:
+        shadow_total = (
+            self.shadow_fetched + self.shadow_no_md5 + self.shadow_no_pdf
+            + self.shadow_doi_mismatch + self.shadow_title_mismatch
+        )
         shadow_line = (
             f"  Shadow library (opt-in): "
             f"fetched={self.shadow_fetched:,}, "
             f"no_md5={self.shadow_no_md5:,}, "
-            f"no_pdf={self.shadow_no_pdf:,}\n"
-            if (self.shadow_fetched + self.shadow_no_md5 + self.shadow_no_pdf) > 0
+            f"no_pdf={self.shadow_no_pdf:,}, "
+            f"doi_mismatch={self.shadow_doi_mismatch:,}, "
+            f"title_mismatch={self.shadow_title_mismatch:,}\n"
+            if shadow_total > 0
             else ""
         )
         return (
@@ -227,11 +235,15 @@ def acquire(
         report.shadow_fetched = shadow_report.fetched
         report.shadow_no_md5 = shadow_report.no_md5
         report.shadow_no_pdf = shadow_report.no_pdf
+        report.shadow_doi_mismatch = shadow_report.doi_mismatch
+        report.shadow_title_mismatch = shadow_report.title_mismatch
         if verbose:
             print(
                 f"  fetched={shadow_report.fetched}, "
                 f"no_md5={shadow_report.no_md5}, "
                 f"no_pdf={shadow_report.no_pdf}, "
+                f"doi_mismatch={shadow_report.doi_mismatch}, "
+                f"title_mismatch={shadow_report.title_mismatch}, "
                 f"already_have={shadow_report.already_have}"
             )
 

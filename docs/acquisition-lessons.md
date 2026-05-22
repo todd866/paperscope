@@ -42,22 +42,32 @@ A working, verification-gated reference implementation lives at
    `acquire_shadow_pdfs(verify_title=True)` after *both* the Sci-Hub and libgen
    fetches — closing the unguarded-Sci-Hub hole. Opt-in per record: a record
    with no `title` is not content-checked, so existing callers are unaffected.
+   **Recall-preserving:** a Sci-Hub title mismatch is *not* terminal — it falls
+   through to Anna's (Stage 3b); the record becomes `title_mismatch` only if no
+   route yields the right paper.
 2. **OCR fallback before rejecting.** When the text-layer match is low,
    `pdf_matches_title` OCRs the first 2 pages (tesseract via PyMuPDF) and
    re-judges on the higher ratio — so scanned/watermark-only PDFs aren't
    false-rejected. Degrades to text-layer-only when tesseract is absent.
+3. **Acronym/gene-aware tokenization.** `_content_tokens` keeps alphanumeric
+   tokens of length >= 2 (so `ALS`, `SOD1`, `C9orf72`, `TDP-43`, numbers survive)
+   minus a small stopword set. A 4+-letters-only rule discarded exactly the
+   tokens that identify a short biomedical title.
+4. **Guards surfaced in the report.** `AcquireResult` and the verbose summary
+   now carry `shadow_doi_mismatch` and `shadow_title_mismatch`, so the wrong-paper
+   failures these guards catch are visible, not silently dropped.
 
 For the content gate, the watermark case is already handled: a watermark-only
 text layer scores a low title ratio, which triggers the OCR re-judge. The
 remaining items below live in the `~/PaperLibrary/library.py` reference impl and
 are not needed by the gate:
 
-3. **Member `fast_download` (optional, fast path).** The libgen.li chain is
-   slow and rate-limited (50 files / 300 s). With an Anna's membership key:
-   `GET {base}/dyn/api/fast_download.json?md5=<md5>&key=<key>` → JSON
-   `{download_url}`. Read the key from env only, never persist it.
-4. **`_is_thin` by *unique* tokens** — only relevant if `extract_text` is later
-   ported to *store* OCR'd text for scans (the gate doesn't store text).
+- **Member `fast_download` (optional, fast path).** The libgen.li chain is
+  slow and rate-limited (50 files / 300 s). With an Anna's membership key:
+  `GET {base}/dyn/api/fast_download.json?md5=<md5>&key=<key>` → JSON
+  `{download_url}`. Read the key from env only, never persist it.
+- **`_is_thin` by *unique* tokens** — only relevant if `extract_text` is later
+  ported to *store* OCR'd text for scans (the gate doesn't store text).
 
 ## Working cascade order (most reliable first)
 

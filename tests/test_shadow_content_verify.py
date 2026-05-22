@@ -172,3 +172,44 @@ def test_no_title_in_record_is_noop_even_when_verifying(tmp_path):
         )
     assert report.fetched == 1
     assert (tmp_path / "P1.pdf").exists()
+
+
+def test_scihub_wrong_then_libgen_right_is_fetched(tmp_path):
+    """Recall guard: a Sci-Hub title mismatch must fall through to the libgen
+    route, not abandon the record. Wrong Sci-Hub PDF + correct libgen PDF ->
+    fetched (not title_mismatch)."""
+    def fake_scihub(doi, dest, session=None, timeout=60.0):
+        dest.write_bytes(_text_pdf(OTHER))     # wrong paper from Sci-Hub
+        return True, "wrong scihub"
+
+    def fake_md5(md5, dest, session=None, timeout=60.0):
+        dest.write_bytes(_text_pdf(TITLE))     # right paper from libgen
+        return True, "right libgen"
+
+    with patch.object(sl, "fetch_via_scihub", side_effect=fake_scihub), \
+         patch.object(sl, "resolve_doi_to_md5s", return_value=["a" * 32]), \
+         patch.object(sl, "md5_landing_carries_doi", return_value=True), \
+         patch.object(sl, "fetch_pdf_by_md5", side_effect=fake_md5):
+        report = sl.acquire_shadow_pdfs(
+            _records(), tmp_path, pace_s=0, verify_title=True, verify_doi=True,
+        )
+    assert report.fetched == 1
+    assert report.title_mismatch == 0
+    assert (tmp_path / "P1.pdf").exists()
+    assert sl.pdf_matches_title((tmp_path / "P1.pdf").read_bytes(), TITLE)[0]
+
+
+def test_short_acronym_title_discriminates():
+    """Short biomedical titles are mostly acronyms/genes/numbers. The tokenizer
+    must keep them (ALS, SOD1, C9orf72) or it can't tell right from wrong."""
+    title = "SOD1 and C9orf72 in ALS"
+    right = sl.pdf_matches_title(_text_pdf("SOD1 C9orf72 ALS familial cohort"), title)
+    wrong = sl.pdf_matches_title(_text_pdf("Tetraspanin platelet receptor study"), title)
+    assert right[0] is True
+    assert wrong[0] is False
+
+
+def test_tokenizer_keeps_acronyms_and_numbers_drops_stopwords():
+    toks = sl._content_tokens("SOD1 and C9orf72 in ALS TDP-43")
+    assert {"sod1", "c9orf72", "als", "tdp", "43"} <= toks
+    assert "and" not in toks and "in" not in toks
