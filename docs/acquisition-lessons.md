@@ -17,10 +17,10 @@ A working, verification-gated reference implementation lives at
   and both were stored. Already mitigated by `resolve_doi_to_md5s` +
   `md5_landing_carries_doi` (the DOI landing-page guard). Good.
 - **Sci-Hub returns the wrong paper / not a paper.** `acquire_shadow_pdfs`
-  tries Sci-Hub *first* (Stage 3a) and explicitly does **not** guard it. In
-  practice Sci-Hub returned a Portuguese literature journal for one Gold-Coast
-  DOI, and HTML interstitials for others. **Gap: the unguarded first stage is
-  the least trustworthy one.**
+  tries Sci-Hub *first* (Stage 3a). In practice Sci-Hub returned a Portuguese
+  literature journal for one Gold-Coast DOI, and HTML interstitials for others.
+  The DOI-landing guard does not cover it. **Now closed** by the content gate
+  (`verify_title`), which checks Sci-Hub's bytes too.
 - **Scanned image-only PDFs.** Pre-~2000 papers (e.g. Brooks 1994; Ransohoff
   1978, an image-only NEJM archive scan) have no real text layer, so any
   content check sees nothing and false-rejects a correct file.
@@ -32,22 +32,32 @@ A working, verification-gated reference implementation lives at
   page*, not the downloaded file. The libgen chain can still deliver a wrong or
   truncated PDF. Content-level verification is complementary, not redundant.
 
-## Recommended hardening (port from `library.py`)
+## Hardening status
 
-1. **Verify delivered PDF content, not just the landing page.** After any
-   download (Sci-Hub *and* libgen), check the first ~2 pages' text against the
-   expected title; accept only on a match ratio ≥ ~0.45. See
-   `pdf_matches_title`. This is the single highest-value guard and it closes the
-   unguarded-Sci-Hub hole. Requires carrying the expected `title` in each record.
-2. **OCR fallback before rejecting.** When the text-layer match is low, OCR the
-   first 2 pages (tesseract via PyMuPDF rasterization) and re-judge; only then
-   reject. Store OCR'd text for scans so downstream charting isn't blank.
-3. **Detect "thin" by *unique* tokens, not raw length** — so repeated
-   watermarks don't mask an image-only PDF (`_is_thin`).
-4. **Member `fast_download` (optional, fast path).** The libgen.li chain is
+**Implemented** in `shadow_library.py` (tests: `tests/test_shadow_content_verify.py`):
+
+1. **Content verification, not just the landing page.** `pdf_matches_title`
+   checks the delivered bytes' first ~2 pages against the expected title; a
+   non-match deletes the file and records `title_mismatch`. Wired into
+   `acquire_shadow_pdfs(verify_title=True)` after *both* the Sci-Hub and libgen
+   fetches — closing the unguarded-Sci-Hub hole. Opt-in per record: a record
+   with no `title` is not content-checked, so existing callers are unaffected.
+2. **OCR fallback before rejecting.** When the text-layer match is low,
+   `pdf_matches_title` OCRs the first 2 pages (tesseract via PyMuPDF) and
+   re-judges on the higher ratio — so scanned/watermark-only PDFs aren't
+   false-rejected. Degrades to text-layer-only when tesseract is absent.
+
+For the content gate, the watermark case is already handled: a watermark-only
+text layer scores a low title ratio, which triggers the OCR re-judge. The
+remaining items below live in the `~/PaperLibrary/library.py` reference impl and
+are not needed by the gate:
+
+3. **Member `fast_download` (optional, fast path).** The libgen.li chain is
    slow and rate-limited (50 files / 300 s). With an Anna's membership key:
    `GET {base}/dyn/api/fast_download.json?md5=<md5>&key=<key>` → JSON
    `{download_url}`. Read the key from env only, never persist it.
+4. **`_is_thin` by *unique* tokens** — only relevant if `extract_text` is later
+   ported to *store* OCR'd text for scans (the gate doesn't store text).
 
 ## Working cascade order (most reliable first)
 

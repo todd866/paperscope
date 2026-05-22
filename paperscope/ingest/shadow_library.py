@@ -145,6 +145,7 @@ class ShadowReport:
     error: int = 0
     already_have: int = 0
     doi_mismatch: int = 0   # SciDB returned MD5(s), but none matched the DOI (collision guard)
+    title_mismatch: int = 0  # a PDF downloaded but its text didn't match the title (content guard)
 
 
 def fetch_via_scihub(
@@ -413,6 +414,101 @@ def fetch_pdf_by_md5(
     return False, "all mirrors failed or no PDF returned"
 
 
+def _content_tokens(s: str) -> set[str]:
+    """Word tokens (4+ letters) for title/content overlap scoring."""
+    return set(re.findall(r"[a-z]{4,}", (s or "").lower()))
+
+
+def _ocr_pdf_text(pdf_bytes: bytes, max_pages: int = 2, dpi: int = 200) -> str:
+    """OCR the first pages of a (likely scanned) PDF; "" on any failure.
+
+    Pre-~2000 papers are frequently image-only scans with no text layer, and
+    some scans carry only a per-page watermark. Either way the text layer is
+    useless for a content check; OCR recovers the real text. Requires
+    `tesseract` on PATH and PyMuPDF; degrades to "" when unavailable.
+    """
+    import subprocess
+    import tempfile
+    try:
+        import fitz
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    except Exception:
+        return ""
+    out: list[str] = []
+    for i in range(min(max_pages, len(doc))):
+        try:
+            pix = doc[i].get_pixmap(dpi=dpi)
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=True) as tf:
+                pix.save(tf.name)
+                r = subprocess.run(
+                    ["tesseract", tf.name, "-", "--psm", "6"],
+                    capture_output=True, text=True, timeout=120,
+                )
+                out.append(r.stdout)
+        except Exception:
+            break
+    return "\n".join(out)
+
+
+def pdf_matches_title(
+    pdf_bytes: bytes,
+    title: str,
+    min_ratio: float = 0.45,
+) -> tuple[bool, float]:
+    """Does the PDF's own text contain enough of `title`? Returns (ok, ratio).
+
+    The content guard: SciDB DOI->MD5 and Sci-Hub both occasionally deliver an
+    unrelated paper (or an HTML error page). Checking the delivered bytes' text
+    against the expected title catches this where a DOI-landing check cannot.
+    No title to check against -> (True, 1.0) (the check is opt-in per record).
+
+    Scanned PDFs have no usable text layer, so a low text-layer score is
+    re-judged on OCR before rejecting; the higher of the two ratios wins.
+    """
+    if not title:
+        return True, 1.0
+    tt = _content_tokens(title)
+    if not tt:
+        return True, 1.0
+    head = ""
+    try:
+        import fitz
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        head = "".join(doc[i].get_text() for i in range(min(2, len(doc))))
+    except Exception:
+        head = ""
+
+    def ratio_of(text: str) -> float:
+        return len(tt & _content_tokens(text)) / len(tt)
+
+    ratio = ratio_of(head)
+    if ratio < min_ratio:  # sparse/scanned/watermark text layer -> OCR and re-judge
+        ratio = max(ratio, ratio_of(_ocr_pdf_text(pdf_bytes)))
+    return ratio >= min_ratio, ratio
+
+
+def _title_gate_failed(dest: Path, title: str, verify_title: bool) -> tuple[bool, float]:
+    """Has the just-downloaded `dest` failed the content gate? Deletes it if so.
+
+    Returns (failed, ratio). A no-op (never fails) when verification is off, no
+    title is available, or the file can't be read — verification should not
+    discard an otherwise-good download on a reader error.
+    """
+    if not (verify_title and title):
+        return False, 1.0
+    try:
+        ok, ratio = pdf_matches_title(dest.read_bytes(), title)
+    except OSError:
+        return False, 1.0
+    if not ok:
+        try:
+            dest.unlink()
+        except OSError:
+            pass
+        return True, ratio
+    return False, ratio
+
+
 def acquire_shadow_pdfs(
     records: list[dict],
     output_dir: str | Path,
@@ -422,6 +518,7 @@ def acquire_shadow_pdfs(
     log_path: Optional[str | Path] = None,
     skip_existing: bool = True,
     verify_doi: bool = True,
+    verify_title: bool = True,
 ) -> ShadowReport:
     """Walk a record list, resolve DOI → MD5 → PDF, write to disk.
 
@@ -448,6 +545,13 @@ def acquire_shadow_pdfs(
             SciDB occasionally maps a DOI to a wrong file, which would
             otherwise be saved silently. Sci-Hub (Stage 3a) is keyed on
             the DOI directly and is not subject to this guard.
+        verify_title: when True (default) and a record carries a non-empty
+            ``title``, the downloaded PDF's own text is checked against that
+            title (OCR fallback for scans) before it is kept. A non-matching
+            file is deleted and recorded as ``title_mismatch``. This is the
+            content guard and — unlike ``verify_doi`` — it also covers Sci-Hub,
+            which otherwise returns the wrong paper (or an HTML error) silently.
+            Records without a title are not content-checked.
 
     Returns:
         ShadowReport with per-record attempts and aggregate counters.
@@ -461,6 +565,7 @@ def acquire_shadow_pdfs(
         for rec in records:
             rid = str(rec.get(id_key, ""))
             doi = (rec.get("doi") or "").strip()
+            title = (rec.get("title") or "").strip()
             dest = output_dir / f"{rid}.pdf"
 
             if skip_existing and dest.exists():
@@ -475,6 +580,17 @@ def acquire_shadow_pdfs(
             ok_sh, note_sh = fetch_via_scihub(doi, dest, session=sess)
             time.sleep(pace_s)
             if ok_sh:
+                failed, ratio = _title_gate_failed(dest, title, verify_title)
+                if failed:
+                    report.title_mismatch += 1
+                    report.attempts.append(ShadowAttempt(
+                        record_id=rid, doi=doi, outcome="title_mismatch",
+                        note=f"sci-hub PDF text does not match title "
+                             f"(ratio={ratio:.2f}; not kept)",
+                    ))
+                    _log(log_fh, rid, doi, "", "title_mismatch",
+                         f"ratio={ratio:.2f}")
+                    continue
                 report.fetched += 1
                 report.attempts.append(ShadowAttempt(
                     record_id=rid, doi=doi, outcome="fetched_scihub",
@@ -524,6 +640,19 @@ def acquire_shadow_pdfs(
 
             ok, note = fetch_pdf_by_md5(md5, dest, session=sess)
             time.sleep(pace_s)
+            if ok:
+                failed, ratio = _title_gate_failed(dest, title, verify_title)
+                if failed:
+                    report.title_mismatch += 1
+                    report.attempts.append(ShadowAttempt(
+                        record_id=rid, doi=doi, md5=md5,
+                        outcome="title_mismatch",
+                        note=f"PDF text does not match title "
+                             f"(ratio={ratio:.2f}; not kept)",
+                    ))
+                    _log(log_fh, rid, doi, md5, "title_mismatch",
+                         f"ratio={ratio:.2f}")
+                    continue
             attempt = ShadowAttempt(
                 record_id=rid, doi=doi, md5=md5,
                 outcome="fetched" if ok else "no_pdf",
