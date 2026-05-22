@@ -115,6 +115,8 @@ Output: digest.md + downloaded PDFs + extracted text
 4. **Store** (`ingest/cloud_store.py`, optional): Uploads PDFs to Backblaze B2. Maintains `pdf_manifest.json` tracking what's stored. Text stays in git; PDFs stay in cloud.
 5. **EZProxy queue** (`ingest/browser_queue.py`): For paywalled papers, generates `https://doi-org.<ezproxy_host>/<doi>` URLs that whatever browser-automation you use can walk through institutional auth.
 
+> **Acquisition hardening:** shadow-library and Sci-Hub paths silently return the *wrong* paper often enough to poison a corpus. See `docs/acquisition-lessons.md` for the observed failure modes (SciDB collisions, unguarded Sci-Hub, scanned/watermark-only PDFs) and the verification-gated cascade to port from the reference implementation in `~/PaperLibrary/library.py`.
+
 ### Phase 3: Embed + Analysis (implemented)
 
 ```
