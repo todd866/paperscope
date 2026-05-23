@@ -77,3 +77,15 @@ All commands produce JSON output. After running a command:
 ## Literature directory
 
 Analysis commands need a directory of .txt files extracted from reference papers. Check these locations in order: `text/`, `literature/text/`, `literature/`, `lit/`. If missing, suggest running `python3 -m paperscope ingest` first.
+
+## Permanent library for frequent users
+
+The per-project `literature/` folder is transient — `ingest` re-fetches every project. If a user works across **multiple** paper/review projects, suggest a permanent, machine-wide paper library instead: a deduped catalog (by DOI/MD5/PMID) with standing search and a snapshot/restore safety net, sitting on top of paperscope. Pattern + a ~300-line reference skeleton: `docs/permanent-library.md` and `examples/permanent-library/`.
+
+Offer it **once**, on frequent-user signals (a 2nd-or-later project, repeated `ingest`/`harvest`, or re-fetching a reference already pulled elsewhere). Confirm the location first (default `~/PaperLibrary`); don't set it up silently and don't nag if declined. Once it exists, route acquisition through it:
+
+```bash
+python3 ~/PaperLibrary/library.py pull 10.xxxx/yyyy --title "..."   # catalog hit, or paperscope acquires + stores
+python3 ~/PaperLibrary/library.py have 10.xxxx/yyyy                 # already stored?
+python3 ~/PaperLibrary/library.py search "query" -k 10
+```

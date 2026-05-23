@@ -135,6 +135,24 @@ python3 -m paperscope ingest /path/to/literature/
 python3 -m paperscope pre-submit paper.tex --bib bibliography.json
 ```
 
+### Permanent library (frequent users)
+
+`ingest` writes into a transient per-project `literature/` folder and re-fetches
+every project. If you use paperscope across many papers and reviews, stand up a
+**permanent, machine-wide paper library** instead: one deduped catalog (by
+DOI/MD5/PMID) with standing semantic search and a snapshot/restore safety net,
+sitting on top of paperscope's acquisition and embeddings. A paper enters once and
+is never re-fetched. See [`docs/permanent-library.md`](docs/permanent-library.md)
+for the pattern and [`examples/permanent-library/`](examples/permanent-library/) for
+a copy-and-adapt reference skeleton.
+
+```bash
+cp -r examples/permanent-library ~/PaperLibrary && cd ~/PaperLibrary
+export PAPERSCOPE_HOME=/path/to/paperscope
+python3 library.py pull 10.1016/j.biosystems.2025.105608 --title "..."
+python3 library.py search "active inference free energy" -k 10
+```
+
 ### Systematic literature reviews
 
 ```bash

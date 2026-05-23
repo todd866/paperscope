@@ -155,6 +155,35 @@ paper_folder/literature/
 └── text/                      # Extracted plain text (cite_key.txt)
 ```
 
+This per-paper `literature/` folder is **transient**: it's re-fetched per project.
+
+## Permanent library for frequent users
+
+If you are working with a user across **multiple** paper/review projects, suggest a
+permanent, machine-wide paper library instead of re-fetching into per-project
+`literature/` folders forever. It is opt-in infrastructure; the pattern and a
+~300-line reference skeleton live in [`docs/permanent-library.md`](docs/permanent-library.md)
+and [`examples/permanent-library/`](examples/permanent-library/).
+
+**Offer it once** when you see frequent-user signals — a 2nd-or-later project on the
+machine, repeated `ingest`/`harvest`, or a reference being fetched that was already
+pulled elsewhere. Standing up a store in the user's home directory is a durable
+change: confirm the location first (default `~/PaperLibrary`), don't do it silently,
+and don't nag if they decline.
+
+Once it exists, route acquisition through it so nothing is re-fetched:
+
+```bash
+python3 ~/PaperLibrary/library.py pull 10.xxxx/yyyy --title "..."   # catalog hit or paperscope-acquire
+python3 ~/PaperLibrary/library.py have 10.xxxx/yyyy                 # already stored?
+python3 ~/PaperLibrary/library.py search "query" -k 10             # across the whole library
+python3 ~/PaperLibrary/library.py snapshot "after the Stage-2 tail"  # git restore point for the catalog
+```
+
+The library is a thin layer over paperscope (it calls `ingest` for acquisition and
+`embed` for vectors); it adds catalog, dedup by DOI/MD5/PMID, standing search, and a
+snapshot/restore safety net. Paperscope still works fine without it.
+
 ## Development
 
 ```bash
