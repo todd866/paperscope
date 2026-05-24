@@ -73,6 +73,25 @@ re-extracting, and snapshot the catalog after a batch of pulls:
 python3 ~/PaperLibrary/library.py snapshot "harvested the ALS Stage-2 tail"
 ```
 
+## Storage management
+
+The PDF store grows without bound, but the extracted text is ~5% of its size and is what every
+analysis and the search actually read. `storage.py` (in the skeleton) keeps the library under a
+size cap by evicting the PDFs of cold, cheap-to-restore entries while preserving their text. It is
+a **cache eviction, not data loss**: each evicted row keeps `text/<cite_key>.txt`, its DOI/MD5, and
+metadata, so the PDF is re-fetchable on demand (`storage.py restore <id>` re-runs `pull`).
+
+```bash
+python3 ~/PaperLibrary/storage.py status         # size vs cap (default 200GB)
+python3 ~/PaperLibrary/storage.py plan           # dry-run eviction plan
+python3 ~/PaperLibrary/storage.py prune --apply  # evict to the low-water mark
+```
+
+A PDF is evictable only if its text is extracted, it's re-fetchable (DOI or MD5), and it isn't
+pinned. Eviction order is a composite score (coldness + cheap-to-restore + size − citations) with
+env-tunable weights and a configurable cap (`STORAGE_CAP_GB`). Access is stamped on `search`/`text`
+so "cold" means genuinely unused, not merely old.
+
 ## Why this isn't baked into paperscope as a default
 
 paperscope stays a toolkit: it acquires, analyses, and reviews, and it works

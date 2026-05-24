@@ -50,6 +50,26 @@ python3 library.py restore --yes                            # rebuild db from ca
 point of the git history is to *see and undo* an agent's (or a bad command's)
 damage to the catalog — `git diff catalog.sql` shows exactly what changed.
 
+## Keeping it under a size cap
+
+Over time the PDF store dominates (text is ~5% of the bytes). `storage.py` keeps the
+library under a cap by evicting the PDFs of low-value entries while keeping their text —
+a **cache eviction, not data loss**: the row keeps `text/<cite_key>.txt`, `doi`/`md5`, and
+metadata, so the PDF is re-fetchable on demand.
+
+```bash
+python3 storage.py status            # size vs cap (default 200GB), headroom, counts
+python3 storage.py plan              # dry-run: what would be evicted, and why
+python3 storage.py prune --apply     # evict down to the low-water mark
+python3 storage.py restore <id>      # re-fetch an evicted PDF (re-runs pull)
+python3 storage.py pin <id>          # never evict this one
+```
+
+A PDF is evictable only if its text is extracted, it's re-fetchable, and it's unpinned.
+Order is a composite score — coldness (least-recently-accessed first) + cheap-to-restore
+(DOI before md5-only) + size − citations, weights env-tunable. Access is stamped by
+`search`/`text`.
+
 ## Layout
 
 | File | Role |
@@ -57,6 +77,7 @@ damage to the catalog — `git diff catalog.sql` shows exactly what changed.
 | `library.py` | catalog + dedup + the `pull`/`import`/`have`/`text`/`search`/`stats`/`snapshot`/`restore` commands |
 | `schema.sql` | catalog schema (papers table + partial-unique dedup indexes) |
 | `snapshot.py` / `restore.py` | thin wrappers over the same functions |
+| `storage.py` | size-capped PDF eviction: drop cold/cheap PDFs, keep text, re-fetchable (`status`/`plan`/`prune`/`restore`/`pin`) |
 | `catalog.db` | live SQLite catalog *(gitignored)* |
 | `catalog.sql` / `catalog.jsonl` | tracked text dump + readable manifest |
 | `pdfs/`, `text/` | PDF store + extracted text *(gitignored, reproducible)* |

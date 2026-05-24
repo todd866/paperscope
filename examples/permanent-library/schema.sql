@@ -11,9 +11,15 @@ CREATE TABLE IF NOT EXISTS papers (
     year       INTEGER,
     journal    TEXT,
     cite_key   TEXT,        -- stable slug; the PDF/text are named <cite_key>
-    path       TEXT,        -- pdfs/<cite_key>.pdf, relative to the library root
+    path       TEXT,        -- pdfs/<cite_key>.pdf, relative to the library root ('' if PDF evicted)
     source     TEXT,        -- how acquired: oa | shadow | import
-    added_at   TEXT         -- ISO 8601 timestamp
+    added_at   TEXT,        -- ISO 8601 timestamp
+    -- storage tiering (see storage.py): evict the PDF of cold/cheap entries, keep text/<cite_key>.txt
+    last_accessed  TEXT,              -- ISO 8601; stamped on search/text access
+    access_count   INTEGER DEFAULT 0,
+    pinned         INTEGER DEFAULT 0, -- 1 = never evict
+    pdf_evicted    INTEGER DEFAULT 0, -- 1 = PDF deleted, text kept, re-fetchable
+    cited_by_count INTEGER            -- optional; lowers eviction score if known
 );
 
 -- Dedup keys. Partial uniqueness so the many DOI-less imports don't collide on ''.

@@ -237,6 +237,19 @@ def _insert(conn, **kw):
     )
 
 
+def _touch(conn, cite_key) -> None:
+    """Stamp an access for storage tiering (see storage.py). No-op if columns absent."""
+    try:
+        conn.execute(
+            "UPDATE papers SET last_accessed=?, access_count=COALESCE(access_count,0)+1 "
+            "WHERE cite_key=?",
+            (_dt.datetime.now().isoformat(timespec="seconds"), cite_key),
+        )
+        conn.commit()
+    except Exception:
+        pass
+
+
 def cmd_have(args) -> int:
     conn = _connect(args.root)
     ident = args.identifier
@@ -256,6 +269,7 @@ def cmd_text(args) -> int:
         print("not in library")
         return 1
     tp = p["text"] / f"{row['cite_key']}.txt"
+    _touch(conn, row["cite_key"])
     print(str(tp) if tp.exists() else "(no extracted text)")
     return 0 if tp.exists() else 1
 
@@ -287,6 +301,7 @@ def cmd_search(args) -> int:
     print(f"top {len(order)} ({backend}):")
     for i in order:
         r = keys[i]
+        _touch(conn, r["cite_key"])
         print(f"  {sims[i]:.3f}  {r['cite_key']}  {r['title'] or r['doi']}")
     return 0
 
