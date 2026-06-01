@@ -346,6 +346,27 @@ def main() -> int:
         help="Skip OpenAlex author lookup (offline mode)",
     )
 
+    # annotate command
+    annotate_parser = subparsers.add_parser(
+        "annotate", help="Build an annotated reading copy of a PDF from a notes spec"
+    )
+    annotate_parser.add_argument(
+        "pdf",
+        type=Path,
+        help="Source PDF to annotate",
+    )
+    annotate_parser.add_argument(
+        "notes",
+        type=Path,
+        help="Notes spec (JSON or YAML): notes + optional front-matter / summary / appendix",
+    )
+    annotate_parser.add_argument(
+        "--output", "-o",
+        type=Path,
+        default=None,
+        help="Output PDF (default: <pdf-stem>_annotated.pdf)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "extract":
@@ -414,7 +435,7 @@ def main() -> int:
 
     elif args.command in {
         "analyze", "journal-fit", "abstract-check", "argument-graph",
-        "revision-diff", "related", "critical-read",
+        "revision-diff", "related", "critical-read", "annotate",
     }:
         # Analysis runners live in analysis/cli.py. Lazy import keeps the
         # CLI fast for non-analysis subcommands.
@@ -427,6 +448,7 @@ def main() -> int:
             "revision-diff": analysis_cli.run_revision_diff,
             "related": analysis_cli.run_related,
             "critical-read": analysis_cli.run_critical_read,
+            "annotate": analysis_cli.run_annotate,
         }[args.command]
         return runner(args)
 

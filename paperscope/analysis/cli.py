@@ -366,3 +366,21 @@ def run_critical_read(args) -> int:
     )
 
     return 0
+
+
+def run_annotate(args) -> int:
+    """Build an annotated reading copy of a PDF from a notes spec."""
+    from .annotate import build_annotated_pdf, load_spec
+
+    src = args.pdf.resolve()
+    spec = load_spec(args.notes.resolve())
+    out = (args.output or src.with_name(src.stem + "_annotated.pdf")).resolve()
+    result = build_annotated_pdf(src, spec, out)
+    print(f"saved: {result['output']} | pages: {result['pages']} | notes: {result['n_notes']}")
+    if result["misses"]:
+        print("ANCHOR MISSES (note still placed on its hint page, badge only):")
+        for n, a in result["misses"]:
+            print(f"  note {n}: {a!r}")
+    else:
+        print("all anchors placed cleanly.")
+    return 0

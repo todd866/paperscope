@@ -98,6 +98,15 @@ python3 -m paperscope critical-read paper.pdf --skip-author-lookup
 
 Runs four analyses: author/COI profiling, method-resolution mismatch detection, missing complementary methods, and overclaiming detection.
 
+### Annotate a paper (teaching / referee markup)
+
+```bash
+# Build an annotated reading copy from a notes spec (JSON or YAML)
+python3 -m paperscope annotate paper.pdf notes.json -o annotated.pdf
+```
+
+Turns a PDF + a list of notes — each pinning an `anchor` phrase on a page to a colour-coded `header` + `body` (TEACH / DEF / STRENGTH / CRIT) — into a reading copy with highlighted, numbered passages, interleaved "annotator's notes" commentary pages, a colour-key front page, and an optional one-screen summary + figure appendix. Substrate-free: all paper-specific content lives in the spec, so the same tool builds a teaching copy, a referee's markup, or a collaborator's. Anchors that don't bind are reported (the note is still emitted, badge-only). Spec format and a programmatic API (`build_annotated_pdf`) are documented in `paperscope/analysis/annotate.py`; see `examples/annotate/`.
+
 ### Forensic statistics (data integrity)
 
 ```bash

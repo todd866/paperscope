@@ -46,6 +46,15 @@ python3 -m paperscope critical-read paper.pdf --skip-author-lookup
 
 Runs four analyses: author/COI profiling, method-resolution mismatch detection, missing complementary methods, and overclaiming detection. Outputs structured JSON + console summary.
 
+### Annotate a paper (teaching / referee markup)
+
+```bash
+# PDF + notes spec (JSON/YAML) -> annotated reading copy
+python3 -m paperscope annotate paper.pdf notes.json -o annotated.pdf
+```
+
+A notes spec is a list of `{page, anchor, cat, header, body}` (cat = TEACH/DEF/STRENGTH/CRIT) plus optional front-matter `bottom_line`, a one-screen `summary`, and a figure `appendix`. The engine highlights+numbers each anchor on its page, interleaves commentary pages, prepends a colour-key page, and reports any anchor that fails to bind. Substrate-free — all paper-specific content lives in the spec. API: `paperscope.analysis.annotate.build_annotated_pdf`; example: `examples/annotate/`.
+
 ### Forensic statistics (data integrity)
 
 ```bash
@@ -109,7 +118,7 @@ Module README: `paperscope/systematic_review/README.md`. Design: `docs/systemati
 paperscope/
 ├── text/       # Shared text processing (LaTeX cleaning, chunking, parsing)
 ├── embed/      # Embedding infrastructure (sentence-transformers + TF-IDF fallback)
-├── analysis/   # 15 modules (embedding, critical read, forensic)
+├── analysis/   # 16 modules (embedding, critical read, annotate, forensic)
 │   │
 │   │  # Embedding-powered (your papers)
 │   ├── citation_alignment.py    # Do citations match the citing sentence?
@@ -128,6 +137,7 @@ paperscope/
 │   ├── method_resolution.py    # Method-conclusion resolution mismatch
 │   ├── missing_methods.py      # Complementary methods from same ecosystem
 │   ├── overclaiming.py         # Hedge erosion and scope expansion
+│   ├── annotate.py             # PDF + notes spec -> annotated reading copy
 │   │
 │   │  # Forensic statistics (data integrity, 19 checks)
 │   └── forensic_stats.py       # GRIM, GRIMMER, DEBIT, SPRITE, correlation
