@@ -653,36 +653,103 @@ _METHOD_ALIASES: Dict[str, tuple] = {
 }
 
 
+_DISABLED_BARE_ALIASES = {
+    # Too ambiguous in non-genetics papers: magnetic resonance, Mr., etc.
+    "mr",
+}
+
+_UPPERCASE_ONLY_ALIASES = {
+    # These are ordinary English words unless they appear as tool names.
+    "admixture",
+    "fade",
+    "relax",
+    "structure",
+}
+
+_CONTEXT_REQUIRED_ALIASES = {
+    # Uppercase alone is not enough; these are also domain concepts.
+    "admixture",
+    "structure",
+}
+
+_METHOD_CONTEXT_RE = re.compile(
+    r"\b("
+    r"analysis|algorithm|applied|computed|estimated|fit|fitted|framework|"
+    r"implemented|method|model|package|performed|pipeline|program|ran|run|"
+    r"software|tool|used|using"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def detect_method_candidates(text: str) -> List[Dict]:
+    """Return method-name evidence for an agent to inspect.
+
+    Candidates include weak lexical hits that should not drive downstream
+    missing-method critique by themselves. ``accepted`` marks the conservative
+    subset that ``detect_methods`` will use for legacy automation.
+    """
+    candidates: List[Dict] = []
+
+    for alias, (eco_key, meth_key) in _METHOD_ALIASES.items():
+        meth = METHOD_REGISTRY[eco_key]["methods"][meth_key]
+        match = next(_word_re(alias).finditer(text), None)
+        if match is None:
+            continue
+        accepted, reason = _alias_match_verdict(text, alias, meth["name"], match)
+        candidates.append(_candidate(
+            text=text,
+            source="alias",
+            matched_from=alias,
+            eco_key=eco_key,
+            meth_key=meth_key,
+            match=match,
+            accepted=accepted,
+            reason=reason,
+        ))
+
+    for eco_key, eco in METHOD_REGISTRY.items():
+        for meth_key, meth in eco["methods"].items():
+            method_name = meth["name"]
+            match = next(_word_re(method_name).finditer(text), None)
+            if match is None:
+                continue
+            accepted, reason = _method_name_match_verdict(
+                text,
+                method_name,
+                match,
+            )
+            candidates.append(_candidate(
+                text=text,
+                source="method_name",
+                matched_from=method_name,
+                eco_key=eco_key,
+                meth_key=meth_key,
+                match=match,
+                accepted=accepted,
+                reason=reason,
+            ))
+
+    return candidates
+
+
 def detect_methods(text: str) -> List[str]:
     """Auto-detect method names mentioned in paper text.
 
-    Scans for known method names and aliases from the registry.
-    Returns deduplicated list of matched method names.
+    Returns the conservative, deduplicated subset of method candidates suitable
+    for automated downstream checks.
     """
     found = []
     seen_targets = set()
-    text_lower = text.lower()
 
-    for alias, (eco_key, meth_key) in _METHOD_ALIASES.items():
-        target = (eco_key, meth_key)
+    for candidate in detect_method_candidates(text):
+        if not candidate["accepted"]:
+            continue
+        target = (candidate["ecosystem"], candidate["method_key"])
         if target in seen_targets:
             continue
-        # Check if alias appears in text (word-boundary-ish)
-        if re.search(r'\b' + re.escape(alias) + r'\b', text_lower):
-            meth = METHOD_REGISTRY[eco_key]["methods"][meth_key]
-            found.append(meth["name"])
-            seen_targets.add(target)
-
-    # Also check method names directly
-    for eco_key, eco in METHOD_REGISTRY.items():
-        for meth_key, meth in eco["methods"].items():
-            target = (eco_key, meth_key)
-            if target in seen_targets:
-                continue
-            name_lower = meth["name"].lower()
-            if re.search(r'\b' + re.escape(name_lower) + r'\b', text_lower):
-                found.append(meth["name"])
-                seen_targets.add(target)
+        found.append(candidate["name"])
+        seen_targets.add(target)
 
     return found
 
@@ -694,6 +761,140 @@ def detect_methods(text: str) -> List[str]:
 def _normalize(name: str) -> str:
     """Lowercase, strip, collapse whitespace."""
     return re.sub(r"\s+", " ", name.strip().lower())
+
+
+def _word_re(phrase: str) -> re.Pattern:
+    """Compile a case-insensitive word-boundary matcher for a method phrase."""
+    return re.compile(r"\b" + re.escape(phrase) + r"\b", re.IGNORECASE)
+
+
+def _is_uppercase_token(value: str) -> bool:
+    """True when all cased letters in a matched token are uppercase."""
+    letters = [ch for ch in value if ch.isalpha()]
+    return bool(letters) and all(ch.upper() == ch for ch in letters)
+
+
+def _has_method_context(text: str, start: int, end: int) -> bool:
+    """Check whether a short/ambiguous acronym is near method-use language."""
+    window = text[max(0, start - 90): min(len(text), end + 90)]
+    return bool(_METHOD_CONTEXT_RE.search(window))
+
+
+def _is_short_acronym(alias: str) -> bool:
+    compact = re.sub(r"[^a-zA-Z0-9]", "", alias)
+    return len(compact) <= 3 and any(ch.isalpha() for ch in compact)
+
+
+def _snippet(text: str, start: int, end: int, radius: int = 90) -> str:
+    value = text[max(0, start - radius): min(len(text), end + radius)]
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def _candidate(
+    *,
+    text: str,
+    source: str,
+    matched_from: str,
+    eco_key: str,
+    meth_key: str,
+    match: re.Match,
+    accepted: bool,
+    reason: str,
+) -> Dict:
+    meth = METHOD_REGISTRY[eco_key]["methods"][meth_key]
+    return {
+        "name": meth["name"],
+        "ecosystem": eco_key,
+        "method_key": meth_key,
+        "source": source,
+        "matched_from": matched_from,
+        "match_text": match.group(0),
+        "start": match.start(),
+        "end": match.end(),
+        "snippet": _snippet(text, match.start(), match.end()),
+        "accepted": accepted,
+        "reason": reason,
+    }
+
+
+def _alias_match_verdict(
+    text: str,
+    alias: str,
+    method_name: str,
+    match: re.Match,
+) -> tuple[bool, str]:
+    if alias in _DISABLED_BARE_ALIASES:
+        return False, "bare_alias_disabled"
+
+    matched = match.group(0)
+    acronym_like_method = method_name.isupper() and alias.isalpha()
+
+    if alias in _UPPERCASE_ONLY_ALIASES or acronym_like_method:
+        if not _is_uppercase_token(matched):
+            return False, "requires_uppercase_tool_name"
+
+    if _is_short_acronym(alias):
+        if not _is_uppercase_token(matched):
+            return False, "requires_uppercase_acronym"
+        if not _has_method_context(text, match.start(), match.end()):
+            return False, "short_acronym_without_method_context"
+
+    if alias in _CONTEXT_REQUIRED_ALIASES:
+        if not _has_method_context(text, match.start(), match.end()):
+            return False, "ambiguous_alias_without_method_context"
+
+    return True, "accepted_alias_match"
+
+
+def _method_name_match_verdict(
+    text: str,
+    method_name: str,
+    match: re.Match,
+) -> tuple[bool, str]:
+    acronym = re.fullmatch(r"[A-Z0-9-]{2,5}", method_name) is not None
+
+    if acronym and not _is_uppercase_token(match.group(0)):
+        return False, "requires_uppercase_method_name"
+
+    if acronym and len(re.sub(r"[^A-Z0-9]", "", method_name)) <= 3:
+        if not _has_method_context(text, match.start(), match.end()):
+            return False, "short_method_name_without_method_context"
+
+    return True, "accepted_method_name_match"
+
+
+def _find_usable_alias_match(
+    text: str,
+    alias: str,
+    method_name: str,
+) -> Optional[re.Match]:
+    """Return the first plausible alias match, filtering common false hits."""
+    if alias in _DISABLED_BARE_ALIASES:
+        return None
+
+    pattern = _word_re(alias)
+    for match in pattern.finditer(text):
+        accepted, _ = _alias_match_verdict(text, alias, method_name, match)
+        if accepted:
+            return match
+
+    return None
+
+
+def _find_usable_method_name_match(
+    text: str,
+    method_name: str,
+) -> Optional[re.Match]:
+    """Return the first plausible direct method-name match."""
+    pattern = _word_re(method_name)
+    acronym = re.fullmatch(r"[A-Z0-9-]{2,5}", method_name) is not None
+
+    for match in pattern.finditer(text):
+        accepted, _ = _method_name_match_verdict(text, method_name, match)
+        if accepted:
+            return match
+
+    return None
 
 
 def _match_method(query: str) -> Optional[tuple]:

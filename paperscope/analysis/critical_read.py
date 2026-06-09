@@ -35,7 +35,10 @@ def critical_read(
     """
     from .overclaiming import detect_overclaiming, split_sections
     from .method_resolution import check_resolution_match
-    from .missing_methods import check_missing_methods, detect_methods
+    from .missing_methods import (
+        check_missing_methods,
+        detect_method_candidates,
+    )
     from .author_profile import profile_authors
 
     print("=" * 60)
@@ -49,9 +52,16 @@ def critical_read(
     print(f"  Found sections: {', '.join(section_names)}")
 
     # --- Auto-detect methods if not provided ---
+    method_detection_scope = "provided"
+    method_candidates = []
     if methods_used is None:
         print("\nDetecting methods...")
-        methods_used = detect_methods(paper_text)
+        method_detection_text, method_detection_scope = _method_detection_text(
+            sections,
+            paper_text,
+        )
+        method_candidates = detect_method_candidates(method_detection_text)
+        methods_used = _accepted_method_names(method_candidates)
         print(f"  Detected: {', '.join(methods_used) if methods_used else 'none'}")
 
     # --- Author profiling ---
@@ -102,6 +112,8 @@ def critical_read(
     # --- Combined result ---
     result = {
         "sections_found": section_names,
+        "method_detection_scope": method_detection_scope,
+        "method_candidates": method_candidates,
         "methods_detected": methods_used,
         "author_profile": author_result,
         "resolution_analysis": resolution_result,
@@ -125,6 +137,45 @@ def critical_read(
         print(f"\nFull results: {out_path}")
 
     return result
+
+
+def _accepted_method_names(method_candidates: List[Dict]) -> List[str]:
+    """Deduplicate accepted candidate names while preserving registry order."""
+    found = []
+    seen_targets = set()
+    for candidate in method_candidates:
+        if not candidate.get("accepted"):
+            continue
+        target = (candidate["ecosystem"], candidate["method_key"])
+        if target in seen_targets:
+            continue
+        found.append(candidate["name"])
+        seen_targets.add(target)
+    return found
+
+
+def _method_detection_text(sections: Dict[str, str], paper_text: str) -> tuple[str, str]:
+    """Prefer method-like sections for auto-detecting methods.
+
+    Full-paper lexical detection confuses background/theory prose and references
+    with methods the authors actually used. If no method-like section exists,
+    fall back to the front matter only; the matcher itself remains conservative
+    enough to catch explicit method phrases there.
+    """
+    method_keys = [
+        "methods",
+        "materials and methods",
+        "methodology",
+        "statistical analysis",
+        "data analysis",
+        "experiments",
+        "experimental setup",
+    ]
+    chunks = [sections.get(key, "").strip() for key in method_keys]
+    chunks = [chunk for chunk in chunks if chunk]
+    if chunks:
+        return "\n\n".join(chunks), "method_sections"
+    return paper_text[:12000], "front_matter_fallback"
 
 
 def extract_author_names(text: str) -> List[str]:
