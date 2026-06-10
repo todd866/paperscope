@@ -148,9 +148,22 @@ def _parse_article(art: ET.Element) -> dict | None:
             )
 
     doi = ""
-    for aid in art.findall(".//ArticleIdList/ArticleId"):
-        if aid.get("IdType") == "doi":
-            doi = aid.text or ""
+    # The article's OWN doi only: ELocationID first, then the article's own
+    # ArticleIdList (a direct child of PubmedData). A recursive .//ArticleIdList
+    # ALSO matches every cited reference's ArticleIdList under PubmedData/
+    # ReferenceList, whose DOI would clobber the article's own and silently
+    # mis-DOI ~1 in 4 records (those whose PubMed record carries reference DOIs).
+    for el in article.findall("ELocationID"):
+        if el.get("EIdType") == "doi" and el.text:
+            doi = el.text
+            break
+    if not doi:
+        idlist = art.find("PubmedData/ArticleIdList")
+        if idlist is not None:
+            for aid in idlist.findall("ArticleId"):
+                if aid.get("IdType") == "doi" and aid.text:
+                    doi = aid.text
+                    break
 
     pubtypes = [
         pt.text
