@@ -346,6 +346,17 @@ def main() -> int:
         help="Skip OpenAlex author lookup (offline mode)",
     )
 
+    # citation-uptake command
+    uptake_parser = subparsers.add_parser(
+        "citation-uptake",
+        help="Check independent (non-self) citation uptake of a DOI",
+    )
+    uptake_parser.add_argument(
+        "doi",
+        type=str,
+        help="DOI of the published work (bare or doi.org URL)",
+    )
+
     # annotate command
     annotate_parser = subparsers.add_parser(
         "annotate", help="Build an annotated reading copy of a PDF from a notes spec"
@@ -432,6 +443,11 @@ def main() -> int:
             data_dir=args.data_dir.resolve(),
             by_paper=args.by_paper,
         )
+
+    elif args.command == "citation-uptake":
+        from .analysis.citation_uptake import check_uptake, _print_report
+        _print_report(check_uptake(args.doi))
+        return 0
 
     elif args.command in {
         "analyze", "journal-fit", "abstract-check", "argument-graph",
