@@ -1,4 +1,4 @@
-# Paperscope
+# PaperScope
 
 **An AI-assisted toolkit for academic paper analysis, systematic reviews, corpus-scale evidence mapping, and review knowledge bases.**
 
@@ -7,11 +7,23 @@
 
 ---
 
+## Three tools, three jobs
+
+PaperScope is one of three linked but distinct tools:
+
+| Tool | Does | Input → Output |
+|---|---|---|
+| **PaperScope** (this repo) | **Analyzes** the literature — bibliography / DOI / retraction QA, forensic metascience, systematic reviews, embeddings. | papers → checked analysis |
+| [LocalEvidence](https://github.com/todd866/LocalEvidence) | **Answers** a clinical question from a library you own, grounded and cited. | a question + your library → a cited evidence pack |
+| [EvidenceViewer](https://github.com/todd866/EvidenceViewer) | **Presents** any source-backed artifact through one contract + viewer, every claim traceable to its source. | an EvidenceArtifact → a source-linked reading UI |
+
+The pipeline: **PaperScope analyzes → LocalEvidence answers** (using PaperScope's fact-checking) **→ EvidenceViewer presents** either one's output.
+
 ## What This Does
 
-Paperscope is a Python toolkit for working with academic papers at both manuscript and corpus scale. It supports pre-submission checks on your own work, critical reads of someone else's manuscript, and AI-assisted scoping reviews where a review corpus becomes a queryable evidence base rather than a spreadsheet dump.
+PaperScope is a Python toolkit for working with academic papers at both manuscript and corpus scale. It supports pre-submission checks on your own work, critical reads of someone else's manuscript, and AI-assisted scoping reviews where a review corpus becomes a queryable evidence base rather than a spreadsheet dump.
 
-The core premise is that paper-level evaluation and corpus-level evaluation are inseparable. A paper is only meaningful relative to the literature it claims to extend, cite, contradict, ignore, or compress. Paperscope therefore treats "evaluate this paper" as a local view into "evaluate this corpus": citation checks, novelty, method resolution, overclaiming, forensic flags, and review synthesis all depend on knowing what the surrounding corpus looks like.
+The core premise is that paper-level evaluation and corpus-level evaluation are inseparable. A paper is only meaningful relative to the literature it claims to extend, cite, contradict, ignore, or compress. PaperScope therefore treats "evaluate this paper" as a local view into "evaluate this corpus": citation checks, novelty, method resolution, overclaiming, forensic flags, and review synthesis all depend on knowing what the surrounding corpus looks like.
 
 - **Semantic analysis** — embeds a manuscript and its literature into a shared vector space to catch citation misalignment, unsupported claims, abstract gaps, and missing related work
 - **Forensic statistics** — 19 data-integrity checks (GRIM, GRIMMER, SPRITE, correlation bounds, p-value recalculation, Carlisle test, and more) based on Heathers (2025) [*An Introduction to Forensic Metascience*](https://jamesheathers.curve.space/)
@@ -22,7 +34,7 @@ The core premise is that paper-level evaluation and corpus-level evaluation are 
 
 ## Scaling to Large Reviews
 
-Paperscope is built for large review corpora: thousands of records, working evidence bases of well over a thousand papers, AI-assisted charting, paper-card generation, quality flags, rich metadata, dual-rater comparison, and a searchable collaborator portal. Discipline-specific rubrics, claims, and synthesis outputs stay in the caller project; the generic machinery is pulled back into Paperscope.
+PaperScope is built for large review corpora: thousands of records, working evidence bases of well over a thousand papers, AI-assisted charting, paper-card generation, quality flags, rich metadata, dual-rater comparison, and a searchable collaborator portal. Discipline-specific rubrics, claims, and synthesis outputs stay in the caller project; the generic machinery is pulled back into PaperScope.
 
 For large reviews the useful product is not just "screen and aggregate" but a corpus knowledge base that lets a reader ask questions such as:
 
@@ -50,7 +62,7 @@ Without `sentence-transformers`, embedding-based tools fall back to TF-IDF (whic
 
 ### Integration with AI coding assistants
 
-Paperscope works as a CLI that any AI assistant can call. Two tested workflows:
+PaperScope works as a CLI that any AI assistant can call. Two tested workflows:
 
 **Claude Code:** Clone into your project or a known path. Claude reads the `CLAUDE.md` file and uses the CLI when working on papers. You can also use `--plugin-dir` for skill auto-invocation:
 ```bash
@@ -262,7 +274,7 @@ See [`examples/annotate/`](examples/annotate/) for a worked annotation spec and 
 
 ## Development Workflow
 
-Paperscope is developed using a multi-model feedback loop:
+PaperScope is developed using a multi-model feedback loop:
 
 1. **Claude Code** (Opus) writes features and runs analyses
 2. **Codex** reviews the code and output, producing detailed findings

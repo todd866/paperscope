@@ -2,7 +2,7 @@
 
 ## System Overview
 
-Paperscope is five layers:
+PaperScope is five layers:
 
 1. **Bibliography** — citation extraction, DOI resolution, retraction detection
 2. **Harvest + Ingest** — paper discovery, OA acquisition, text extraction

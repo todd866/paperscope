@@ -12,7 +12,7 @@ A paper can only be evaluated against the corpus it enters: the work it cites, t
 - Is the paper an outlier, a representative example, or a symptom of a broader literature pattern?
 - Are suspicious statistics paper-specific, or part of a corpus-level reporting signature?
 
-Paperscope therefore treats "evaluate this paper" and "evaluate this corpus" as the same task at different resolutions. A paper-level critique is a local slice through a corpus map. A corpus-level review is the global context that makes paper-level critique meaningful.
+PaperScope therefore treats "evaluate this paper" and "evaluate this corpus" as the same task at different resolutions. A paper-level critique is a local slice through a corpus map. A corpus-level review is the global context that makes paper-level critique meaningful.
 
 ## The Two-System Method
 
@@ -69,7 +69,7 @@ Why honesty matters:
 
 AI-assisted writing has a specific failure mode with citations: models generate plausible-sounding references that don't exist, or cite real papers for claims they don't make.
 
-Paperscope addresses this at every stage:
+PaperScope addresses this at every stage:
 1. **Extract** — pull actual citations from your LaTeX, not from model memory
 2. **Resolve** — verify DOIs against CrossRef (the authoritative registry)
 3. **Verify** — cross-check resolved DOIs against CrossRef metadata; catches title mismatches, year discrepancies, retractions

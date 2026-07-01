@@ -147,7 +147,7 @@ Both are corpus-scale; both use AI sub-agent reading where applicable; both are 
 
 The static HTML review site is the v0 audit surface. The next product layer is a corpus knowledge base: paper cards, cluster pages, quality flags, source-object manifests, and field-level rater disagreement. This keeps large AI-assisted reviews navigable for humans after the bulk extraction has finished.
 
-The design is in `../../docs/corpus-knowledge-base.md`. The key boundary is that Paperscope supplies the mechanics; project-specific rubrics, labels, disease claims, and synthesis arguments stay in the caller repo.
+The design is in `../../docs/corpus-knowledge-base.md`. The key boundary is that PaperScope supplies the mechanics; project-specific rubrics, labels, disease claims, and synthesis arguments stay in the caller repo.
 
 ## Regression test
 

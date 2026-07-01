@@ -1,4 +1,4 @@
-# Paperscope — Codex Instructions
+# PaperScope — Codex Instructions
 
 
 

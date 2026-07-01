@@ -33,7 +33,7 @@ Use two AI systems with complementary strengths:
 3. **Opus revises** based on GPT's corrections
 4. **GPT re-checks** the revision
 
-## Paperscope Integration
+## PaperScope Integration
 
 - **Discovery tools** (harvest, embed, ingest) → feed Opus with raw material
 - **Audit tools** (verify, pre_submit, citation_alignment, critical_read, forensic_stats) → enable GPT to check output
@@ -43,14 +43,14 @@ Use two AI systems with complementary strengths:
 
 ```
 Morning: Opus drafts a new section connecting paper X to theorem Y
-  → Paperscope: harvest to check for recent work on this connection
-  → Paperscope: analyze for embedding-based gap detection against your literature
+  → PaperScope: harvest to check for recent work on this connection
+  → PaperScope: analyze for embedding-based gap detection against your literature
 
 Afternoon: GPT reviews the section
-  → Paperscope: verify all cited DOIs
-  → Paperscope: analyze → citation_alignment flags low-similarity citations
+  → PaperScope: verify all cited DOIs
+  → PaperScope: analyze → citation_alignment flags low-similarity citations
     for manual check against the cited paper's text
 
 Evening: Opus revises based on GPT's findings
-  → Paperscope: pre-submit check before finalizing
+  → PaperScope: pre-submit check before finalizing
 ```

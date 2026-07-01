@@ -1,10 +1,10 @@
-# Paperscope — Claude Code Instructions
+# PaperScope — Claude Code Instructions
 
 
 
 ## What This Is
 
-Paperscope is a Python toolkit for writing and reviewing academic papers. Every tool works on both sides of peer review: semantic analysis, forensic statistics, citation management, and literature discovery.
+PaperScope is a Python toolkit for writing and reviewing academic papers. Every tool works on both sides of peer review: semantic analysis, forensic statistics, citation management, and literature discovery.
 
 ## Quick Commands
 
@@ -191,7 +191,7 @@ python3 ~/a local paper library/library.py snapshot "after the Stage-2 tail"  # 
 
 The library is a thin layer over paperscope (it calls `ingest` for acquisition and
 `embed` for vectors); it adds catalog, dedup by DOI/MD5/PMID, standing search, and a
-snapshot/restore safety net. Paperscope still works fine without it.
+snapshot/restore safety net. PaperScope still works fine without it.
 
 ## Development
 
