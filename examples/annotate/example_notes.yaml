@@ -1,0 +1,66 @@
+# Example notes spec for `paperscope annotate`.
+#
+#   python3 -m paperscope annotate paper.pdf examples/annotate/example_notes.yaml -o annotated.pdf
+#
+# The engine is substrate-free: nothing here is specific to any manuscript.
+# Only `notes` is required; front_matter / summary / appendix are optional.
+# Full schema + a programmatic API live in paperscope/analysis/annotate.py.
+
+title: "Annotated reading copy"                       # front-matter title (optional)
+subtitle: "MS-12345 - A Paper Title (Author)"          # optional
+
+# Optional summary box on the colour-key front page.
+bottom_line:
+  label: "Major revision"
+  text: >
+    One honest paragraph: what the paper is, whether there are integrity issues,
+    and the few things that must change. Unicode is fine (em-dashes, Greek alpha)
+    - it is mapped to ASCII so base-14 fonts render it.
+
+# Optional "in one screen" page: each section is a coloured heading + bullet items.
+summary:
+  title: "The paper in one screen"
+  sections:
+    - heading: "The thesis"
+      color: teach
+      items:
+        - "One or two sentences stating the paper's central move."
+    - heading: "Building blocks (read in this order)"
+      color: def
+      items:
+        - "1. The keystone construct."
+        - "2. The core criterion / equation."
+        - "3. The main control variable or method."
+    - heading: "My major criticisms"
+      color: crit
+      items:
+        - "1. The deepest objection."
+        - "2. The prior-art / positioning gap."
+        - "3. A formal / dimensional problem."
+
+# Required: one entry per highlight. `anchor` must be a short phrase that occurs
+# verbatim on the page (mind PDF line-wraps - pick a phrase that does not break
+# across a line). `cat` is TEACH / DEF / STRENGTH / CRIT (case-insensitive).
+notes:
+  - page: 0                                            # 0-based PDF page index
+    anchor: "a distinctive phrase on the title page"
+    cat: DEF
+    header: "The central new object"
+    body: >
+      What it is: plain-English description of the passage.
+      My read: the teaching point or critique, and why.
+  - page: 4
+    anchor: "a phrase in the methods"
+    cat: CRIT
+    header: "The criterion does not bind"
+    body: "What it is: ...  My read: ..."
+
+# Optional figure appendix. `figures_dir` is relative to this spec file.
+appendix:
+  title: "Appendix - supporting figures"
+  intro: "Optional intro paragraph for the appendix."
+  figures_dir: "figs"
+  figures:
+    - file: "fig1.png"
+      title: "Fig 1.  A short title"
+      caption: "What the figure shows and why it matters."

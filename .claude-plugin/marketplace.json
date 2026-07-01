@@ -1,0 +1,16 @@
+{
+  "name": "Paperscope",
+  "plugins": [
+    {
+      "id": "paperscope",
+      "name": "Paperscope",
+      "description": "Toolkit for writing and reviewing academic papers. Semantic analysis, forensic statistics (19 data-integrity checks), critical read, and bibliography management.",
+      "version": "1.0.0",
+      "source": {
+        "type": "github",
+        "repo": "todd866/paperscope",
+        "path": "."
+      }
+    }
+  ]
+}

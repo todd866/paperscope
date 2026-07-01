@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.npz
+*.npy
+.env
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+.DS_Store
+
+# Regenerable analysis outputs for paper/ — `paperscope analyze paper.tex`
+# and friends rebuild these. The source (.tex, .bib, .pdf) stays tracked.
+paper/analysis/
+paper/abstract_alignment.json
+paper/critical_read.json
+paper/revision_diff.json
+paper/related_radar.json
+paper/journal_fit.json
