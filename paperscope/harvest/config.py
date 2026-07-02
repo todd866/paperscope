@@ -1,9 +1,10 @@
 """Configuration loader for paper harvesting."""
 
+import os
 from pathlib import Path
 from typing import List, Optional
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PathsConfig(BaseModel):
@@ -21,7 +22,10 @@ class DiscoveryConfig(BaseModel):
 
 
 class LibraryConfig(BaseModel):
-    ezproxy_host: str = "ezproxy.library.usyd.edu.au"
+    # No institution baked in: set via config.yaml or $PAPERSCOPE_EZPROXY_HOST.
+    ezproxy_host: str = Field(
+        default_factory=lambda: os.environ.get("PAPERSCOPE_EZPROXY_HOST", "")
+    )
     browser: str = "chrome"
 
 

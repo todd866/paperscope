@@ -17,12 +17,14 @@ def write_ezproxy_queue(
     paywalled_records: list[dict],
     output_path: str | Path,
     *,
-    ezproxy_host: str = "ezproxy.library.usyd.edu.au",
+    ezproxy_host: str | None = None,
 ) -> int:
     """Write an EZProxy download queue for the paywalled records.
 
     Each record needs `pmid` and `doi`. The queue entries are dicts with
-    `cite_key` (= pmid), `doi`, `title`, and `ezproxy_url`.
+    `cite_key` (= pmid), `doi`, `title`, and `ezproxy_url`. The proxy host
+    defaults to $PAPERSCOPE_EZPROXY_HOST; with neither set, queueing any
+    record with a DOI raises RuntimeError.
 
     Returns the number of queued items.
     """

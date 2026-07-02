@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -251,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("config", help="path to review config YAML")
     s.add_argument("--corpus", help="corpus dir (default: config.corpus_dir)")
     s.add_argument("--records", help="path to records JSONL (default: <corpus>/included.jsonl, fallback records.jsonl)")
-    s.add_argument("--ezproxy-host", default="ezproxy.library.usyd.edu.au", help="institutional EZProxy hostname")
+    s.add_argument("--ezproxy-host", default=os.environ.get("PAPERSCOPE_EZPROXY_HOST"), help="institutional EZProxy hostname (default: $PAPERSCOPE_EZPROXY_HOST)")
     s.add_argument("--no-oa", action="store_true", help="skip Unpaywall, just generate the EZProxy queue")
     s.add_argument("--no-extract", action="store_true", help="skip PyMuPDF text extraction")
     s.add_argument("--upload-b2", action="store_true", help="upload acquired PDFs to Backblaze B2")
@@ -265,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--config", help="path to review config YAML (optional if --corpus given)")
     s.add_argument("--corpus", help="corpus dir")
     s.add_argument("--records", help="JSON/JSONL records source (default: <corpus>/included.jsonl)")
-    s.add_argument("--ezproxy-host", default="ezproxy.library.usyd.edu.au", help="institutional EZProxy host")
+    s.add_argument("--ezproxy-host", default=os.environ.get("PAPERSCOPE_EZPROXY_HOST"), help="institutional EZProxy host (default: $PAPERSCOPE_EZPROXY_HOST)")
     s.add_argument("--concurrency", type=int, default=4, help="parallel pages (default: 4)")
     s.add_argument("--headless", action="store_true", help="run headless (after initial warmup)")
     s.add_argument("--limit", type=int, default=0, help="cap records (0 = all)")

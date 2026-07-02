@@ -26,7 +26,7 @@ FORBIDDEN = [
     ("private constellation map", r"PROJECT-MAP|GLOBAL_PROJECT_MAP|highdimensional"),
 ]
 COMPILED = [(label, re.compile(pat, re.I)) for label, pat in FORBIDDEN]
-TEXT_EXT = re.compile(r"\.(py|md|txt|json|ts|tsx|js|mjs|yml|yaml|toml|cfg|sh)$", re.I)
+TEXT_EXT = re.compile(r"\.(py|md|txt|json|ts|tsx|js|mjs|yml|yaml|toml|cfg|sh|tex|bib)$", re.I)
 
 
 def tracked_files() -> list[str]:

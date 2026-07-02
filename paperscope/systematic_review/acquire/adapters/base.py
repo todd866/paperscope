@@ -8,8 +8,9 @@ if no specific one matches.
 
 Three outcome classes you'll see most often:
   - SUCCESS:           PDF saved to papers/<pmid>.pdf, magic-byte verified
-  - PAYWALL_UNAUTH:    publisher refused institutional access (Sydney not
-                       subscribed, or session not propagated to publisher)
+  - PAYWALL_UNAUTH:    publisher refused access via your institution's
+                       proxy/SSO (no subscription, or session not
+                       propagated to publisher)
   - NO_PDF_LINK:       adapter couldn't find a download element
 
 The Outcome class enumerates the rest. Adapters mutate and return a

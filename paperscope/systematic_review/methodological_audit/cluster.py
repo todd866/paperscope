@@ -30,7 +30,12 @@ from pathlib import Path
 
 def _load_vectors(parquet_path: str | Path):
     import numpy as np
-    import pyarrow.parquet as pq
+    try:
+        import pyarrow.parquet as pq
+    except ImportError as e:
+        raise RuntimeError(
+            "methodological-audit clustering requires pyarrow: pip install pyarrow"
+        ) from e
     table = pq.read_table(parquet_path)
     pmids = table.column("pmid").to_pylist()
     embs = table.column("embedding").to_pylist()

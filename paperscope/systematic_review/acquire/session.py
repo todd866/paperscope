@@ -83,7 +83,13 @@ class Session:
         Otherwise, launches a fresh Chrome and (optionally) layers in a
         previously-dumped storage state.
         """
-        from playwright.async_api import async_playwright
+        try:
+            from playwright.async_api import async_playwright
+        except ImportError as e:
+            raise RuntimeError(
+                "browser-harvest requires playwright: "
+                "pip install playwright && playwright install chromium"
+            ) from e
 
         self._pw = await async_playwright().start()
 

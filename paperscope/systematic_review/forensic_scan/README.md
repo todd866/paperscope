@@ -119,4 +119,4 @@ from paperscope.analysis.forensic_stats import check_anova_oneway
 
 - `paperscope.analysis.forensic_stats` — per-paper forensic tests
 - `paperscope.systematic_review.methodological_audit` — per-paper rubric-based audit (orthogonal failure mode: does the paper ask the right question? vs forensic: are the numbers honest?)
-- Demo: `lit-review/audit/forensic-findings.md` in the MND scoping-review project for a full results write-up
+- Demo: the headline numbers quoted above come from the author's (private) MND scoping-review run; the output files in the schema above are everything needed to write the equivalent findings report for your own corpus

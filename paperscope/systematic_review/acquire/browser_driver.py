@@ -31,6 +31,8 @@ import json
 from pathlib import Path
 from typing import Iterable, Optional, TYPE_CHECKING
 
+from paperscope.ingest.browser_queue import resolve_ezproxy_host
+
 from .adapters import HarvestAttempt, Outcome, magic_bytes_ok, pick_adapter, utc_now
 from .session import Session, DEFAULT_STATE_PATH
 from .strategy_cache import DEFAULT_CACHE_PATH, StrategyCache
@@ -239,7 +241,7 @@ async def harvest_records(
     records: Iterable[dict],
     *,
     corpus_dir: Path | str,
-    ezproxy_host: str = "ezproxy.library.usyd.edu.au",
+    ezproxy_host: str | None = None,
     concurrency: int = 4,
     headless: bool = False,
     skip_already_have: bool = True,
@@ -300,6 +302,11 @@ async def harvest_records(
         if verbose:
             print(f"Nothing to harvest — all {len(records)} records already in papers/.")
         return report
+
+    # Every harvested URL goes through the proxy, so fail before launching
+    # a browser if no host is configured (arg or $PAPERSCOPE_EZPROXY_HOST).
+    # Resolved only now: a no-op rerun (everything cached) needs no host.
+    ezproxy_host = resolve_ezproxy_host(ezproxy_host)
 
     session = Session(Path(state_path))
 

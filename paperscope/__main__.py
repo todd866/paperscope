@@ -220,8 +220,8 @@ def main() -> int:
     )
     site_parser.add_argument(
         "--paperlibrary-root",
-        default="../a local paper library",
-        help="Relative a local paper library root recorded in the scaffold config",
+        default="../paper-library",
+        help="Relative paper-library root recorded in the scaffold config",
     )
     site_parser.add_argument(
         "--force",

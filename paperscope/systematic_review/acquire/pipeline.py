@@ -110,7 +110,7 @@ def acquire(
     corpus_dir: str | Path,
     records: list[dict] | None = None,
     records_path: str | Path | None = None,
-    ezproxy_host: str = "ezproxy.library.usyd.edu.au",
+    ezproxy_host: str | None = None,
     fetch_oa: bool = True,
     enable_shadow_library: bool = False,
     shadow_library_pace_s: float = 2.0,

@@ -82,11 +82,12 @@ def _readme(config: PaperSiteConfig) -> str:
 Generated {label} paper-navigation site scaffold.
 
 Shared contract:
-- MD3/light-dark token palette shared with md3.info and the MND lab site.
+- MD3/light-dark token palette: the shared MD3 visual contract used across the author's paper sites.
 - Native web manuscript as the reading surface; PDFs are downloads only.
 - Inline citation controls open the side panel first, with explicit external links inside the panel.
 - More-detail markers are inline annotations, not callout blocks.
-- Reference records carry a local paper library status from `{config.paperlibrary_root}`.
+- Reference records carry paper-library status from `{config.paperlibrary_root}`
+  (a permanent library at ~/paper-library by convention).
 - Reference records should include reader-facing use notes when available:
   `role`, `what`, `why`, `caution`, and deduped `contexts`.
 - Reference records can include `native_href` and `source_href`; citation clicks
@@ -624,12 +625,12 @@ function referenceContexts(ref: Reference): string[] {
 
 function paperLibraryStatusText(ref: Reference): string {
   if (ref.paperlibrary_status === "have_text") {
-    return "a local paper library has harvested text for this source, so the citation can be checked against local source material rather than metadata alone.";
+    return "The paper library (~/paper-library) has harvested text for this source, so the citation can be checked against local source material rather than metadata alone.";
   }
   if (ref.paperlibrary_status) {
-    return `a local paper library status: ${ref.paperlibrary_status}. The source remains visible so the citation role can still be inspected.`;
+    return `Paper-library status: ${ref.paperlibrary_status}. The source remains visible so the citation role can still be inspected.`;
   }
-  return "a local paper library status is not recorded for this source. The citation role is shown from the generated site inventory.";
+  return "Paper-library status is not recorded for this source. The citation role is shown from the generated site inventory.";
 }
 
 function DetailLayer({ label, children, ctx }: { label: string; children: ReactNode; ctx: Context }) {
@@ -800,7 +801,7 @@ export default function PaperReader({
               ) : null}
             </div>
             <ReferenceUsePanel ref={activeRef} ctx={ctx} />
-            <DetailLayer label="a local paper library" ctx={ctx}>
+            <DetailLayer label="Paper library" ctx={ctx}>
               <p>{paperLibraryStatusText(activeRef)}</p>
               {activeRef.paperlibrary_note ? <p>{activeRef.paperlibrary_note}</p> : null}
             </DetailLayer>
@@ -826,7 +827,7 @@ export default function PaperReader({
         ) : (
           <>
             <p className="md-eyebrow">Reference layer</p>
-            <h2>a local paper library coverage</h2>
+            <h2>Paper-library coverage</h2>
             <div className="paper-panel-stats">
               <div>
                 <strong>{references.length}</strong>
