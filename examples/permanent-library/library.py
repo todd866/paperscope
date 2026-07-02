@@ -166,7 +166,10 @@ def cmd_pull(args) -> int:
         return 0
 
     cite_key = args.cite_key or _cite_key(doi, pmid, "", doi or pmid or "paper")
-    ref = {"doi": doi, "cite_key": cite_key, "pmid": pmid}
+    # title enables the content guard: acquire_oa_pdfs only verifies a
+    # downloaded PDF against the paper when the ref carries a title
+    ref = {"doi": doi, "cite_key": cite_key, "pmid": pmid,
+           "title": (args.title or "").strip()}
 
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)

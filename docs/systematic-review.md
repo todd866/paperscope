@@ -188,7 +188,10 @@ follow private links to source PDFs or extracted text held outside Git.
 
 Running the review through this generic pipeline reproduces the review's own
 `synthesis-tables.json` across **15 semantic assertions** — every counter,
-every text collection, the PRISMA funnel. Not byte-identical: the new
+every text collection, the PRISMA funnel. That validation runs against the
+author's private review corpus (via `PAPERSCOPE_SR_CORPUS`); on a fresh
+checkout without it the regression suite skips rather than failing.
+Not byte-identical: the new
 output's key names are deliberately cleaner (e.g. the nested
 `model_prediction.{by_category,charted,validation_texts}` is flattened into
 `model_prediction_by_category` + `model_validation_texts` + a derivable

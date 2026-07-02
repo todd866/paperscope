@@ -31,6 +31,13 @@ search:
     C3_delay: '("diagnostic delay"[tiab] OR "time to diagnosis"[tiab] OR "diagnostic interval"[tiab] OR "diagnostic pathway"[tiab] OR "diagnostic journey"[tiab] OR "delayed diagnosis"[tiab] OR "Delayed Diagnosis"[MeSH] OR "misdiagnosis"[tiab] OR "mis-triage"[tiab] OR "referral delay"[tiab] OR "primary care recognition"[tiab])'
     C3_differential: '("differential diagnosis"[tiab] OR "mimic"[tiab] OR "mimics"[tiab] OR "false positive"[tiab] OR "referral threshold"[tiab] OR "probability model"[tiab] OR "diagnostic model"[tiab] OR "clinical prediction model"[tiab])'
 
+# Screening rubric + charting schema — markdown files parsed by screen.rubric
+# and extract.schema. Paths resolve relative to this YAML's directory.
+# Commented out here because the pilot's rubric and schema are review-project
+# files, not shipped with paperscope; point these at your own.
+# rubric_path: ./screening-rubric.md
+# schema_path: ./extraction-schema.md
+
 aggregation:
   # Frequency counters over list fields. `normalize` is always on for list_counters
   # (lowercase + collapse whitespace) so "Dysarthria" and "dysarthria " collapse.

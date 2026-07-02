@@ -52,7 +52,7 @@ The forensic module is a Python library for checking data integrity in reported 
 
 ```python
 from paperscope.analysis.forensic_stats import (
-    grim, grimmer, debit, sprite, correlation_bound,
+    grim, grimmer, grim_percentage, sprite, correlation_bound,
     check_ttest_paired, check_ttest_independent,
     check_anova_oneway, check_chi_squared,
     carlisle_stouffer_fisher, effect_size_consistency,
@@ -84,10 +84,10 @@ Analysis commands need a directory of .txt files extracted from reference papers
 
 The per-project `literature/` folder is transient — `ingest` re-fetches every project. If a user works across **multiple** paper/review projects, suggest a permanent, machine-wide paper library instead: a deduped catalog (by DOI/MD5/PMID) with standing search and a snapshot/restore safety net, sitting on top of paperscope. Pattern + a ~300-line reference skeleton: `docs/permanent-library.md` and `examples/permanent-library/`.
 
-Offer it **once**, on frequent-user signals (a 2nd-or-later project, repeated `ingest`/`harvest`, or re-fetching a reference already pulled elsewhere). Confirm the location first (default `~/a local paper library`); don't set it up silently and don't nag if declined. Once it exists, route acquisition through it:
+Offer it **once**, on frequent-user signals (a 2nd-or-later project, repeated `ingest`/`harvest`, or re-fetching a reference already pulled elsewhere). Confirm the location first (default `~/paper-library`); don't set it up silently and don't nag if declined. Once it exists, route acquisition through it:
 
 ```bash
-python3 ~/a local paper library/library.py pull 10.xxxx/yyyy --title "..."   # catalog hit, or paperscope acquires + stores
-python3 ~/a local paper library/library.py have 10.xxxx/yyyy                 # already stored?
-python3 ~/a local paper library/library.py search "query" -k 10
+python3 ~/paper-library/library.py pull 10.xxxx/yyyy --title "..."   # catalog hit, or paperscope acquires + stores
+python3 ~/paper-library/library.py have 10.xxxx/yyyy                 # already stored?
+python3 ~/paper-library/library.py search "query" -k 10
 ```

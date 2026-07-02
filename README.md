@@ -15,7 +15,7 @@ PaperScope is one of three linked but distinct tools:
 |---|---|---|
 | **PaperScope** (this repo) | **Analyzes** the literature — bibliography / DOI / retraction QA, forensic metascience, systematic reviews, embeddings. | papers → checked analysis |
 | [LocalEvidence](https://github.com/todd866/LocalEvidence) | **Answers** a clinical question from a library you own, grounded and cited. | a question + your library → a cited evidence pack |
-| [EvidenceViewer](https://github.com/todd866/EvidenceViewer) | **Presents** any source-backed artifact through one contract + viewer, every claim traceable to its source. | an EvidenceArtifact → a source-linked reading UI |
+| [EvidenceViewer](https://github.com/todd866/EvidenceViewer-public) | **Presents** any source-backed artifact through one contract + viewer, every claim traceable to its source. | an EvidenceArtifact → a source-linked reading UI |
 
 The pipeline: **PaperScope analyzes → LocalEvidence answers** (using PaperScope's fact-checking) **→ EvidenceViewer presents** either one's output.
 
@@ -29,7 +29,7 @@ The core premise is that paper-level evaluation and corpus-level evaluation are 
 - **Forensic statistics** — 19 data-integrity checks (GRIM, GRIMMER, SPRITE, correlation bounds, p-value recalculation, Carlisle test, and more) based on Heathers (2025) [*An Introduction to Forensic Metascience*](https://jamesheathers.curve.space/)
 - **Critical read** — author profiling, method-resolution mismatch detection, overclaiming analysis
 - **Bibliography pipeline** — citation extraction, DOI resolution, retraction detection, literature discovery
-- **Systematic literature reviews** — JBI / PRISMA-ScR pipeline (harvest → screen → extract → validate → synthesise) for AI-accelerated scoping reviews, with a human audit layer and a static-HTML review site. Reviews are protocol-as-data: one YAML defines PCC, search query blocks, screening rubric, charting schema, and aggregation rules. The `validate` step turns AI screening/extraction decisions into a human work queue (the model self-flags its low-confidence calls; the human adjudicates only those; flips reconcile back append-only) — see [`docs/validate.md`](docs/validate.md). See also [`paperscope/systematic_review/`](paperscope/systematic_review/) and [`docs/systematic-review.md`](docs/systematic-review.md).
+- **Systematic literature reviews** — JBI / PRISMA-ScR rails (harvest → screen → extract → validate → synthesise) for scoping reviews where **your AI assistant is the screening/extraction engine**. There is no bundled classifier: `screen` and `extract` are SDK-agnostic seams (interface + abstaining stub) designed to be driven by the assistant you already use — Claude Code, Codex — through the CLI and JSONL contracts; the pipeline supplies the rails, the append-only audit trail, the human-adjudication queue, and a static-HTML review site. Reviews are protocol-as-data: one YAML defines PCC, search query blocks, screening rubric, charting schema, and aggregation rules. The `validate` step turns AI screening/extraction decisions into a human work queue (the model self-flags its low-confidence calls; the human adjudicates only those; flips reconcile back append-only) — see [`docs/validate.md`](docs/validate.md). See also [`paperscope/systematic_review/`](paperscope/systematic_review/) and [`docs/systematic-review.md`](docs/systematic-review.md).
 - **Review knowledge bases** — emerging tooling for turning large review corpora into paper cards, cluster pages, quality flags, private source-object links, and public summaries. See [`docs/corpus-knowledge-base.md`](docs/corpus-knowledge-base.md).
 
 ## Scaling to Large Reviews
@@ -52,6 +52,8 @@ cd paperscope
 pip install -r requirements.txt
 export PAPERSCOPE_EMAIL="you@university.edu"  # for OpenAlex/CrossRef polite pool
 ```
+
+Heavier optional dependencies ship commented out in `requirements.txt` — e.g. `playwright` (only needed for `systematic_review browser-harvest`) and `pyarrow` (methodological-audit clustering). Uncomment what you use.
 
 For better embeddings (optional but recommended):
 ```bash
@@ -123,10 +125,10 @@ Turns a PDF + a list of notes — each pinning an `anchor` phrase on a page to a
 
 ```python
 # Import individual checks in Python
-from paperscope.analysis.forensic_stats import grim, debit, correlation_bound
-print(grim(mean="18.72", n=22))             # GRIM test (fails at 2dp)
-print(debit(percentage=53.2, n=25, dp=1))   # DEBIT test
-print(correlation_bound(0.10, 0.30, 0.05))  # impossible r (|r| > 1)
+from paperscope.analysis.forensic_stats import grim, grim_percentage, correlation_bound
+print(grim(mean="18.72", n=22))                       # GRIM test (fails at 2dp)
+print(grim_percentage(percentage=53.2, n=25, dp=1))   # GRIM applied to percentages
+print(correlation_bound(0.10, 0.30, 0.05))            # impossible r (|r| > 1)
 ```
 
 The forensic module is a Python library, not a CLI command. You transcribe summary statistics from a paper's tables and feed them to the functions. The checks are automated; the data entry is manual.
@@ -161,9 +163,9 @@ python3 -m paperscope paper-site ./site \
 ```
 
 Scaffolds a paper-library-backed Next.js paper reader with the shared MD3 visual
-contract used by md3.info and the MND lab site: native web manuscript first,
+contract used across the author's paper sites: native web manuscript first,
 downloadable PDFs second, inline citation/detail controls, side-panel reference
-context, and a local paper library source status. Reference records can carry
+context, and paper-library source status. Reference records can carry
 `role`/`what`/`why`/`caution`/`contexts` fields so the sidebar teaches the
 reader what each source is doing instead of dumping raw citation snippets. When
 those fields are absent, the scaffold falls back to conservative academic and
@@ -186,7 +188,7 @@ for the pattern and [`examples/permanent-library/`](examples/permanent-library/)
 a copy-and-adapt reference skeleton.
 
 ```bash
-cp -r examples/permanent-library ~/a local paper library && cd ~/a local paper library
+cp -r examples/permanent-library ~/paper-library && cd ~/paper-library
 export PAPERSCOPE_HOME=/path/to/paperscope
 python3 library.py pull 10.1016/j.biosystems.2025.105608 --title "..."
 python3 library.py search "active inference free energy" -k 10
@@ -231,7 +233,7 @@ Corpus knowledge-base roadmap: [`docs/corpus-knowledge-base.md`](docs/corpus-kno
 |-------|---------|
 | `grim()` | Impossible means for integer-valued instruments (BDI, Likert, counts) |
 | `grimmer()` | Impossible SDs for integer data (extends GRIM to standard deviations) |
-| `debit()` | Impossible percentages from discrete counts |
+| `grim_percentage()` | Impossible percentages from discrete counts (GRIM applied to percentages; `debit()` remains as a deprecated alias) |
 | `sprite()` | Whether any valid dataset can produce the reported mean + SD |
 | `correlation_bound()` | Impossible pre/post/change SD combinations (implied \|r\| > 1) |
 | `check_ttest_paired()` | Recalculates paired t-test p-values from reported statistics |
@@ -266,11 +268,11 @@ Corpus knowledge-base roadmap: [`docs/corpus-knowledge-base.md`](docs/corpus-kno
 2. 19 automated checks test internal consistency
 3. Results classified as pass, flag (suspicious), or fail (impossible)
 
-For the full technical description, see the [paper (PDF)](paper/paperscope.pdf).
+The [paper (PDF)](paper/paperscope.pdf) (March 2026) describes the embedding-analysis core; the forensic-statistics and systematic-review modules postdate it. For those, Heathers (2025) is the forensic reference and [`docs/systematic-review.md`](docs/systematic-review.md) is the design document.
 
 ## Examples
 
-See [`examples/annotate/`](examples/annotate/) for a worked annotation spec and [`examples/permanent-library/`](examples/permanent-library/) for a reference a local paper library integration.
+See [`examples/annotate/`](examples/annotate/) for a worked annotation spec and [`examples/permanent-library/`](examples/permanent-library/) for a reference paper-library integration.
 
 ## Development Workflow
 

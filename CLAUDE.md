@@ -61,12 +61,12 @@ A notes spec is a list of `{page, anchor, cat, header, body}` (cat = TEACH/DEF/S
 
 ```python
 # Import individual checks
-from paperscope.analysis.forensic_stats import grim, grimmer, debit, sprite
+from paperscope.analysis.forensic_stats import grim, grimmer, grim_percentage, sprite
 from paperscope.analysis.forensic_stats import correlation_bound, check_ttest_paired
 from paperscope.analysis.forensic_stats import carlisle_stouffer_fisher, check_chi_squared
 ```
 
-19 checks based on Heathers (2025) *An Introduction to Forensic Metascience*: GRIM, GRIMMER, DEBIT, SPRITE, correlation bounds, t-test/ANOVA/chi-squared recalculation, Carlisle-Stouffer-Fisher, SD/SE confusion, Benford's law, variance ratios, effect size consistency, and more.
+19 checks based on Heathers (2025) *An Introduction to Forensic Metascience*: GRIM, GRIMMER, GRIM-for-percentages (`grim_percentage`; `debit` survives as a deprecated alias), SPRITE, correlation bounds, t-test/ANOVA/chi-squared recalculation, Carlisle-Stouffer-Fisher, SD/SE confusion, Benford's law, variance ratios, effect size consistency, and more.
 
 ### Bibliography pipeline
 
@@ -117,7 +117,7 @@ Module README: `paperscope/systematic_review/README.md`. Design: `docs/systemati
 paperscope/
 ├── text/       # Shared text processing (LaTeX cleaning, chunking, parsing)
 ├── embed/      # Embedding infrastructure (sentence-transformers + TF-IDF fallback)
-├── analysis/   # 16 modules (embedding, critical read, annotate, forensic)
+├── analysis/   # 18 modules (embedding, critical read, annotate, forensic)
 │   │
 │   │  # Embedding-powered (your papers)
 │   ├── citation_alignment.py    # Do citations match the citing sentence?
@@ -129,6 +129,7 @@ paperscope/
 │   ├── revision_diff.py         # Semantic diff between revisions
 │   ├── argument_graph.py        # Cross-paper dependency graph
 │   ├── related_radar.py         # Find missing related work (via OpenAlex)
+│   ├── citation_uptake.py       # Independent citation uptake (via OpenAlex)
 │   │
 │   │  # Critical read (external papers)
 │   ├── critical_read.py         # Orchestrator for external paper critique
@@ -136,10 +137,11 @@ paperscope/
 │   ├── method_resolution.py    # Method-conclusion resolution mismatch
 │   ├── missing_methods.py      # Complementary methods from same ecosystem
 │   ├── overclaiming.py         # Hedge erosion and scope expansion
+│   ├── audit_router.py         # Study-type classifier -> validity battery
 │   ├── annotate.py             # PDF + notes spec -> annotated reading copy
 │   │
 │   │  # Forensic statistics (data integrity, 19 checks)
-│   └── forensic_stats.py       # GRIM, GRIMMER, DEBIT, SPRITE, correlation
+│   └── forensic_stats.py       # GRIM, GRIMMER, GRIM-%, SPRITE, correlation
 │                                # bounds, t-test/ANOVA/chi2 recalc, Carlisle,
 │                                # SD/SE confusion, Benford's, variance ratios
 ├── bib/        # Bibliography management (extract, resolve, verify)
@@ -177,16 +179,16 @@ and [`examples/permanent-library/`](examples/permanent-library/).
 **Offer it once** when you see frequent-user signals — a 2nd-or-later project on the
 machine, repeated `ingest`/`harvest`, or a reference being fetched that was already
 pulled elsewhere. Standing up a store in the user's home directory is a durable
-change: confirm the location first (default `~/a local paper library`), don't do it silently,
+change: confirm the location first (default `~/paper-library`), don't do it silently,
 and don't nag if they decline.
 
 Once it exists, route acquisition through it so nothing is re-fetched:
 
 ```bash
-python3 ~/a local paper library/library.py pull 10.xxxx/yyyy --title "..."   # catalog hit or paperscope-acquire
-python3 ~/a local paper library/library.py have 10.xxxx/yyyy                 # already stored?
-python3 ~/a local paper library/library.py search "query" -k 10             # across the whole library
-python3 ~/a local paper library/library.py snapshot "after the Stage-2 tail"  # git restore point for the catalog
+python3 ~/paper-library/library.py pull 10.xxxx/yyyy --title "..."   # catalog hit or paperscope-acquire
+python3 ~/paper-library/library.py have 10.xxxx/yyyy                 # already stored?
+python3 ~/paper-library/library.py search "query" -k 10              # across the whole library
+python3 ~/paper-library/library.py snapshot "after the Stage-2 tail"  # git restore point for the catalog
 ```
 
 The library is a thin layer over paperscope (it calls `ingest` for acquisition and
@@ -200,7 +202,7 @@ pip install -r requirements.txt
 python3 -m paperscope <command> [args]
 ```
 
-The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 15 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity). Each tool is a standalone module with a main function that returns structured results.
+The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 18 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity). Each tool is a standalone module with a main function that returns structured results.
 
 ### Bug fix workflow
 

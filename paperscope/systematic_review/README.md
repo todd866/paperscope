@@ -82,7 +82,7 @@ python -m paperscope.systematic_review browser-harvest \
 ## Configuration
 
 A review config is a single YAML — see `examples/mnd-pilot.yaml` for a full
-worked example. The four sections:
+worked example. The core sections:
 
 ```yaml
 name: my-review
@@ -97,6 +97,8 @@ search:
     C2_intervention: '(...)'
     C3_outcome: '(...)'
   filters: 'English[lang] AND humans[mesh] AND 2000:2026[pdat] NOT (editorial[pt])'
+rubric_path: ./screening-rubric.md   # markdown rubric, parsed by screen.rubric
+schema_path: ./extraction-schema.md  # markdown charting schema, parsed by extract.schema
 aggregation:
   list_counters: [...]      # frequency tables over list-of-string fields
   scalar_counters: [...]    # frequency tables over single-value fields
@@ -159,7 +161,9 @@ collection, model-prediction roll-up, delay summary + detail rows, and the
 PRISMA funnel numbers. Not byte-identical: the new output's key names are
 deliberately cleaner (e.g. `model_prediction_by_category` instead of nested
 `model_prediction.by_category`, `delay.min` instead of `delay.min_months`).
-The test compares values, not serialisation. 15 / 15 pass.
+The test compares values, not serialisation. 15 / 15 pass — against the
+author's private review corpus; on a fresh checkout without that corpus the
+suite skips rather than failing (see below).
 
 ```bash
 python tests/test_systematic_review.py          # standalone runner
