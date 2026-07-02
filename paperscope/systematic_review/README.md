@@ -81,7 +81,7 @@ python -m paperscope.systematic_review browser-harvest \
 
 ## Configuration
 
-A review config is a single YAML — see `examples/mnd-pilot.yaml` for a full
+A review config is a single YAML — see `examples/example-review.yaml` for a full
 worked example. The core sections:
 
 ```yaml
@@ -96,7 +96,7 @@ search:
     C1_population: '(MeSH/tiab strings)'
     C2_intervention: '(...)'
     C3_outcome: '(...)'
-  filters: 'English[lang] AND humans[mesh] AND 2000:2026[pdat] NOT (editorial[pt])'
+  filters: 'English[lang] AND 2000:2026[pdat] NOT (editorial[pt])'
 rubric_path: ./screening-rubric.md   # markdown rubric, parsed by screen.rubric
 schema_path: ./extraction-schema.md  # markdown charting schema, parsed by extract.schema
 aggregation:
@@ -131,7 +131,7 @@ the spec schemas of each aggregation type.
 | `ui.build_review_site` | ✅ | Static HTML with Covidence-style record pages. v0 is PubMed-shaped: keys records by `pmid` and writes filenames from it — fine for MEDLINE, needs a generic `record_id` for Embase/CINAHL accession strings. |
 | `ui.serve` | 🚧 | Live-edit server, designed not built |
 | `methodological_audit` | ✅ | Per-paper rubric-based audit pipeline (cluster, sample, score, exclusions). Extracted from a working scoping review's audit layer, with calibration validated by a blind recheck. See `methodological_audit/README.md`. |
-| `forensic_scan` | ✅ | Corpus-scale forensic data-quality scan (p-curve, last-digit, positivity, industry-bias, salami). Uses `paperscope.analysis.forensic_stats` for per-paper verification. See `forensic_scan/README.md`. Documents known false-positive modes for medical literature (statcheck ~95% FP, GRIM ~100% FP on continuous data). |
+| `forensic_scan` | ✅ | Corpus-scale forensic data-quality scan (p-curve, last-digit, positivity, industry-bias, salami). Uses `paperscope.analysis.forensic_stats` for per-paper verification. See `forensic_scan/README.md`. Documents known false-positive modes for non-psychology literature (statcheck ~95% FP, GRIM ~100% FP on continuous data). |
 | `knowledge_base` | 🧭 | Roadmap stage: paper cards, clusters, source manifests, public summaries, private source links, and rater-family disagreement reports. See `../../docs/corpus-knowledge-base.md`. |
 
 ## Companion modules: methodological audit + forensic scan
@@ -149,7 +149,7 @@ Both are corpus-scale; both use AI sub-agent reading where applicable; both are 
 
 The static HTML review site is the v0 audit surface. The next product layer is a corpus knowledge base: paper cards, cluster pages, quality flags, source-object manifests, and field-level rater disagreement. This keeps large AI-assisted reviews navigable for humans after the bulk extraction has finished.
 
-The design is in `../../docs/corpus-knowledge-base.md`. The key boundary is that PaperScope supplies the mechanics; project-specific rubrics, labels, disease claims, and synthesis arguments stay in the caller repo.
+The design is in `../../docs/corpus-knowledge-base.md`. The key boundary is that PaperScope supplies the mechanics; project-specific rubrics, labels, domain claims, and synthesis arguments stay in the caller repo.
 
 ## Regression test
 

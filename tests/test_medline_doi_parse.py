@@ -22,7 +22,7 @@ ARTICLE_WITH_REFERENCE_DOIS = """
     <Article>
       <Journal><Title>Am J Hum Genet</Title>
         <JournalIssue><PubDate><Year>2004</Year></PubDate></JournalIssue></Journal>
-      <ArticleTitle>DNA/RNA helicase gene mutations in a form of juvenile ALS</ArticleTitle>
+      <ArticleTitle>Antecedent soil-moisture thresholds in a form of urban flash flooding</ArticleTitle>
       <AuthorList><Author><LastName>Chen</LastName><Initials>YZ</Initials></Author></AuthorList>
     </Article>
   </MedlineCitation>

@@ -1,6 +1,6 @@
 """Tests for OA acquisition + EZProxy queue.
 
-These mock the network layer, so they run anywhere — no MND corpus needed.
+These mock the network layer, so they run anywhere — no review corpus needed.
 """
 
 from __future__ import annotations

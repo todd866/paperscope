@@ -1,6 +1,6 @@
 """MEDLINE harvest via NCBI E-utilities. Keyless, polite-pool, no auth.
 
-Generic port of the MND review's `harvest_corpus.py`: takes a SearchConfig with
+Generic port of the source review's `harvest_corpus.py`: takes a SearchConfig with
 named query blocks + filters and produces a records.jsonl. The block
 composition is C1 (population) AND (C2_* OR C3_* OR ...) — i.e. the population
 is required, the rest is a permissive OR. This is the standard structure for

@@ -2,7 +2,7 @@
 
 Corpus-scale forensic data-quality scan. Run a battery of regex-based extractors over a text-extracted paper corpus, then aggregate into corpus-level statistics that no single-paper test would surface.
 
-**Status:** v1, extracted from a working MND scoping-review scan (2026-05-16) that processed 2,443 text files in ~3 minutes producing 13,308 p-values, 603 effect+CI rows, 3,272 mean+SD+n triples, 2,443 funding classifications, and corpus-level p-curve / last-digit / positivity / salami summaries.
+**Status:** v1, extracted from a working scoping-review scan (2026-05-16) that processed 2,443 text files in ~3 minutes producing 13,308 p-values, 603 effect+CI rows, 3,272 mean+SD+n triples, 2,443 funding classifications, and corpus-level p-curve / last-digit / positivity / salami summaries.
 
 ## Where this fits
 
@@ -10,7 +10,7 @@ Corpus-scale forensic data-quality scan. Run a battery of regex-based extractors
 - **`paperscope.systematic_review.forensic_scan`** (this module) = corpus-scale extraction + aggregation. Use when you have thousands of papers and want population-level patterns (p-curve, publication bias, industry-funding effects, salami clustering).
 - **`paperscope.systematic_review.methodological_audit`** = per-paper rubric-based methodological audit. Use when you want to grade each paper on construct adequacy, statistical hygiene, etc. (the orthogonal question to forensic data quality).
 
-The three layers compose. The MND demo used all three: methodological audit found 53.5% of diagnostic-utility papers `suspect` on construct adequacy; forensic scan found the corpus's data hygiene is generally clean (publication bias is the universal filter; no p-hacking, no fabrication signal); per-paper `forensic_stats` verification of the corpus-scan's specific flags found ~95% to be regex-extraction artefacts. Net result: the construct-adequacy story stands on its own, the forensic baseline is clean, and the spinoff methods finding is that off-the-shelf forensic tooling needs medical-paper adaptation.
+The three layers compose. The demo corpus used all three: methodological audit found 53.5% of the sampled papers `suspect` on construct adequacy; forensic scan found the corpus's data hygiene is generally clean (publication bias is the universal filter; no p-hacking, no fabrication signal); per-paper `forensic_stats` verification of the corpus-scan's specific flags found ~95% to be regex-extraction artefacts. Net result: the construct-adequacy story stands on its own, the forensic baseline is clean, and the spinoff methods finding is that off-the-shelf forensic tooling needs domain adaptation for the target literature.
 
 ## Pipeline at a glance
 
@@ -83,15 +83,15 @@ from paperscope.analysis.forensic_stats import check_anova_oneway
 
 ## What works well at corpus scale
 
-- **P-curve at corpus level** is robust. Even if individual p-value extractions are noisy, the aggregate shape (right-skew toward 0.01 = real effects; flat or left-skew toward 0.05 = p-hacking) is reliable from ~500 papers up. The MND demo's 8,442 significant p-values gave a definitive Simonsohn binom test p ≈ 0 for right-skew.
+- **P-curve at corpus level** is robust. Even if individual p-value extractions are noisy, the aggregate shape (right-skew toward 0.01 = real effects; flat or left-skew toward 0.05 = p-hacking) is reliable from ~500 papers up. The demo corpus's 8,442 significant p-values gave a definitive Simonsohn binom test p ≈ 0 for right-skew.
 - **Result-positivity ratio** as a publication-bias indicator. Average across the corpus is a stable population measure even with per-paper noise.
-- **Last-digit distribution** distinguishes Newcomb-Benford (natural data) from fraud patterns (preference for 4/5/7 + avoidance of 0/9). The MND demo found Newcomb-Benford, ruling out a fraud pattern.
+- **Last-digit distribution** distinguishes Newcomb-Benford (natural data) from fraud patterns (preference for 4/5/7 + avoidance of 0/9). The demo corpus found Newcomb-Benford, ruling out a fraud pattern.
 - **Industry vs non-industry positivity** is a powerful cross-tab that needs both funding classification AND positivity per paper; the corpus scale makes the Welch t-test interpretable.
 - **Salami screen** (author × cohort-size overlap) is high-precision when it fires; it misses distinct-cohort author-overlap salami.
 
 ## What false-positives at corpus scale (document explicitly)
 
-1. **Statcheck-style p-value recomputation false-positives 95%+** on medical papers. Mechanisms:
+1. **Statcheck-style p-value recomputation false-positives 95%+** on non-psychology papers. Mechanisms:
    - One-sided p-values mis-recomputed as two-sided
    - Omnibus ANOVA F mis-paired with post-hoc p (Tukey/LSD)
    - Mann-Whitney/Kruskal-Wallis rows mis-paired in dense table cells
@@ -99,7 +99,7 @@ from paperscope.analysis.forensic_stats import check_anova_oneway
    - Figure-caption asterisks read as inferential p-values
    The corpus-level **p-curve and last-digit distributions are valid** even with this — they depend on the p-value extractions, not the test-stat pairings.
 
-2. **GRIM-style integer-decomposition false-positives 100%** on medical-paper means. Medical means are continuous (percentages, regression coefficients, ages, biomarker levels). Filter to integer-summed data (Likert scales, counts) before applying GRIM via `paperscope.analysis.forensic_stats.grim`.
+2. **GRIM-style integer-decomposition false-positives 100%** on continuous-valued means. Such means are continuous (percentages, regression coefficients, rates, measured levels). Filter to integer-summed data (Likert scales, counts) before applying GRIM via `paperscope.analysis.forensic_stats.grim`.
 
 3. **Salami false-positives** for legitimate companion papers from the same lab. The author × cohort-size overlap is a candidate flag, not a verdict.
 
@@ -119,4 +119,4 @@ from paperscope.analysis.forensic_stats import check_anova_oneway
 
 - `paperscope.analysis.forensic_stats` — per-paper forensic tests
 - `paperscope.systematic_review.methodological_audit` — per-paper rubric-based audit (orthogonal failure mode: does the paper ask the right question? vs forensic: are the numbers honest?)
-- Demo: the headline numbers quoted above come from the author's (private) MND scoping-review run; the output files in the schema above are everything needed to write the equivalent findings report for your own corpus
+- Demo: the headline numbers quoted above come from the author's (private) scoping-review run; the output files in the schema above are everything needed to write the equivalent findings report for your own corpus

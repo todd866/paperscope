@@ -15,8 +15,8 @@ import pytest
 
 from paperscope.ingest import shadow_library as sl
 
-TITLE = "Gold Coast diagnostic criteria increase sensitivity in amyotrophic lateral sclerosis"
-OTHER = "Tetraspanin Fc receptor interactions on the surface of activated platelets"
+TITLE = "Early warning thresholds improve lead time for urban flood forecasting"
+OTHER = "Thermal expansion coefficients of laminated composite panels"
 
 _HAS_TESSERACT = shutil.which("tesseract") is not None
 
@@ -84,16 +84,17 @@ def test_image_only_wrong_paper_still_rejected_after_ocr():
 # --- tokenizer behaviour ---
 
 def test_short_acronym_title_discriminates():
-    """Short biomedical titles are mostly acronyms/genes/numbers. The tokenizer
-    must keep them (ALS, SOD1, C9orf72) or it can't tell right from wrong."""
-    title = "SOD1 and C9orf72 in ALS"
-    right = sl.pdf_matches_title(_text_pdf("SOD1 C9orf72 ALS familial cohort"), title)
-    wrong = sl.pdf_matches_title(_text_pdf("Tetraspanin platelet receptor study"), title)
+    """Short technical titles are mostly acronyms/model-names/numbers. The
+    tokenizer must keep them (GIS, SWMM, HEC22) or it can't tell right from
+    wrong."""
+    title = "SWMM and HEC22 in GIS"
+    right = sl.pdf_matches_title(_text_pdf("SWMM HEC22 GIS urban catchment"), title)
+    wrong = sl.pdf_matches_title(_text_pdf("Laminated composite panel study"), title)
     assert right[0] is True
     assert wrong[0] is False
 
 
 def test_tokenizer_keeps_acronyms_and_numbers_drops_stopwords():
-    toks = sl._content_tokens("SOD1 and C9orf72 in ALS TDP-43")
-    assert {"sod1", "c9orf72", "als", "tdp", "43"} <= toks
+    toks = sl._content_tokens("SWMM and HEC22 in GIS LID-08")
+    assert {"swmm", "hec22", "gis", "lid", "08"} <= toks
     assert "and" not in toks and "in" not in toks

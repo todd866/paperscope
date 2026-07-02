@@ -13,10 +13,10 @@ sample() can filter excluded pmids out at every level. Detection is staged:
     - title-in-text vs metadata-title fuzzy match (best across first 200 lines
       + 2/3-line sliding windows; threshold tunable; 0.30 strict / 0.50 lax)
     - boilerplate-only line-uniqueness (catches "Downloaded by:" stamp PDFs)
-    - keyword absence (e.g., MND-vocabulary absence flags abbreviation collisions)
+    - keyword absence (e.g., target-vocabulary absence flags abbreviation collisions)
 
 Known limitations:
-  - Title fuzzy-match is corpus-dependent (medical-paper PDFs sometimes split
+  - Title fuzzy-match is corpus-dependent (some source PDFs split
     titles across multiple lines; the sliding-window catches most). Tune the
     threshold by validating against a known-good and known-bad set per corpus.
   - The corrupted-text regex only catches symptom A (Caesar-shift caps); other

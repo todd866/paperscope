@@ -8,17 +8,17 @@ applies them.
 ## Aggregation types
 
 ### `list_counters`
-Frequency Counter over a list-of-strings field (e.g. `onset_features`,
-`differentials_named`). Spec:
+Frequency Counter over a list-of-strings field (e.g. `warning_indicators`,
+`confounders_named`). Spec:
 
     {
-      "field": "onset_features",     # required: source field name
-      "name": "onset_features_top40", # output key (default: <field>_top<top_n>)
+      "field": "warning_indicators", # required: source field name
+      "name": "warning_indicators_top40", # output key (default: <field>_top<top_n>)
       "top_n": 40,                    # optional: most-common N; null = full dict
       "drop_values": [...],           # optional: normalised values to skip
-                                      # (e.g. drop the index condition from
-                                      # a differentials list)
-      "drop_count_name": "differentials_index_labels_dropped",  # optional:
+                                      # (e.g. drop the index topic from
+                                      # a confounders list)
+      "drop_count_name": "confounders_index_labels_dropped",  # optional:
                                       # emits the drop count under this key
     }
 
@@ -33,15 +33,15 @@ Spec:
       "drop_empty": true,             # skip empty strings
       "normalize": false,             # lowercase + collapse whitespace; default off
       "default": "uncharted",         # value used when field is missing/empty
-                                      # (e.g. "uncharted" for model_based_prediction)
+                                      # (e.g. "uncharted" for model_based_forecast)
     }
 
 ### `text_collections`
-Collect non-empty string values with companion fields (e.g. delay-detail rows,
-weight-loss texts). Spec:
+Collect non-empty string values with companion fields (e.g. lead-time detail
+rows, impact-summary texts). Spec:
 
     {
-      "field": "onset_region_breakdown",
+      "field": "catchment_breakdown",
       "name": "region_breakdowns",
       "include_fields": ["pmid", "country", "study_design", "relevance_tier"],
                                       # source fields to carry along
@@ -52,7 +52,7 @@ weight-loss texts). Spec:
 
 ### `numeric_extractors`
 Regex-extract numeric values (with optional unit conversion) from a free-text
-field, summarise. Two known limitations inherited from the source MND
+field, summarise. Two known limitations inherited from the source review
 pipeline, kept for regression equivalence and flagged in-line:
 
 - `median_of_reported` uses the *upper-middle* convention for even-length
@@ -66,15 +66,15 @@ pipeline together, so the regression remains meaningful.
 Spec:
 
     {
-      "field": "diagnostic_delay",
-      "name": "delay",                # emits <name> (summary) AND <name>_detail
+      "field": "warning_lead_time",
+      "name": "lead_time",            # emits <name> (summary) AND <name>_detail
       "units": {                       # named regex per unit; capture-group 1 = number
-        "months": "(\\d+(?:\\.\\d+)?)\\s*(?:months?|mo\\b|mths?)",
-        "years":  "(\\d+(?:\\.\\d+)?)\\s*(?:years?|yrs?|y\\b)",
+        "hours": "(\\d+(?:\\.\\d+)?)\\s*(?:hours?|hrs?|h\\b)",
+        "days":  "(\\d+(?:\\.\\d+)?)\\s*(?:days?|d\\b)",
       },
-      "convert_to": "months",          # all values normalised to this unit
-      "conversions": {"years": 12},    # multipliers from source unit → convert_to
-      "band": [8, 20],                 # emits "values_in_8_to_20_band" count
+      "convert_to": "hours",           # all values normalised to this unit
+      "conversions": {"days": 24},     # multipliers from source unit → convert_to
+      "band": [6, 48],                 # emits "values_in_6_to_48_band" count
       "detail_fields": ["pmid", "country", "study_design", "relevance_tier"],
       "detail_rename": {"relevance_tier": "tier", "study_design": "design"},
       "detail_text_key": "text",

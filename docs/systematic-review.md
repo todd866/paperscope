@@ -77,8 +77,8 @@ corpus_dir:  ./corpus/
 ```
 
 Nothing about the *particular* review lives in code. The configuration in
-`examples/mnd-pilot.yaml` is one such review; the code that runs it is the same
-code that would run a magnesium-supplementation review or a maternal-mortality
+`examples/example-review.yaml` is one such review; the code that runs it is the
+same code that would run a transport-safety review or an education-policy
 review.
 
 ## The two-stage method
@@ -108,9 +108,9 @@ The synthesis layer is a pure function: charted JSONL + aggregation config →
 synthesis tables. Four aggregation types cover what the review's
 hand-written `build_synthesis.py` did, and they're declared in YAML:
 
-- **`list_counters`** — Counter over list-of-strings fields (onset features,
-  differentials, themes), with optional drop list (e.g. drop the index
-  condition from a differentials list) and top-N
+- **`list_counters`** — Counter over list-of-strings fields (warning
+  indicators, confounders, themes), with optional drop list (e.g. drop the
+  index topic from a confounders list) and top-N
 - **`scalar_counters`** — Counter over single-value fields (study design,
   country, relevance tier), with optional defaults (`uncharted` for an enum
   field that's absent on most rows) and normalisation
@@ -118,8 +118,8 @@ hand-written `build_synthesis.py` did, and they're declared in YAML:
   fields (PMID, country, tier) — for texts the synthesis narrator will weave
   through
 - **`numeric_extractors`** — regex-pull numbers (with unit conversion) from a
-  free-text field, summarise — for things like "studies report a 14-month
-  median delay" where the figure is in prose
+  free-text field, summarise — for things like "studies report a 14-hour
+  median warning lead time" where the figure is in prose
 
 The regression test proves this declarative form reproduces the review's
 hand-coded aggregation outputs exactly. Any new review writes a new YAML; the
@@ -193,22 +193,22 @@ author's private review corpus (via `PAPERSCOPE_SR_CORPUS`); on a fresh
 checkout without it the regression suite skips rather than failing.
 Not byte-identical: the new
 output's key names are deliberately cleaner (e.g. the nested
-`model_prediction.{by_category,charted,validation_texts}` is flattened into
-`model_prediction_by_category` + `model_validation_texts` + a derivable
-boolean; `delay.min_months` becomes `delay.min`). The test compares values,
-not serialisation. That's the test of faithfulness — the generalisation
+`model_forecast.{by_category,charted,validation_texts}` is flattened into
+`model_forecast_by_category` + `model_validation_texts` + a derivable
+boolean; `lead_time.min_hours` becomes `lead_time.min`). The test compares
+values, not serialisation. That's the test of faithfulness — the generalisation
 didn't lose anything that mattered.
 
 Specifically, 15 assertions pass:
 
 - corpus size matches (the charted-row count)
-- onset-features top-40, differentials top-40 (with index-label drops),
+- warning-indicators top-40, confounders top-40 (with index-label drops),
   themes, designs, tiers, countries top-15 — all identical
-- delay summary (n studies, n values, min/max, median, 8–20-month band count)
-  and per-study delay detail rows — all identical
-- model-prediction by-category counter, derived "charted" boolean, and
+- lead-time summary (n studies, n values, min/max, median, 6–48-hour band count)
+  and per-study lead-time detail rows — all identical
+- model-forecast by-category counter, derived "charted" boolean, and
   validation-text rows — all identical
-- region breakdowns and weight-loss text collections — identical
+- region breakdowns and impact-summary text collections — identical
 - PRISMA-ScR funnel numbers — identified, included, excluded, and
   maybe-for-full-text counts — all identical
 

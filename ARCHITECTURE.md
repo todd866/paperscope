@@ -163,7 +163,7 @@ Output: records.jsonl, screening.jsonl, extraction.jsonl,
 2. **Screen** (`screen/`): Markdown rubric loader + SDK-agnostic AI-screen interface. The reviewer is an AI agent (or several in parallel) executing the rubric; the human audits a sample and resolves "maybe"s.
 3. **Extract** (`extract/`): Charting schema loader + SDK-agnostic AI-extract interface. Same two-stage shape as screening.
 4. **Acquire** (`acquire/`): For the included set, pulls OA PDFs via `ingest/open_access`, writes an EZProxy queue for the paywalled tail, and can optionally walk that tail through a Playwright browser driver using an authenticated local profile. Paywalled access remains an operator-controlled boundary because institutional authentication and licensing constraints vary by deployment.
-5. **Synthesise** (`synthesise/`): Declarative aggregator (`aggregate.py`) + PRISMA-ScR flow (`prisma.py`) + cross-database dedup. Regression-verified against a working MND review.
+5. **Synthesise** (`synthesise/`): Declarative aggregator (`aggregate.py`) + PRISMA-ScR flow (`prisma.py`) + cross-database dedup. Regression-verified against a working scoping review.
 6. **UI** (`ui/`): Static HTML review site with Covidence-style record pages. No JS dependency — publishable as a `gh-pages` artefact.
 
 See `docs/systematic-review.md` for the design + roadmap and `paperscope/systematic_review/README.md` for the quickstart.
@@ -224,7 +224,7 @@ research_profile:
     - cs.IT
 ```
 
-The systematic_review module uses a different YAML format (PCC + query_blocks + aggregation). See `paperscope/systematic_review/examples/mnd-pilot.yaml` for a worked example.
+The systematic_review module uses a different YAML format (PCC + query_blocks + aggregation). See `paperscope/systematic_review/examples/example-review.yaml` for a worked example.
 
 ## API Dependencies
 

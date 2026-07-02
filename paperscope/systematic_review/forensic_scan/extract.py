@@ -100,9 +100,9 @@ def _find_nearby_stat(text: str, p_pos: int, window: int = 200):
 
 
 def extract_pvalues(text: str, pmid: str = "") -> list[dict]:
-    """Extract all reported p-values + adjacent test statistics. NOTE: medical
-    papers rarely have adjacent test stats in APA format — expect a low
-    extraction yield with adjacent stats (~3-5% in MND demo)."""
+    """Extract all reported p-values + adjacent test statistics. NOTE: papers
+    in the target corpus rarely have adjacent test stats in APA format — expect
+    a low extraction yield with adjacent stats (~3-5% in the demo corpus)."""
     rows = []
     for m in P_VALUE_RE.finditer(text):
         op, val_str = m.group(1), m.group(2)

@@ -2,7 +2,7 @@
 
 The full implementation belongs to the caller's agent SDK (Anthropic, OpenAI,
 etc.); this module defines the *contract*: given a record + a rubric, produce a
-decision dict with `decision`, `themes`, `reason`. The MND pilot ran this with
+decision dict with `decision`, `themes`, `reason`. The pilot review ran this with
 parallel Claude agents — that orchestration is intentionally out of scope here
 so this module stays SDK-agnostic.
 

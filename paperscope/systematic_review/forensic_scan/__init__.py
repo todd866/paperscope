@@ -22,9 +22,9 @@ What this module does NOT do (intentionally):
     `paperscope.analysis.forensic_stats`. This module extracts data; that
     module verifies it.
 
-Known false-positive modes (DOCUMENTED; the MND demo found them the hard way):
+Known false-positive modes (DOCUMENTED; the demo corpus found them the hard way):
 
-  1. **statcheck false positives ~95%** on medical papers because medical
+  1. **statcheck false positives ~95%** on the target corpus because the
      literature does not use APA-formatted `t(df) = X, p = Y` notation.
      Dominant failure modes:
         - One-sided p-values mis-recomputed as two-sided
@@ -35,9 +35,9 @@ Known false-positive modes (DOCUMENTED; the MND demo found them the hard way):
      The corpus-level p-curve and last-digit distributions are STILL valid;
      individual statcheck flags need manual verification.
 
-  2. **GRIM false positives ~100%** on medical papers because medical means
+  2. **GRIM false positives ~100%** on this corpus because the reported means
      are almost universally continuous (percentages, regression coefficients,
-     ages, biomarker levels). GRIM assumes integer-summed data; without that
+     rates, measured levels). GRIM assumes integer-summed data; without that
      assumption, the integer-decomposition test gives meaningless results.
      A continuous-vs-integer filter is on the v0.3 roadmap; until then, treat
      GRIM-flagged means as candidates for manual verification, not findings.

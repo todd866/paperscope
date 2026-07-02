@@ -38,7 +38,7 @@ from paperscope.systematic_review.synthesise import aggregate, prisma_flow  # no
 _CORPUS_ENV = "PAPERSCOPE_SR_CORPUS"
 _PLACEHOLDER_CORPUS = "/nonexistent/paperscope-sr-corpus"
 CORPUS_DIR = Path(os.environ.get(_CORPUS_ENV, _PLACEHOLDER_CORPUS)).expanduser()
-REVIEW_YAML = ROOT / "paperscope/systematic_review/examples/mnd-pilot.yaml"
+REVIEW_YAML = ROOT / "paperscope/systematic_review/examples/example-review.yaml"
 
 
 def _corpus_inputs_available() -> bool:
@@ -97,38 +97,38 @@ def test_corpus_size():
     assert new["corpus_n"] > 0
 
 
-def test_delay_summary():
+def test_lead_time_summary():
     _, _, _, old, new = _load()
-    n, o = new["delay"], old["delay"]
+    n, o = new["lead_time"], old["lead_time"]
     assert n["n_studies_with_figure"] == o["n_studies_with_figure"]
     assert n["n_extracted_values"] == o["n_extracted_values"]
-    assert n["min"] == o["min_months"]
-    assert n["max"] == o["max_months"]
+    assert n["min"] == o["min_hours"]
+    assert n["max"] == o["max_hours"]
     assert n["median_of_reported"] == o["median_of_reported"]
-    assert n["values_in_8_to_20_band"] == o["values_8_to_20mo"]
+    assert n["values_in_6_to_48_band"] == o["values_6_to_48h"]
 
 
-def test_delay_detail_rows():
+def test_lead_time_detail_rows():
     _, _, _, old, new = _load()
     # The detail rows carry pmid + (renamed) tier/design + text — same set
     # of pmids should appear in both
-    new_pmids = {r["pmid"] for r in new["delay_detail"]}
-    old_pmids = {r["pmid"] for r in old["delay_detail"]}
+    new_pmids = {r["pmid"] for r in new["lead_time_detail"]}
+    old_pmids = {r["pmid"] for r in old["lead_time_detail"]}
     assert new_pmids == old_pmids
 
 
-def test_onset_features_top40():
+def test_warning_indicators_top40():
     _, _, _, old, new = _load()
     # JSON serialisation makes both lists-of-[str,int]; compare directly
-    assert new["onset_features_top40"] == old["onset_features_top40"]
+    assert new["warning_indicators_top40"] == old["warning_indicators_top40"]
 
 
-def test_differentials_top40_and_drops():
+def test_confounders_top40_and_drops():
     _, _, _, old, new = _load()
-    assert new["differentials_top40"] == old["differentials_top40"]
+    assert new["confounders_top40"] == old["confounders_top40"]
     assert (
-        new["differentials_index_labels_dropped"]
-        == old["differentials_index_labels_dropped"]
+        new["confounders_index_labels_dropped"]
+        == old["confounders_index_labels_dropped"]
     )
 
 
@@ -157,29 +157,29 @@ def test_region_breakdowns():
     assert _norm_rows(new["region_breakdowns"]) == _norm_rows(old["region_breakdowns"])
 
 
-def test_weight_loss_texts():
+def test_impact_texts():
     _, _, _, old, new = _load()
-    assert _norm_rows(new["weight_loss_texts"]) == _norm_rows(old["weight_loss_texts"])
+    assert _norm_rows(new["impact_texts"]) == _norm_rows(old["impact_texts"])
 
 
-def test_model_prediction_by_category():
+def test_model_forecast_by_category():
     _, _, _, old, new = _load()
-    assert new["model_prediction_by_category"] == old["model_prediction"]["by_category"]
+    assert new["model_forecast_by_category"] == old["model_forecast"]["by_category"]
 
 
-def test_model_prediction_charted_bool_matches():
+def test_model_forecast_charted_bool_matches():
     _, _, _, old, new = _load()
     # "charted" is derivable: any category other than "uncharted" appears
     derived_charted = any(
-        c != "uncharted" for c in new["model_prediction_by_category"]
+        c != "uncharted" for c in new["model_forecast_by_category"]
     )
-    assert derived_charted == old["model_prediction"]["charted"]
+    assert derived_charted == old["model_forecast"]["charted"]
 
 
 def test_model_validation_texts():
     _, _, _, old, new = _load()
     assert _norm_rows(new["model_validation_texts"]) == _norm_rows(
-        old["model_prediction"]["validation_texts"]
+        old["model_forecast"]["validation_texts"]
     )
 
 

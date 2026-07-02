@@ -1,0 +1,118 @@
+# Review configuration — early-warning indicators of urban flood risk (pilot).
+# A worked, non-clinical scoping-review example: the first-pass search that
+# seeds the systematic_review module. Used by tests/test_systematic_review.py
+# as the regression dogfood.
+
+name: example-review
+
+pcc:
+  population: >
+    Urban and peri-urban areas exposed to pluvial (surface-water) or fluvial
+    (river) flooding, by any contemporary flood-hazard classification. Mixed
+    urban-rural catchments eligible where urban-specific data are extractable.
+  concept: >
+    Early-warning indicators of flood risk and their dimensionality; warning
+    lead time and its predictors; early-warning thresholds, their validation
+    against observed flood events, and their successive revision; common
+    confounding signals and indicator non-specificity; the operator's role in
+    recognition; and any model-based or probabilistic forecasting attempts
+    within this literature and their validation.
+  context: >
+    Any operational setting (municipal drainage authorities, meteorological
+    services, catchment agencies), any country.
+
+search:
+  databases: [medline, embase, cinahl]
+  date_range: [2000, 2026]
+  filters: 'English[lang] AND 2000:2026[pdat] NOT (editorial[pt] OR letter[pt] OR comment[pt])'
+  query_blocks:
+    C1_population: '("urban flood"[tiab] OR "urban flooding"[tiab] OR "pluvial flood"[tiab] OR "surface water flood"[tiab] OR "fluvial flood"[tiab] OR "flash flood"[tiab] OR "stormwater"[tiab] OR "urban drainage"[tiab])'
+    C2_onset: '("early warning"[tiab] OR "warning signal"[tiab] OR "warning signals"[tiab] OR "precursor"[tiab] OR "precursors"[tiab] OR "leading indicator"[tiab] OR "leading indicators"[tiab] OR "antecedent condition"[tiab] OR "antecedent conditions"[tiab] OR "onset"[tiab] OR "trigger threshold"[tiab] OR "rising limb"[tiab])'
+    C2_indicators: '("rainfall intensity"[tiab] OR "rainfall accumulation"[tiab] OR "river level"[tiab] OR "river stage"[tiab] OR "water level"[tiab] OR "soil moisture"[tiab] OR "soil saturation"[tiab] OR "antecedent precipitation"[tiab] OR "drainage capacity"[tiab] OR "runoff"[tiab])'
+    C3_delay: '("warning lead time"[tiab] OR "lead time"[tiab] OR "time to inundation"[tiab] OR "response time"[tiab] OR "warning pathway"[tiab] OR "dissemination delay"[tiab] OR "missed warning"[tiab] OR "false alarm"[tiab] OR "alert threshold"[tiab])'
+    C3_differential: '("confounding signal"[tiab] OR "false positive"[tiab] OR "false alarm rate"[tiab] OR "alert threshold"[tiab] OR "probability model"[tiab] OR "forecast model"[tiab] OR "hydrological prediction model"[tiab])'
+
+# Screening rubric + charting schema — markdown files parsed by screen.rubric
+# and extract.schema. Paths resolve relative to this YAML's directory.
+# Commented out here because a pilot's rubric and schema are review-project
+# files, not shipped with paperscope; point these at your own.
+# rubric_path: ./screening-rubric.md
+# schema_path: ./extraction-schema.md
+
+aggregation:
+  # Frequency counters over list fields. `normalize` is always on for list_counters
+  # (lowercase + collapse whitespace) so "Rainfall" and "rainfall " collapse.
+  list_counters:
+    - field: warning_indicators
+      name: warning_indicators_top40
+      top_n: 40
+    - field: confounders_named
+      name: confounders_top40
+      top_n: 40
+      # The extraction agents occasionally listed the index hazard itself
+      # as a "confounder"; drop those so the confounder map is real.
+      drop_values:
+        - urban flood
+        - urban flooding
+        - pluvial flood
+        - surface water flood
+        - fluvial flood
+        - flash flood
+        - flooding
+        - flood
+        - flood risk
+      drop_count_name: confounders_index_labels_dropped
+    - field: themes
+      name: themes
+      # no top_n -> emits the full dict
+
+  # Frequency counters over scalar fields. `normalize` defaults false
+  # (preserves casing) so design/country/tier outputs are raw values.
+  scalar_counters:
+    - field: study_design
+      name: designs
+    - field: relevance_tier
+      name: tiers
+    - field: country
+      name: countries_top15
+      top_n: 15
+      drop_empty: true
+    - field: model_based_forecast
+      name: model_forecast_by_category
+      normalize: true
+      default: uncharted
+
+  # Collect non-empty texts with companion fields, useful for the
+  # human-audited synthesis layer.
+  text_collections:
+    - field: catchment_breakdown
+      name: region_breakdowns
+      include_fields: [pmid, country, relevance_tier]
+      rename_fields:
+        relevance_tier: tier
+    - field: impact_summary
+      name: impact_texts
+      include_fields: [pmid, relevance_tier]
+      rename_fields:
+        relevance_tier: tier
+    - field: model_validation
+      name: model_validation_texts
+      include_fields: [pmid, relevance_tier]
+      rename_fields:
+        relevance_tier: tier
+
+  # Numeric extraction with unit conversion (lead time days/hours -> hours).
+  numeric_extractors:
+    - field: warning_lead_time
+      name: lead_time
+      units:
+        hours: '(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h\b)'
+        days: '(\d+(?:\.\d+)?)\s*(?:days?|d\b)'
+      convert_to: hours
+      conversions:
+        days: 24
+      band: [6, 48]
+      detail_fields: [pmid, country, study_design, relevance_tier]
+      detail_rename:
+        relevance_tier: tier
+        study_design: design
