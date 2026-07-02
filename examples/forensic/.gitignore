@@ -1,0 +1,6 @@
+# Generated artifacts -- rebuild with make_demo_paper.py / the forensic CLI
+demo-paper.pdf
+demo-paper_annotated.pdf
+annotated.pdf
+*.forensic.json
+report.json

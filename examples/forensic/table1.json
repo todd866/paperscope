@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "paper": "The Effect of X on Y (SYNTHETIC demo paper)",
+    "table": "Table 1. Baseline Q-scale scores by group."
+  },
+  "scale": {"lo": 0, "hi": 63, "granularity": 1},
+  "variables": [
+    {
+      "name": "Q-scale",
+      "groups": [
+        {"name": "treatment", "n": 22, "mean": "18.72", "sd": "5.31"},
+        {"name": "control", "n": 24, "mean": "17.29", "sd": "5.44"}
+      ]
+    }
+  ]
+}

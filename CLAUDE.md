@@ -59,6 +59,19 @@ A notes spec is a list of `{page, anchor, cat, header, body}` (cat = TEACH/DEF/S
 
 ### Forensic statistics (data integrity)
 
+```bash
+# Table mode: transcribed summary stats (schema: analysis/forensic_report.py docstring)
+python3 -m paperscope forensic table1.json
+
+# Text mode: statcheck-style p recalculation over reported t/F/chi2/r/z (.pdf/.txt/.md)
+python3 -m paperscope forensic paper.pdf
+
+# Text mode + annotated reading copy (FAIL/FLAG findings highlighted on source pages)
+python3 -m paperscope forensic paper.pdf --annotate annotated.pdf
+```
+
+Verdicts: FAIL = arithmetically impossible as printed; FLAG = suspicious, not proven; UNDETERMINED = could not check (never bad news — a parsing problem must never harden into FAIL). JSON report written alongside console output. Worked demo: `examples/forensic/`.
+
 ```python
 # Import individual checks
 from paperscope.analysis.forensic_stats import grim, grimmer, grim_percentage, sprite
@@ -117,7 +130,7 @@ Module README: `paperscope/systematic_review/README.md`. Design: `docs/systemati
 paperscope/
 ├── text/       # Shared text processing (LaTeX cleaning, chunking, parsing)
 ├── embed/      # Embedding infrastructure (sentence-transformers + TF-IDF fallback)
-├── analysis/   # 18 modules (embedding, critical read, annotate, forensic)
+├── analysis/   # 20 modules (embedding, critical read, annotate, forensic)
 │   │
 │   │  # Embedding-powered (your papers)
 │   ├── citation_alignment.py    # Do citations match the citing sentence?
@@ -140,10 +153,14 @@ paperscope/
 │   ├── audit_router.py         # Study-type classifier -> validity battery
 │   ├── annotate.py             # PDF + notes spec -> annotated reading copy
 │   │
-│   │  # Forensic statistics (data integrity, 19 checks)
-│   └── forensic_stats.py       # GRIM, GRIMMER, GRIM-%, SPRITE, correlation
-│                                # bounds, t-test/ANOVA/chi2 recalc, Carlisle,
-│                                # SD/SE confusion, Benford's, variance ratios
+│   │  # Forensic statistics (data integrity, 19 checks + CLI)
+│   ├── forensic_stats.py       # GRIM, GRIMMER, GRIM-%, SPRITE, correlation
+│   │                            # bounds, t-test/ANOVA/chi2 recalc, Carlisle,
+│   │                            # SD/SE confusion, Benford's, variance ratios
+│   ├── forensic_report.py      # Finding/Report contract, verdict mapping,
+│   │                            # table-mode runner (JSON table spec -> Report)
+│   └── reported_stats.py       # statcheck-style t/F/chi2/r/z extraction +
+│                                # interval-safe p recalculation (text mode)
 ├── bib/        # Bibliography management (extract, resolve, verify)
 ├── harvest/    # Paper discovery (OpenAlex, arXiv, bioRxiv)
 ├── ingest/     # PDF acquisition + text extraction
@@ -202,7 +219,7 @@ pip install -r requirements.txt
 python3 -m paperscope <command> [args]
 ```
 
-The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 18 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity). Each tool is a standalone module with a main function that returns structured results.
+The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 20 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity). Each tool is a standalone module with a main function that returns structured results.
 
 ### Bug fix workflow
 

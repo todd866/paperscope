@@ -12,7 +12,7 @@ When working on academic papers (.tex or .pdf files), you have access to papersc
 - **After revision**: run `revision-diff` to verify changes addressed concerns
 - **When reviewing bibliography**: run `related` to find missing related work
 - **When reviewing an external paper**: run `critical-read` on the PDF
-- **When checking reported statistics**: import functions from `paperscope.analysis.forensic_stats`
+- **When checking reported statistics**: run `forensic` on the PDF (statcheck-style p recalculation) or on a transcribed table spec (GRIM et al.)
 
 ## Commands
 
@@ -42,13 +42,18 @@ python3 -m paperscope extract .
 python3 -m paperscope verify bibliography.json
 python3 -m paperscope resolve bibliography.json
 
+# Forensic statistics: table mode / text mode / annotated reading copy
+python3 -m paperscope forensic table1.json
+python3 -m paperscope forensic paper.pdf
+python3 -m paperscope forensic paper.pdf --annotate annotated.pdf
+
 # Forensic statistics demo (built-in example)
 python3 -m paperscope.analysis.forensic_stats
 ```
 
 ## Forensic statistics
 
-The forensic module is a Python library for checking data integrity in reported statistics. Import and call functions directly:
+The `forensic` CLI checks data integrity in reported statistics. Table mode takes a JSON table spec (schema in the `paperscope/analysis/forensic_report.py` docstring) and runs GRIM/GRIMMER/SD/variance-ratio/Carlisle checks; text mode takes a .pdf/.txt/.md and recomputes every reported t/F/chi2/r/z p-value (statcheck-style, after Nuijten et al. 2016); `--annotate` (PDF only) highlights FAIL/FLAG findings on the source pages. Verdicts: FAIL = impossible as printed, FLAG = suspicious but not proven, UNDETERMINED = could not check (never bad news). Worked demo: `examples/forensic/`. The underlying checks are also importable directly:
 
 ```python
 from paperscope.analysis.forensic_stats import (

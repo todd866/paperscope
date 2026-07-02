@@ -415,6 +415,35 @@ def main() -> int:
         help="Output PDF (default: <pdf-stem>_annotated.pdf)",
     )
 
+    # forensic command
+    forensic_parser = subparsers.add_parser(
+        "forensic",
+        help="Forensic statistics checks (GRIM, GRIMMER, Carlisle, "
+             "statcheck-style p recalculation, ...) on tables or paper text",
+    )
+    forensic_parser.add_argument(
+        "input",
+        type=Path,
+        help="Input file: a .json table spec runs in table mode "
+             "(schema: paperscope.analysis.forensic_report docstring); "
+             "a .pdf/.txt/.md runs in text mode (statcheck-style "
+             "p recalculation over reported t/F/chi2/r/z statistics)",
+    )
+    forensic_parser.add_argument(
+        "--output", "-o",
+        type=Path,
+        default=None,
+        help="Output report JSON (default: <stem>.forensic.json alongside input)",
+    )
+    forensic_parser.add_argument(
+        "--annotate",
+        type=Path,
+        default=None,
+        metavar="ANNOTATED_PDF",
+        help="(PDF input only) also write an annotated reading copy with "
+             "FAIL/FLAG findings highlighted on the source pages",
+    )
+
     args = parser.parse_args()
 
     if args.command == "extract":
@@ -501,7 +530,7 @@ def main() -> int:
 
     elif args.command in {
         "analyze", "journal-fit", "abstract-check", "argument-graph",
-        "revision-diff", "related", "critical-read", "annotate",
+        "revision-diff", "related", "critical-read", "annotate", "forensic",
     }:
         # Analysis runners live in analysis/cli.py. Lazy import keeps the
         # CLI fast for non-analysis subcommands.
@@ -515,6 +544,7 @@ def main() -> int:
             "related": analysis_cli.run_related,
             "critical-read": analysis_cli.run_critical_read,
             "annotate": analysis_cli.run_annotate,
+            "forensic": analysis_cli.run_forensic,
         }[args.command]
         return runner(args)
 

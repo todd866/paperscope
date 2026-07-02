@@ -384,3 +384,148 @@ def run_annotate(args) -> int:
     else:
         print("all anchors placed cleanly.")
     return 0
+
+
+def run_forensic(args) -> int:
+    """Run forensic statistics checks and emit a verdict-grouped report."""
+    import json
+    import sys
+
+    in_path = args.input.resolve()
+    suffix = in_path.suffix.lower()
+    is_pdf = suffix == ".pdf"
+
+    if getattr(args, "annotate", None) and not is_pdf:
+        print("Error: --annotate needs a PDF input (anchors are placed on "
+              "the source pages)", file=sys.stderr)
+        return 1
+
+    if suffix == ".json":
+        # ── table mode: a structured table spec (see forensic_report) ──
+        from .forensic_report import run_table_checks
+
+        try:
+            table = json.loads(in_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            print(f"Error: {in_path.name} is not valid JSON: {exc}",
+                  file=sys.stderr)
+            return 1
+        try:
+            report = run_table_checks(table, source=str(in_path))
+        except ValueError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+    elif is_pdf:
+        # ── text mode over a PDF: parse reported statistics per page so
+        # each finding carries its 1-based page (anchors stay exact
+        # source text -- the annotate bridge binds them verbatim) ──
+        try:
+            import fitz  # PyMuPDF
+        except ImportError:
+            print("Error: PyMuPDF (fitz) required for PDF input.",
+                  file=sys.stderr)
+            print("Install with: pip install PyMuPDF", file=sys.stderr)
+            return 1
+        from .forensic_report import build_report
+        from .reported_stats import check_reported_tests
+
+        findings = []
+        doc = fitz.open(str(in_path))
+        for page_idx in range(doc.page_count):
+            page_report = check_reported_tests(doc[page_idx].get_text(),
+                                               source=str(in_path))
+            for finding in page_report["findings"]:
+                finding["page"] = page_idx + 1
+                findings.append(finding)
+        doc.close()
+        report = build_report(str(in_path), "text", findings)
+    elif suffix in {".txt", ".md"}:
+        # ── text mode over plain text ──
+        from .reported_stats import check_reported_tests
+
+        text = in_path.read_text(encoding="utf-8", errors="replace")
+        report = check_reported_tests(text, source=str(in_path))
+    else:
+        print(f"Error: unsupported input type '{suffix}' -- expected a "
+              f".json table spec or .pdf/.txt/.md text",
+              file=sys.stderr)
+        return 1
+
+    out_path = (args.output or
+                in_path.with_name(in_path.stem + ".forensic.json")).resolve()
+    out_path.write_text(json.dumps(report, indent=2, ensure_ascii=False),
+                        encoding="utf-8")
+
+    _print_forensic_report(report)
+    print(f"\nReport written to {out_path}")
+
+    if getattr(args, "annotate", None):
+        return _annotate_forensic(in_path, report, args.annotate.resolve())
+    return 0
+
+
+def _annotate_forensic(src_pdf, report: dict, out_pdf) -> int:
+    """Bridge FAIL/FLAG findings into the annotate engine.
+
+    Both severities render as CRIT (red): the engine's DEF (amber) means
+    "key definition" on its printed colour key, which would mislabel a
+    suspicion -- severity lives in the header word instead (IMPOSSIBLE vs
+    INCONSISTENT).  Finding pages are 1-based; annotate hints are 0-based.
+    """
+    import json
+
+    from .annotate import build_annotated_pdf
+
+    notes = []
+    for f in report["findings"]:
+        if f["verdict"] not in ("FAIL", "FLAG"):
+            continue
+        if not f.get("anchor") or not f.get("page"):
+            continue   # nothing to pin the highlight to
+        word = "IMPOSSIBLE" if f["verdict"] == "FAIL" else "INCONSISTENT"
+        notes.append({
+            "page": f["page"] - 1,
+            "anchor": f["anchor"],
+            "cat": "CRIT",
+            "header": f"{word}: {f['check'].replace('_', ' ')}",
+            "body": f"{f['detail']}  Inputs: {json.dumps(f['inputs'])}",
+        })
+
+    spec = {
+        "title": "Forensic statistics annotations",
+        "subtitle": src_pdf.name,
+        "bottom_line": {"label": "Forensic summary", "text": report["summary"]},
+        "notes": notes,
+    }
+    result = build_annotated_pdf(src_pdf, spec, out_pdf)
+    print(f"\nAnnotated copy: {result['output']} | pages: {result['pages']} "
+          f"| notes: {result['n_notes']}")
+    if result["misses"]:
+        print("ANCHOR MISSES (note still placed on its hint page, badge only):")
+        for n, a in result["misses"]:
+            print(f"  note {n}: {a!r}")
+    else:
+        print("all anchors placed cleanly.")
+    return 0
+
+
+def _print_forensic_report(report: dict) -> None:
+    """Console view of a forensic Report: findings grouped by verdict,
+    worst news first, then the one-line summary."""
+    print(f"\n{'='*60}")
+    print("Forensic Statistics Report")
+    print(f"{'='*60}")
+    print(f"Source: {report['source']}  (mode: {report['mode']})")
+
+    for verdict in ("FAIL", "FLAG", "UNDETERMINED", "PASS"):
+        group = [f for f in report["findings"] if f["verdict"] == verdict]
+        if not group:
+            continue
+        print(f"\n{verdict} ({len(group)})")
+        print("-" * 60)
+        for f in group:
+            print(f"  [{f['check']}] {f['target']}  ({f['ref']})")
+            print(f"      {f['detail']}")
+
+    print(f"\n{'='*60}")
+    print(report["summary"])

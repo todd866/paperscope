@@ -123,15 +123,26 @@ Turns a PDF + a list of notes — each pinning an `anchor` phrase on a page to a
 
 ### Forensic statistics (data integrity)
 
+```bash
+# Table mode: transcribe a paper's Table 1 into a JSON spec, get verdicts
+python3 -m paperscope forensic table1.json
+
+# Text mode: statcheck-style p recalculation straight from the paper
+python3 -m paperscope forensic paper.pdf          # also accepts .txt / .md
+
+# Text mode + an annotated reading copy with FAIL/FLAG findings highlighted
+python3 -m paperscope forensic paper.pdf --annotate annotated.pdf
+```
+
+Table mode runs GRIM, GRIMMER, SD-range, variance-ratio, and Carlisle checks over transcribed summary statistics (schema documented in `paperscope/analysis/forensic_report.py`; the data entry is manual, the checks are automated). Text mode extracts reported t/F/chi2/r/z statistics from the paper text and recomputes each p-value — the approach pioneered by statcheck (Nuijten et al. 2016) — treating every printed number as a rounding interval so honest rounding never produces a false accusation. Every verdict is one of PASS / FLAG / FAIL / UNDETERMINED: FAIL means arithmetically impossible as printed, FLAG means suspicious but not proven, and a parsing problem yields UNDETERMINED, never FAIL. Reports are written as JSON alongside the console output; worked demo in [`examples/forensic/`](examples/forensic/).
+
 ```python
-# Import individual checks in Python
+# Or import individual checks in Python
 from paperscope.analysis.forensic_stats import grim, grim_percentage, correlation_bound
 print(grim(mean="18.72", n=22))                       # GRIM test (fails at 2dp)
 print(grim_percentage(percentage=53.2, n=25, dp=1))   # GRIM applied to percentages
 print(correlation_bound(0.10, 0.30, 0.05))            # impossible r (|r| > 1)
 ```
-
-The forensic module is a Python library, not a CLI command. You transcribe summary statistics from a paper's tables and feed them to the functions. The checks are automated; the data entry is manual.
 
 ### Bibliography pipeline
 
@@ -231,7 +242,7 @@ Corpus knowledge-base roadmap: [`docs/corpus-knowledge-base.md`](docs/corpus-kno
 
 | Check | Detects |
 |-------|---------|
-| `grim()` | Impossible means for integer-valued instruments (BDI, Likert, counts) |
+| `grim()` | Impossible means for integer-valued instruments (Likert scales, bounded questionnaires, counts) |
 | `grimmer()` | Impossible SDs for integer data (extends GRIM to standard deviations) |
 | `grim_percentage()` | Impossible percentages from discrete counts (GRIM applied to percentages; `debit()` remains as a deprecated alias) |
 | `sprite()` | Whether any valid dataset can produce the reported mean + SD |
@@ -272,7 +283,7 @@ The [paper (PDF)](paper/paperscope.pdf) (March 2026) describes the embedding-ana
 
 ## Examples
 
-See [`examples/annotate/`](examples/annotate/) for a worked annotation spec and [`examples/permanent-library/`](examples/permanent-library/) for a reference paper-library integration.
+See [`examples/annotate/`](examples/annotate/) for a worked annotation spec, [`examples/forensic/`](examples/forensic/) for a synthetic mini-paper with planted errors driving all three forensic CLI modes (table, text, `--annotate`), and [`examples/permanent-library/`](examples/permanent-library/) for a reference paper-library integration.
 
 ## Development Workflow
 
