@@ -383,8 +383,8 @@ def sprite(
         mean: reported mean
         sd:   reported standard deviation
         n:    sample size
-        lo:   minimum possible value (e.g. 0 for BDI)
-        hi:   maximum possible value (e.g. 63 for BDI)
+        lo:   minimum possible value (e.g. 0 for a 0-63 scale)
+        hi:   maximum possible value (e.g. 63 for a 0-63 scale)
         max_iter: perturbation attempts per seed per target sum (default 2M)
         n_seeds:  number of independent random seeds to try per sum
         seed: base random seed for reproducibility

@@ -343,7 +343,7 @@ class TestSprite:
         assert r['example_dataset'] == [5] * 10
 
     def test_search_works_above_63(self):
-        """Scales above the old BDI literal 63 must be searchable."""
+        """Scales above the old literal 63 must be searchable."""
         r = sprite(mean=90.0, sd=2.0, n=10, lo=80, hi=100, max_iter=200_000)
         assert r['possible'], r['detail']
         assert all(80 <= x <= 100 for x in r['example_dataset'])
