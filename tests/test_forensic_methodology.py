@@ -22,6 +22,9 @@ from paperscope.analysis.forensic_stats import (
     grim, grim_column, grim_row,
     carlisle_stouffer_fisher, infer_column_dp,
     correlation_bound, check_change_arithmetic,
+    grimmer, sprite, grim_percentage, debit,
+    check_ttest_paired, check_ttest_independent, check_anova_oneway,
+    quick_sd_check, sample_size_from_t, check_chi_squared,
 )
 
 
@@ -228,3 +231,390 @@ class TestImpossibilityFindings:
             if not r.get('consistent', True):
                 failures += 1
         assert failures >= 5, f"Expected ≥5 arithmetic failures, got {failures}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Carlisle: direction of the Stouffer flag (bug 1)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestCarlisleDirection:
+    """High p-values are Carlisle's too-well-balanced fabrication signature;
+    low p-values are genuinely unbalanced baselines. The labels must not be
+    swapped."""
+
+    def test_high_pvalues_flag_well_balanced(self):
+        """[0.95]*10 → combined Z ≈ -5.2 → suspiciously WELL-balanced."""
+        r = carlisle_stouffer_fisher([0.95] * 10)
+        stouffer = [f for f in r['flags'] if 'Stouffer' in f]
+        assert stouffer, "high p-values must trigger the Stouffer flag"
+        assert all('well-balanced' in f for f in stouffer), stouffer
+
+    def test_low_pvalues_flag_unbalanced(self):
+        """[0.05]*10 → combined Z ≈ +5.2 → suspiciously UNbalanced."""
+        r = carlisle_stouffer_fisher([0.05] * 10)
+        stouffer = [f for f in r['flags'] if 'Stouffer' in f]
+        assert stouffer, "low p-values must trigger the Stouffer flag"
+        assert all('well-balanced' not in f and 'unbalanced' in f
+                   for f in stouffer), stouffer
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GRIM: half-boundary rounding (bug 2) and invalid n (bug 12)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestGrimHalfBoundary:
+    """True means sitting exactly on the rounding boundary must PASS —
+    they round to the reported value under half-up or banker's rounding."""
+
+    def test_mean_075_reported_08(self):
+        """Data (0,1,1,1): mean 0.75 reported as '0.8' at 1dp must pass."""
+        r = grim("0.8", 4)
+        assert r['possible'], r['detail']
+
+    def test_boundary_symmetric(self):
+        """0.25 rounds to '0.3' (half-up) or '0.2' (banker's) — both pass."""
+        assert grim("0.3", 4)['possible']
+        assert grim("0.2", 4)['possible']
+
+    def test_canonical_fail_preserved(self):
+        """18.72 with n=22 is a genuine GRIM failure and must stay FAIL."""
+        assert not grim("18.72", 22)['possible']
+
+    def test_n_zero_returns_clean_result(self):
+        """n=0 must return an invalid-input result, not raise."""
+        r = grim("5.0", 0)
+        assert r['possible'] is None
+        r = grim("5.0", -3)
+        assert r['possible'] is None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GRIMMER: multi-sum iteration, zero-SD clamp, parity (bug 3)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestGrimmer:
+    def test_all_grim_admitted_sums_tested(self):
+        """n=25 Likert, real data sum 66 (mean 2.64→'2.6', sd 1.5242→'1.52').
+        Only sum=65 fails; sum=66 works, so GRIMMER must PASS."""
+        r = grimmer("2.6", "1.52", 25)
+        assert r['possible'], r['detail']
+
+    def test_zero_sd_is_possible(self):
+        """Ten 5s give mean 5.0 and SD 0.0 — must PASS (clamp SD lower
+        bound at 0 before squaring)."""
+        r = grimmer("5.0", "0.0", 10)
+        assert r['possible'], r['detail']
+
+    def test_canonical_fail_preserved(self):
+        """mean 5.0, sd 0.15, n=10: no integer sum-of-squares in range."""
+        r = grimmer("5.0", "0.15", 10)
+        assert not r['possible'], r['detail']
+
+    def test_parity_constraint(self):
+        """mean 5.0, sd 1.0, n=10: only candidate sum_sq is 259, but
+        sum(x²) ≡ sum(x) (mod 2) forces even — truly impossible."""
+        r = grimmer("5.0", "1.0", 10)
+        assert not r['possible'], r['detail']
+
+    def test_parity_never_kills_real_data(self):
+        """Real dataset: eight 5s + 4 + 6 → sum 50, sum_sq 252,
+        sd 0.4714 → '0.5'. Parity matches; must PASS."""
+        r = grimmer("5.0", "0.5", 10)
+        assert r['possible'], r['detail']
+
+    def test_negative_sd_fails(self):
+        r = grimmer("5.0", -1.0, 10)
+        assert r['possible'] is False
+
+    def test_n_zero_returns_clean_result(self):
+        r = grimmer("5.0", "1.0", 0)
+        assert r['possible'] is None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SPRITE: zero-SD clamp, hi>63, dp-derived SD tolerance, verdicts (bug 4)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestSprite:
+    def test_zero_sd_is_possible(self):
+        """Ten 5s: mean 5.0, SD 0.0, range [1,7] — must PASS."""
+        r = sprite(mean=5.0, sd=0.0, n=10, lo=1, hi=7, dp=1)
+        assert r['possible'], r['detail']
+        assert r['example_dataset'] == [5] * 10
+
+    def test_search_works_above_63(self):
+        """Scales above the old BDI literal 63 must be searchable."""
+        r = sprite(mean=90.0, sd=2.0, n=10, lo=80, hi=100, max_iter=200_000)
+        assert r['possible'], r['detail']
+        assert all(80 <= x <= 100 for x in r['example_dataset'])
+
+    def test_sd_tolerance_from_dp(self):
+        """SD '0.46' at 2dp has no valid sum-of-squares for mean 5.0, n=10
+        (interval [0.455, 0.465] admits none) — analytic FAIL. The old
+        hardcoded ±0.05 tolerance wrongly admitted sum_sq 252."""
+        r = sprite(mean=5.0, sd=0.46, n=10, lo=0, hi=10, dp_sd=2)
+        assert r['possible'] is False
+        assert r['detail'].startswith('FAIL')
+        assert r['n_feasible_sum_targets'] == 0
+
+    def test_search_exhausted_is_flag_not_fail(self):
+        """A feasible target not found within a tiny budget must be FLAG
+        ('not found within budget'), never a FAIL verdict."""
+        r = sprite(mean=3.5, sd=1.5, n=100, lo=1, hi=7,
+                   max_iter=10, n_seeds=1)
+        assert r['possible'] is None
+        assert r['detail'].startswith('FLAG')
+        assert 'budget' in r['detail']
+
+    def test_n_zero_returns_clean_result(self):
+        r = sprite(mean=5.0, sd=1.0, n=0, lo=1, hi=7)
+        assert r['possible'] is None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# correlation_bound: rounding tolerance + zero denominator (bug 5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestCorrelationBoundRounding:
+    def test_correctly_rounded_sds_pass(self):
+        """SDs 2.6, 2.8, 0.1 from a genuine r=1.0 dataset (rounded to 1dp)
+        must PASS: implied r ≤ 1 somewhere in the ±half-ulp box."""
+        r = correlation_bound(2.6, 2.8, 0.1)
+        assert r['possible'], r['detail']
+
+    def test_genuinely_impossible_still_fails(self):
+        """Pre 0.10, Post 0.30, Change 0.05: |r|>1 across the whole
+        rounding interval — must stay FAIL."""
+        r = correlation_bound(0.10, 0.30, 0.05)
+        assert not r['possible'], r['detail']
+
+    def test_zero_denominator_is_undetermined(self):
+        """Constant pre/post data is valid; r is undefined, not impossible."""
+        r = correlation_bound(0, 0, 0)
+        assert r['possible'] is None
+        assert 'UNDETERMINED' in r['detail']
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Zero-variance degenerate cases (bug 6)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestZeroVarianceDegenerate:
+    """SD exactly 0 → degenerate/cannot-recompute, never 'impossible'.
+    Negative SD stays FAIL."""
+
+    def test_paired_ttest_zero_sd_degenerate(self):
+        r = check_ttest_paired(1.0, 0.0, 10, 0.001)
+        assert r['plausible'] is None
+        assert 'degenerate' in r['detail']
+        assert 'FAIL' not in r['detail']
+
+    def test_paired_ttest_negative_sd_fails(self):
+        r = check_ttest_paired(1.0, -1.0, 10, 0.001)
+        assert r['plausible'] is False
+        assert 'FAIL' in r['detail']
+
+    def test_independent_ttest_zero_se_degenerate(self):
+        r = check_ttest_independent(5.0, 0.0, 10, 5.0, 0.0, 10, 0.5)
+        assert r['plausible'] is None
+        assert 'degenerate' in r['detail']
+
+    def test_independent_ttest_negative_sd_fails(self):
+        r = check_ttest_independent(5.0, -1.0, 10, 5.0, 1.0, 10, 0.5)
+        assert r['plausible'] is False
+
+    def test_anova_zero_within_variance_degenerate(self):
+        r = check_anova_oneway([5.0, 6.0], [0.0, 0.0], [10, 10])
+        assert 'degenerate' in r['detail']
+        assert 'FAIL' not in r['detail']
+
+    def test_anova_negative_sd_fails(self):
+        r = check_anova_oneway([5.0, 6.0], [-1.0, 1.0], [10, 10])
+        assert 'FAIL' in r['detail']
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# quick_sd_check: n-aware sample-SD bound (bug 7)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestQuickSdCheck:
+    def test_sample_sd_above_population_bound_is_possible(self):
+        """[0, 0, 10] has sample SD 5.774 > range/2 — must not be branded
+        impossible when n=3 is known."""
+        r = quick_sd_check(5.77, 3, 0, 10)
+        assert not any('IMPOSSIBLE' in f for f in r['flags']), r['flags']
+
+    def test_above_n_aware_bound_still_impossible(self):
+        """(range/2)*sqrt(3/2) = 6.124; 6.2 exceeds it."""
+        r = quick_sd_check(6.2, 3, 0, 10)
+        assert any('IMPOSSIBLE' in f for f in r['flags']), r['flags']
+
+    def test_impossible_does_not_skip_bimodality_flag(self):
+        """The impossible flag must not short-circuit the softer flag."""
+        r = quick_sd_check(6.2, 3, 0, 10)
+        assert any('bimodal' in f for f in r['flags']), r['flags']
+
+    def test_unknown_n_uses_population_bound(self):
+        r = quick_sd_check(5.1, None, 0, 10)
+        assert any('IMPOSSIBLE' in f for f in r['flags']), r['flags']
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# sample_size_from_t: rounding-aware p inversion (bug 8)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestSampleSizeFromT:
+    def test_consistent_ns_pass(self):
+        """t=2.5, p=0.02: every n in 16-64 gives an exact p that rounds
+        to 0.02, so all must PASS."""
+        flagged = [n for n in range(16, 65)
+                   if not sample_size_from_t(2.5, 0.02, n)['plausible']]
+        assert flagged == [], f"falsely flagged: {flagged}"
+
+    def test_inconsistent_p_flagged(self):
+        """t=2.5, n=44 gives p≈0.016 — a reported p=0.2 is inconsistent
+        over its whole rounding interval [0.15, 0.25]."""
+        r = sample_size_from_t(2.5, 0.2, 44)
+        assert r['plausible'] is False
+
+    def test_implied_n_range_returned(self):
+        r = sample_size_from_t(2.5, 0.02, 44)
+        lo, hi = r['implied_n_range']
+        assert lo <= 20 and hi >= 60
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# grim_percentage (formerly misnamed 'debit') (bug 9)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestGrimPercentage:
+    def test_grim_percentage_works(self):
+        """40.0% of 26 = 10.4 people — impossible at 1dp."""
+        r = grim_percentage(40.0, 26)
+        assert not r['possible']
+
+    def test_debit_alias_deprecated_and_equivalent(self):
+        with pytest.warns(DeprecationWarning):
+            r_old = debit(40.0, 26)
+        r_new = grim_percentage(40.0, 26)
+        assert r_old['possible'] == r_new['possible']
+        assert r_old['implied_count'] == r_new['implied_count']
+
+    def test_docstring_is_not_invented_debit(self):
+        doc = grim_percentage.__doc__
+        assert 'Distribution of Effects Based on Imprecise Totals' not in doc
+        assert 'Brown & Heathers' in doc  # GRIM citation
+        assert 'pm825' in doc             # points at the real DEBIT
+
+    def test_n_zero_returns_clean_result(self):
+        r = grim_percentage(50.0, 0)
+        assert r['possible'] is None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# check_chi_squared: Yates continuity correction for 2x2 (bug 10)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestChiSquaredYates:
+    TABLE = [[10, 20], [20, 10]]  # Pearson 6.667, Yates 5.4
+
+    def test_yates_reported_value_passes(self):
+        r = check_chi_squared(self.TABLE, reported_chi2=5.4)
+        assert r['consistent'], r['detail']
+        assert r['chi2_matched'] == 'yates'
+
+    def test_pearson_reported_value_passes(self):
+        r = check_chi_squared(self.TABLE, reported_chi2=6.67)
+        assert r['consistent'], r['detail']
+        assert r['chi2_matched'] == 'pearson'
+
+    def test_neither_still_flags(self):
+        r = check_chi_squared(self.TABLE, reported_chi2=12.0)
+        assert not r['consistent']
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Module citations: GRIMMER = Anaya 2016, SPRITE = Heathers et al. 2018 (bug 11)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestCitations:
+    def test_grimmer_cited_to_anaya_2016(self):
+        import paperscope.analysis.forensic_stats as fs
+        ref_lines = [l for l in fs.__doc__.splitlines()
+                     if 'GRIMMER' in l and 'doi' in l]
+        assert ref_lines and all('Anaya (2016)' in l for l in ref_lines)
+        assert 'Anaya (2016)' in grimmer.__doc__
+
+    def test_sprite_cited_to_heathers_et_al_2018(self):
+        import paperscope.analysis.forensic_stats as fs
+        ref_lines = [l for l in fs.__doc__.splitlines()
+                     if 'SPRITE' in l and 'doi' in l]
+        assert ref_lines
+        assert all('Heathers' in l and '2018' in l for l in ref_lines)
+        assert '2018' in sprite.__doc__
+
+
+class TestSpriteSumPreservation:
+    """Codex re-review: sprite could accept datasets with the wrong mean.
+
+    The variance-decreasing perturbation moved data[far] without always
+    compensating data[near], so the sum drifted off target; acceptance
+    then only checked the SD interval.
+    """
+
+    def test_wrong_mean_sd_pair_fails(self):
+        # mean 1.0 (1dp) with n=3 admits only sum 3; triples summing to 3
+        # have SD 0, 1.0, or 1.732 — SD 1.2 is impossible.
+        r = sprite(mean=1.0, sd=1.2, n=3, lo=0, hi=5,
+                                  dp=1, dp_sd=1, max_iter=50_000)
+        assert r['possible'] is not True
+
+    def test_example_dataset_always_matches_reported_mean(self):
+        r = sprite(mean=3.5, sd=1.0, n=20, lo=1, hi=7, dp=1)
+        if r.get('example_dataset'):
+            m = sum(r['example_dataset']) / len(r['example_dataset'])
+            assert round(m, 1) == 3.5
+
+
+class TestGrimmerRepresentability:
+    """Codex re-review: parity is necessary, not sufficient.
+
+    sum=15, sumsq=79, n=3 passes the parity gate but no integer triple
+    achieves it (deviations need x^2+xy+y^2 = 2, not a Loeschian number).
+    """
+
+    def test_parity_consistent_but_unrepresentable_fails(self):
+        r = grimmer(mean="5.0", sd="1.4", n=3)
+        assert r['possible'] is not True
+
+    def test_representable_case_still_passes(self):
+        # [4, 5, 6]: mean 5.0, sample SD 1.0
+        r = grimmer(mean="5.0", sd="1.0", n=3)
+        assert r['possible'] is True
+
+    def test_likert_multi_sum_case_still_passes(self):
+        r = grimmer(mean="2.6", sd="1.52", n=25)
+        assert r['possible'] is True
+
+    def test_zero_sd_still_passes(self):
+        r = grimmer(mean="5.0", sd="0.0", n=10)
+        assert r['possible'] is True
+
+
+class TestQuickSdCheckOddN:
+    """Codex re-review: the even-split bound overestimates for odd n."""
+
+    def test_odd_n_uses_floor_ceil_split_bound(self):
+        # n=3 on [0,10]: true max sample SD is [0,0,10] -> 5.7735,
+        # not (range/2)*sqrt(n/(n-1)) = 6.1237
+        r = quick_sd_check(sd=6.0, n=3, lo=0, hi=10)
+        assert any('IMPOSSIBLE' in f for f in r['flags'])
+
+    def test_odd_n_true_max_still_possible(self):
+        r = quick_sd_check(sd=5.77, n=3, lo=0, hi=10)
+        assert not any('IMPOSSIBLE' in f for f in r['flags'])
+
+    def test_even_n_bound_unchanged(self):
+        # n=4 on [0,10]: [0,0,10,10] -> sample SD 5.7735
+        r = quick_sd_check(sd=5.77, n=4, lo=0, hi=10)
+        assert not any('IMPOSSIBLE' in f for f in r['flags'])

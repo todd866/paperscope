@@ -11,7 +11,7 @@ Usage:
 
     from paperscope.analysis.forensic_stats import (
         grim, grim_column, grim_row,
-        grimmer, debit, sprite, correlation_bound,
+        grimmer, grim_percentage, sprite, correlation_bound,
         check_ttest_paired, check_ttest_independent,
         check_anova_oneway, check_chi_squared,
         sample_size_from_t, effect_size_consistency,
@@ -22,12 +22,16 @@ Usage:
         check_frozen_sds, infer_column_dp,
     )
 
+Verdict semantics (cardinal rule of a forensic tool): NEVER brand possible
+data impossible.  When a check cannot be computed (degenerate or invalid
+input), the verdict is "undetermined / cannot test" — never FAIL.
+
 References:
     Heathers (2025) "An Introduction to Forensic Metascience" doi:10.5281/zenodo.14871843
     Brown & Heathers (2017) "The GRIM Test" doi:10.1177/1948550616673876
-    Heathers & Brown (2019) "GRIMMER" doi:10.31234/osf.io/6cn2h
+    Anaya (2016) "The GRIMMER Test" doi:10.7287/peerj.preprints.2400v1
     Jane (2024) matthewbjane.github.io/blog-posts/blog-post-1.html
-    Anaya (2016) "The SPRITE Procedure" doi:10.7287/peerj.preprints.2748v1
+    Heathers, Anaya, van der Zee & Brown (2018) "SPRITE" doi:10.7287/peerj.preprints.26968v1
     Carlisle (2017) doi:10.1111/anae.13938
 """
 
@@ -35,6 +39,7 @@ from __future__ import annotations
 
 import math
 import random
+import warnings
 from collections import Counter
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
@@ -106,17 +111,28 @@ def grim(mean: Union[str, float], n: int, scale: int = 1,
         mean = float(mean)
     elif dp is None:
         dp = _dp_from_str(f"{mean}")
+    if n <= 0:
+        return {
+            'possible': None,
+            'reported_mean': mean,
+            'n': n,
+            'detail': f"UNDETERMINED: invalid sample size n={n} — cannot test",
+        }
     implied_sum = mean * n
     granularity = scale
-    remainder = (implied_sum / granularity) % 1.0
 
-    # Rounding tolerance: last decimal place could be ±0.5 units
-    tolerance = 0.5 * (10 ** -dp) * n
-    near_integer = (remainder < (tolerance / granularity) or
-                    remainder > 1 - (tolerance / granularity))
+    # Rounding tolerance: the true mean can sit up to half a unit of the
+    # last reported decimal place away.  The boundary is *inclusive*: a
+    # true mean exactly 0.5 ulp away still rounds to the reported value
+    # under half-up or banker's rounding, so allow a small epsilon for
+    # float noise rather than a strict inequality.
+    half_ulp = 0.5 * (10 ** -dp)
+    eps = 1e-9
 
     lower = math.floor(implied_sum / granularity) * granularity / n
     upper = math.ceil(implied_sum / granularity) * granularity / n
+    near_integer = (abs(lower - mean) <= half_ulp + eps or
+                    abs(upper - mean) <= half_ulp + eps)
 
     result = {
         'possible': near_integer,
@@ -243,15 +259,21 @@ def grim_row(baseline: Union[str, float], end: Union[str, float],
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 2. DEBIT (Distribution of Effects Based on Imprecise Totals)
+# 2. GRIM FOR PERCENTAGES (formerly misnamed "DEBIT")
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def debit(percentage: float, n: int, dp: int = 1) -> dict:
+def grim_percentage(percentage: float, n: int, dp: int = 1) -> dict:
     """
-    DEBIT: GRIM for percentages/proportions from discrete counts.
+    GRIM applied to percentages/proportions derived from discrete counts.
 
     If a paper says "88.5% of 26 participants responded", that implies
     26 * 0.885 = 23.01 people — impossible. The count must be an integer.
+
+    Note: this is *not* the DEBIT test.  The real DEBIT (DEscriptive
+    BInary Test; Heathers & Brown 2019, osf.io/pm825) is a mean/SD/n
+    consistency check for binary data and is not implemented here.
+
+    Ref: Brown & Heathers (2017) "The GRIM Test" doi:10.1177/1948550616673876
 
     Args:
         percentage: reported percentage (e.g. 88.5 for 88.5%)
@@ -261,6 +283,13 @@ def debit(percentage: float, n: int, dp: int = 1) -> dict:
     Returns:
         dict with 'possible', 'implied_count', 'nearest_achievable', 'detail'.
     """
+    if n <= 0:
+        return {
+            'possible': None,
+            'reported_percentage': percentage,
+            'n': n,
+            'detail': f"UNDETERMINED: invalid sample size n={n} — cannot test",
+        }
     proportion = percentage / 100.0
     implied_count = proportion * n
 
@@ -296,6 +325,23 @@ def debit(percentage: float, n: int, dp: int = 1) -> dict:
     return result
 
 
+def debit(percentage: float, n: int, dp: int = 1) -> dict:
+    """
+    Deprecated alias for grim_percentage().
+
+    This function was misnamed: the real DEBIT (Heathers & Brown 2019,
+    osf.io/pm825) is a different test (mean/SD/n consistency for binary
+    data), while this check is GRIM applied to percentages.
+    """
+    warnings.warn(
+        "debit() is deprecated and was misnamed — it is GRIM for "
+        "percentages, not the DEBIT test. Use grim_percentage() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return grim_percentage(percentage, n, dp=dp)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # 3. SPRITE (Sample Parameter Reconstruction via Iterative TEchniques)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -310,6 +356,7 @@ def sprite(
     n_seeds: int = 5,
     seed: int = 42,
     dp: Optional[int] = None,
+    dp_sd: Optional[int] = None,
 ) -> dict:
     """
     SPRITE: attempt to reconstruct a valid dataset that produces the
@@ -324,6 +371,14 @@ def sprite(
       Phase 2 (search): for each feasible (sum, sum_sq) pair, run
         randomized perturbation search with multiple seeds.
 
+    Verdicts: an analytic-precondition impossibility is a FAIL
+    ('possible': False); a search that exhausts its budget without
+    finding a dataset is only a FLAG ('possible': None) — the statistics
+    are not proven impossible.
+
+    Ref: Heathers, Anaya, van der Zee & Brown (2018)
+         doi:10.7287/peerj.preprints.26968v1
+
     Args:
         mean: reported mean
         sd:   reported standard deviation
@@ -334,22 +389,49 @@ def sprite(
         n_seeds:  number of independent random seeds to try per sum
         seed: base random seed for reproducibility
         dp:   decimal places of the reported mean (auto-detected if None)
+        dp_sd: decimal places of the reported SD (auto-detected if None);
+               sets the SD rounding tolerance to ±0.5 ulp
 
     Returns:
         dict with 'possible', 'grim_possible', 'n_target_sums',
         'n_sumsq_targets', 'example_dataset', 'closest', and 'detail'.
     """
-    # Auto-detect decimal places
+    if n <= 0:
+        return {
+            'possible': None,
+            'n': n,
+            'detail': f"UNDETERMINED: invalid sample size n={n} — cannot test",
+        }
+    if n == 1:
+        return {
+            'possible': None,
+            'n': n,
+            'detail': "UNDETERMINED: SD is undefined for n=1 — cannot test",
+        }
+    if sd < 0:
+        return {
+            'possible': False,
+            'n': n,
+            'detail': f"FAIL: SD ({sd}) is negative — impossible",
+        }
+
+    # Auto-detect decimal places (mean and SD independently)
     if dp is None:
         s = str(mean)
         dp = len(s.split('.')[-1]) if '.' in s else 0
+    if dp_sd is None:
+        s = str(sd)
+        dp_sd = len(s.split('.')[-1]) if '.' in s else 0
 
     # ── Phase 1: analytical feasibility ──
+    # Inclusive rounding boundaries (see grim()): a value exactly 0.5 ulp
+    # away still rounds to the reported one, so pad with a small epsilon.
+    eps = 1e-9
     half_unit = 0.5 * 10**(-dp)
     lo_mean = mean - half_unit
     hi_mean = mean + half_unit
-    lo_sum = max(math.ceil(lo_mean * n), lo * n)
-    hi_sum = min(math.floor(hi_mean * n), hi * n)
+    lo_sum = max(math.ceil(lo_mean * n - eps), lo * n)
+    hi_sum = min(math.floor(hi_mean * n + eps), hi * n)
     possible_sums = list(range(lo_sum, hi_sum + 1))
 
     if not possible_sums:
@@ -364,9 +446,13 @@ def sprite(
             ),
         }
 
-    # For each possible sum, find valid sum-of-squares range
-    sd_lo = sd - 0.05  # rounding tolerance on SD (1 dp)
-    sd_hi = sd + 0.05
+    # For each possible sum, find valid sum-of-squares range.
+    # SD rounding tolerance is ±0.5 ulp at the reported precision, with
+    # the lower bound clamped at 0 (an SD interval can never go negative;
+    # squaring a negative lower bound would fabricate a positive minimum).
+    half_sd = 0.5 * 10**(-dp_sd)
+    sd_lo = max(0.0, sd - half_sd)
+    sd_hi = sd + half_sd
     target_var = sd ** 2
 
     feasible_targets = []  # list of (target_sum, lo_sumsq, hi_sumsq)
@@ -374,8 +460,8 @@ def sprite(
     for ts in possible_sums:
         lo_sumsq = sd_lo**2 * (n - 1) + ts**2 / n
         hi_sumsq = sd_hi**2 * (n - 1) + ts**2 / n
-        lo_int = math.ceil(lo_sumsq)
-        hi_int = math.floor(hi_sumsq)
+        lo_int = math.ceil(lo_sumsq - eps)
+        hi_int = math.floor(hi_sumsq + eps)
         if lo_int <= hi_int:
             feasible_targets.append((ts, lo_int, hi_int))
             total_sumsq_targets += hi_int - lo_int + 1
@@ -414,11 +500,18 @@ def sprite(
                     best_dataset = list(data)
                     best_stats = (cur_mean, cur_var ** 0.5)
 
-                if vd < 0.005:
+                # Accept when the sum is on target AND the reconstructed SD
+                # rounds to the reported SD at its reported precision (the
+                # sum check guards the mean — an SD match alone can come
+                # from a dataset with the wrong mean)
+                if (sum(data) == target_sum
+                        and sd_lo - eps <= cur_var ** 0.5 <= sd_hi + eps):
                     found_dataset = list(data)
                     break
 
-                # Perturb: swap toward/away from target variance
+                # Perturb: swap toward/away from target variance.  Every
+                # move must be a legal +1/-1 pair so the sum is invariant —
+                # a one-sided move would drift the mean off target.
                 i, j = rng.sample(range(n), 2)
                 if cur_var < target_var:
                     if data[i] < hi and data[j] > lo:
@@ -430,21 +523,27 @@ def sprite(
                         far, near = i, j
                     else:
                         far, near = j, i
-                    if data[far] > mid and data[far] > lo:
+                    if data[far] > mid and data[far] > lo and data[near] < hi:
                         data[far] -= 1
-                        if data[near] < hi:
-                            data[near] += 1
-                    elif data[far] < mid and data[far] < 63:
+                        data[near] += 1
+                    elif data[far] < mid and data[far] < hi and data[near] > lo:
                         data[far] += 1
-                        if data[near] > lo:
-                            data[near] -= 1
+                        data[near] -= 1
 
         if found_dataset is not None:
             break
 
     # ── Build result ──
+    # found → PASS; analytic impossibility → FAIL; budget exhausted with
+    # feasible targets remaining → FLAG (None), not FAIL
+    if found_dataset is not None:
+        verdict = True
+    elif not feasible_targets:
+        verdict = False
+    else:
+        verdict = None
     result = {
-        'possible': found_dataset is not None,
+        'possible': verdict,
         'grim_possible': True,
         'n_target_sums': len(possible_sums),
         'possible_sums': possible_sums,
@@ -484,10 +583,12 @@ def sprite(
         else:
             result['detail'] = (
                 f"FLAG: {total_sumsq_targets} valid (sum, sum_sq) targets exist, "
-                f"but no dataset found in {result['total_iterations']:,} iterations "
-                f"({n_seeds} seeds x {len(feasible_targets)} targets x {max_iter:,}). "
+                f"but no dataset found within budget "
+                f"({result['total_iterations']:,} iterations: "
+                f"{n_seeds} seeds x {len(feasible_targets)} targets x {max_iter:,}). "
                 f"Closest SD: {best_stats[1]:.4f} (target {sd}, gap {best_var_diff:.6f}). "
-                f"Statistics may be achievable but are highly constrained."
+                f"Not proven impossible — statistics may be achievable but "
+                f"are highly constrained."
             )
     return result
 
@@ -496,7 +597,9 @@ def sprite(
 # 4. Correlation bound from pre/post/change SDs
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def correlation_bound(sd_pre: float, sd_post: float, sd_change: float) -> dict:
+def correlation_bound(sd_pre: Union[str, float], sd_post: Union[str, float],
+                      sd_change: Union[str, float],
+                      dp: Optional[int] = None) -> dict:
     """
     Reverse-engineer the implied Pearson r between pre and post scores
     from their SDs and the SD of the change score.
@@ -504,23 +607,65 @@ def correlation_bound(sd_pre: float, sd_post: float, sd_change: float) -> dict:
     Var(change) = Var(pre) + Var(post) - 2*r*SD(pre)*SD(post)
     => r = (SD_pre^2 + SD_post^2 - SD_change^2) / (2 * SD_pre * SD_post)
 
-    If |r| > 1, the reported SDs are mutually inconsistent.
+    Reported SDs are rounded, so each is treated as a ±0.5-ulp interval
+    at its reported precision.  FAIL only if |r| > 1 across the *entire*
+    interval — i.e., no (pre, post, change) triple in the rounding box
+    satisfies |pre - post| <= change <= pre + post.
+
+    Args:
+        sd_pre, sd_post, sd_change: reported SDs (strings preserve
+            trailing zeros for dp inference)
+        dp: decimal places of all three SDs.  If None, inferred from
+            each value independently (see grim()).
     """
+    def _half_ulp(v):
+        d = dp if dp is not None else _dp_from_str(v if isinstance(v, str) else f"{v}")
+        return 0.5 * (10 ** -d)
+
+    h_pre, h_post, h_chg = (_half_ulp(sd_pre), _half_ulp(sd_post),
+                            _half_ulp(sd_change))
+    sd_pre = float(sd_pre)
+    sd_post = float(sd_post)
+    sd_change = float(sd_change)
+
+    if sd_pre < 0 or sd_post < 0 or sd_change < 0:
+        return {
+            'possible': False,
+            'implied_r': None,
+            'detail': "FAIL: a negative SD is impossible",
+        }
+
     numerator = sd_pre**2 + sd_post**2 - sd_change**2
     denominator = 2 * sd_pre * sd_post
 
     if denominator == 0:
+        # Constant pre or post data is valid; r is undefined, not impossible
         return {
-            'possible': False,
-            'implied_r': float('inf'),
-            'detail': "FAIL: denominator is zero (one or both SDs are 0)"
+            'possible': None,
+            'implied_r': None,
+            'detail': (
+                "UNDETERMINED: pre or post SD is 0 — the correlation is "
+                "undefined for constant data; cannot test (not evidence "
+                "of error)"
+            ),
         }
 
     implied_r = numerator / denominator
     min_sd_change = abs(sd_pre - sd_post)
     max_sd_change = sd_pre + sd_post
 
-    possible = -1.0 <= round(implied_r, 6) <= 1.0
+    # Rounding intervals (SDs cannot go below 0)
+    eps = 1e-9
+    pre_lo, pre_hi = max(0.0, sd_pre - h_pre), sd_pre + h_pre
+    post_lo, post_hi = max(0.0, sd_post - h_post), sd_post + h_post
+    chg_lo, chg_hi = max(0.0, sd_change - h_chg), sd_change + h_chg
+
+    # |r| <= 1 somewhere in the box iff some change in [chg_lo, chg_hi]
+    # can reach [|pre - post|, pre + post] for some pre/post in range
+    min_gap = max(pre_lo - post_hi, post_lo - pre_hi, 0.0)
+    possible = (chg_hi >= min_gap - eps and
+                chg_lo <= pre_hi + post_hi + eps)
+
     result = {
         'possible': possible,
         'implied_r': round(implied_r, 4),
@@ -532,13 +677,15 @@ def correlation_bound(sd_pre: float, sd_post: float, sd_change: float) -> dict:
     }
     if possible:
         result['detail'] = (
-            f"PASS: implied r = {implied_r:.4f} (within [-1, 1]). "
-            f"Plausible SD(change) range: [{min_sd_change:.4f}, {max_sd_change:.4f}]"
+            f"PASS: implied r = {implied_r:.4f} is achievable within SD "
+            f"rounding. Plausible SD(change) range: "
+            f"[{min_sd_change:.4f}, {max_sd_change:.4f}]"
         )
     else:
         result['detail'] = (
-            f"FAIL: implied r = {implied_r:.4f} — IMPOSSIBLE (outside [-1, 1]). "
-            f"Reported SD(change) = {sd_change}, but valid range is "
+            f"FAIL: implied r = {implied_r:.4f} — IMPOSSIBLE (|r| > 1 across "
+            f"the entire SD rounding interval). Reported SD(change) = "
+            f"{sd_change}, but valid range is "
             f"[{min_sd_change:.4f}, {max_sd_change:.4f}]"
         )
     return result
@@ -551,10 +698,24 @@ def correlation_bound(sd_pre: float, sd_post: float, sd_change: float) -> dict:
 def check_ttest_paired(mean_change: float, sd_change: float, n: int,
                        reported_p: float) -> dict:
     """Recalculate a paired t-test p-value from reported change statistics."""
-    if sd_change <= 0:
+    if sd_change < 0:
         return {
             'plausible': False,
-            'detail': f"FAIL: SD of change ({sd_change}) is <= 0, impossible"
+            'detail': f"FAIL: SD of change ({sd_change}) is negative, impossible"
+        }
+    if n <= 1:
+        return {
+            'plausible': None,
+            'detail': f"UNDETERMINED: invalid sample size n={n} — cannot test"
+        }
+    if sd_change == 0:
+        # Zero change-SD is possible data (all subjects changed identically)
+        return {
+            'plausible': None,
+            'detail': (
+                "UNDETERMINED: degenerate: cannot recompute the test "
+                "statistic (zero variance); not evidence of error"
+            )
         }
 
     se = sd_change / math.sqrt(n)
@@ -585,9 +746,23 @@ def check_ttest_independent(mean1: float, sd1: float, n1: int,
                             mean2: float, sd2: float, n2: int,
                             reported_p: float) -> dict:
     """Recalculate an independent-samples t-test (Welch's) from reported stats."""
+    if sd1 < 0 or sd2 < 0:
+        return {'plausible': False,
+                'detail': "FAIL: a negative SD is impossible"}
+    if n1 <= 1 or n2 <= 1:
+        return {'plausible': None,
+                'detail': (f"UNDETERMINED: invalid sample sizes "
+                           f"(n1={n1}, n2={n2}) — cannot test")}
     se = math.sqrt(sd1**2 / n1 + sd2**2 / n2)
     if se == 0:
-        return {'plausible': False, 'detail': "FAIL: pooled SE is 0"}
+        # Both SDs zero is possible data (constant groups)
+        return {
+            'plausible': None,
+            'detail': (
+                "UNDETERMINED: degenerate: cannot recompute the test "
+                "statistic (zero variance); not evidence of error"
+            )
+        }
 
     t_val = (mean1 - mean2) / se
     num = (sd1**2 / n1 + sd2**2 / n2)**2
@@ -617,49 +792,76 @@ def check_ttest_independent(mean1: float, sd1: float, n1: int,
 # 6. Sample size back-calculation
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def sample_size_from_t(t_val: float, p_reported: float,
-                       reported_n: int, two_tailed: bool = True) -> dict:
+def sample_size_from_t(t_val: float, p_reported: Union[str, float],
+                       reported_n: int, two_tailed: bool = True,
+                       dp: Optional[int] = None) -> dict:
     """
-    From a reported t-statistic and p-value, back-calculate what df (and
-    hence n) would be needed. Compare with the stated n.
+    From a reported t-statistic and p-value, check whether they are
+    consistent with the stated n.
+
+    A reported p-value is rounded, so it cannot be inverted as exact:
+    PASS if the exact p at the stated n's df rounds to the reported p
+    at its reported precision; FLAG only if the exact p falls outside
+    the reported p's entire rounding interval.  The range of n values
+    consistent with the reported p is returned as information.
 
     Args:
         t_val:       reported t-statistic
-        p_reported:  reported p-value
+        p_reported:  reported p-value (string preserves trailing zeros)
         reported_n:  stated sample size (for comparison)
         two_tailed:  whether the test is two-tailed
+        dp:          decimal places of the reported p (inferred if None)
     """
-    # Find df that produces reported_p for the given t
-    # p = 2 * sf(|t|, df) for two-tailed
-    # We search df from 1 to 10000
-    best_df = None
-    best_diff = float('inf')
+    if dp is None:
+        dp = _dp_from_str(p_reported if isinstance(p_reported, str)
+                          else f"{p_reported}")
+    p_reported = float(p_reported)
 
-    for df_candidate in range(1, 10001):
-        if two_tailed:
-            p_calc = sp.t.sf(abs(t_val), df_candidate) * 2
-        else:
-            p_calc = sp.t.sf(abs(t_val), df_candidate)
-        diff = abs(p_calc - p_reported)
-        if diff < best_diff:
-            best_diff = diff
-            best_df = df_candidate
+    if reported_n <= 1:
+        return {
+            'plausible': None,
+            'reported_n': reported_n,
+            'detail': (f"UNDETERMINED: invalid sample size n={reported_n} "
+                       f"— cannot test"),
+        }
 
-    implied_n = best_df + 1  # for one-sample/paired: n = df + 1
+    # Rounding interval of the reported p (inclusive boundary, see grim())
+    half_ulp = 0.5 * (10 ** -dp)
+    eps = 1e-12
+    p_lo = p_reported - half_ulp - eps
+    p_hi = p_reported + half_ulp + eps
+    tails = 2 if two_tailed else 1
 
-    match = abs(implied_n - reported_n) <= 2  # allow small rounding
+    # Exact p at the stated n's df (one-sample/paired: df = n - 1)
+    stated_df = reported_n - 1
+    p_at_stated = float(sp.t.sf(abs(t_val), stated_df)) * tails
+    match = p_lo <= p_at_stated <= p_hi
+
+    # Which df values (1..10000) are consistent with the reported p?
+    import numpy as np
+    dfs = np.arange(1, 10001)
+    p_all = sp.t.sf(abs(t_val), dfs) * tails
+    idx = np.nonzero((p_all >= p_lo) & (p_all <= p_hi))[0]
+    if idx.size:
+        implied_n_range = [int(dfs[idx[0]]) + 1, int(dfs[idx[-1]]) + 1]
+    else:
+        implied_n_range = None
 
     return {
         'plausible': match,
-        'implied_df': best_df,
-        'implied_n': implied_n,
+        'p_at_stated_n': p_at_stated,
+        'implied_n_range': implied_n_range,
         'reported_n': reported_n,
-        'discrepancy': implied_n - reported_n,
         'detail': (
             f"{'PASS' if match else 'FLAG'}: "
-            f"t={t_val} with p={p_reported} implies df={best_df} (n~{implied_n}), "
-            f"reported n={reported_n}"
-            f"{'' if match else f' [discrepancy: {implied_n - reported_n}]'}"
+            f"t={t_val} at stated n={reported_n} (df={stated_df}) gives "
+            f"p={p_at_stated:.4g}, which "
+            f"{'rounds to' if match else 'does not round to'} reported "
+            f"p={p_reported}. "
+            + (f"n consistent with reported p: "
+               f"{implied_n_range[0]}-{implied_n_range[1]}"
+               if implied_n_range else
+               "no n in 2-10001 reproduces the reported p")
         )
     }
 
@@ -962,6 +1164,45 @@ def check_sd_positive(sd: float, label: str = "") -> dict:
 # 11. GRIMMER (SD consistency for integer data)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+_DATASET_EXISTS_BUDGET = 200_000  # memo-entry cap for the exact DP
+
+
+def _integer_dataset_exists(k: int, s: int, q: int, lo: int, hi: int,
+                            memo: dict) -> Optional[bool]:
+    """
+    Exact test: do k integers in [lo, hi] exist with sum s and sum of
+    squares q?  Memoized DFS over (slots, sum, sumsq) with analytic
+    pruning; order is irrelevant for existence, so states stay small.
+    Returns True/False, or None if the memo budget is exhausted (an
+    honest "don't know", never a verdict).
+    """
+    if k > 500:
+        return None  # recursion guard; fall back to undetermined
+    if k == 0:
+        return s == 0 and q == 0
+    if s < k * lo or s > k * hi:
+        return False
+    if q * k < s * s:
+        return False  # Cauchy-Schwarz: sumsq >= s^2 / k
+    if q > (lo + hi) * s - k * lo * hi:
+        return False  # for x in [lo, hi]: x^2 <= (lo+hi)x - lo*hi
+    key = (k, s, q)
+    if key in memo:
+        return memo[key]
+    if len(memo) >= _DATASET_EXISTS_BUDGET:
+        return None
+    found = False
+    for v in range(hi, lo - 1, -1):
+        sub = _integer_dataset_exists(k - 1, s - v, q - v * v, lo, hi, memo)
+        if sub is None:
+            return None  # budget hit below — don't cache, don't conclude
+        if sub:
+            found = True
+            break
+    memo[key] = found
+    return found
+
+
 def grimmer(mean: Union[str, float], sd: Union[str, float], n: int,
             scale: int = 1,
             dp_mean: Optional[int] = None,
@@ -972,9 +1213,16 @@ def grimmer(mean: Union[str, float], sd: Union[str, float], n: int,
 
     Extends GRIM to standard deviations. For integer data with known n
     and mean, the sum of squares must be an integer, which constrains
-    the achievable SDs.
+    the achievable SDs.  Every integer sum admitted by the GRIM gate is
+    tested, and (for integer data) candidate sums of squares must match
+    the parity of the sum, since sum(x^2) ≡ sum(x) (mod 2).  Those
+    conditions are necessary but not sufficient, so for scale=1 each
+    surviving (sum, sum-of-squares) target is verified exactly against
+    an integer dataset (bounded DP); a PASS means a dataset exists, a
+    FAIL means none does, and an exhausted search budget reports
+    UNDETERMINED rather than a verdict.
 
-    Ref: Heathers & Brown (2019) doi:10.31234/osf.io/6cn2h
+    Ref: Anaya (2016) doi:10.7287/peerj.preprints.2400v1
 
     Args:
         mean:    reported mean (string preserves trailing zeros)
@@ -997,6 +1245,18 @@ def grimmer(mean: Union[str, float], sd: Union[str, float], n: int,
         sd = float(sd)
     elif dp_sd is None:
         dp_sd = _dp_from_str(f"{sd}")
+    if n <= 0:
+        return {
+            'possible': None,
+            'n': n,
+            'detail': f"UNDETERMINED: invalid sample size n={n} — cannot test",
+        }
+    if sd < 0:
+        return {
+            'possible': False,
+            'grim_pass': None,
+            'detail': f"FAIL: SD ({sd}) is negative — impossible",
+        }
     # First check GRIM
     grim_result = grim(mean, n, scale=scale, dp=dp_mean)
     if not grim_result['possible']:
@@ -1006,25 +1266,88 @@ def grimmer(mean: Union[str, float], sd: Union[str, float], n: int,
             'detail': f"FAIL: GRIM fails first — mean {mean} is impossible for n={n}"
         }
 
-    # Find the compatible integer sum
+    # Every integer sum the GRIM gate admits must be tested — the true
+    # sum need not be round(mean * n) (inclusive boundary, see grim())
+    eps = 1e-9
+    half_mean = 0.5 * 10**(-dp_mean)
+    lo_sum = math.ceil((mean - half_mean) * n / scale - eps)
+    hi_sum = math.floor((mean + half_mean) * n / scale + eps)
+    candidate_sums = [k * scale for k in range(lo_sum, hi_sum + 1)]
     implied_sum = round(mean * n)
 
-    # SD^2 * (n-1) = sum_of_squares - n * mean_exact^2
-    # sum_of_squares = SD^2 * (n-1) + implied_sum^2 / n
-    exact_mean = implied_sum / n
-    target_sumsq = sd**2 * (n - 1) + implied_sum**2 / n
-
-    # Sum of squares must be an integer (sum of integer squares)
-    # Allow rounding tolerance
-    sd_lo = sd - 0.5 * 10**(-dp_sd)
+    # SD^2 * (n-1) = sum_of_squares - sum^2 / n
+    # Sum of squares must be an integer (sum of integer squares).
+    # Allow rounding tolerance on the SD, clamping the lower bound at 0
+    # (a negative bound would be squared into a spurious positive minimum)
+    sd_lo = max(0.0, sd - 0.5 * 10**(-dp_sd))
     sd_hi = sd + 0.5 * 10**(-dp_sd)
-    lo_sumsq = sd_lo**2 * (n - 1) + implied_sum**2 / n
-    hi_sumsq = sd_hi**2 * (n - 1) + implied_sum**2 / n
 
-    lo_int = math.ceil(lo_sumsq)
-    hi_int = math.floor(hi_sumsq)
+    valid_sums = []
+    per_sum = []
+    sumsq_targets = {}  # ts -> parity-consistent integer sum-of-squares list
+    n_valid_sumsq = 0
+    for ts in candidate_sums:
+        lo_sumsq = sd_lo**2 * (n - 1) + ts**2 / n
+        hi_sumsq = sd_hi**2 * (n - 1) + ts**2 / n
+        lo_int = math.ceil(lo_sumsq - eps)
+        hi_int = math.floor(hi_sumsq + eps)
+        n_ints = max(0, hi_int - lo_int + 1)
+        if n_ints and scale == 1:
+            # Parity: x^2 ≡ x (mod 2) for integers, so sum(x^2) must
+            # match the parity of the sum — exact, never a false FAIL
+            parity = ts % 2
+            first = lo_int if lo_int % 2 == parity else lo_int + 1
+            if first > hi_int:
+                n_ints = 0
+            else:
+                n_ints = (hi_int - first) // 2 + 1
+                sumsq_targets[ts] = list(range(first, hi_int + 1, 2))
+        per_sum.append({
+            'sum': ts,
+            'sumsq_range': [round(lo_sumsq, 4), round(hi_sumsq, 4)],
+            'n_valid_sumsq': n_ints,
+        })
+        if n_ints:
+            valid_sums.append(ts)
+            n_valid_sumsq += n_ints
 
-    possible = lo_int <= hi_int
+    # Integer sum-of-squares + parity are necessary, NOT sufficient — e.g.
+    # sum=15, sumsq=79, n=3 passes both, but no integer triple achieves it.
+    # For scale=1, constructively verify each (sum, sumsq) target with an
+    # exact bounded DP; the value bound mean ± sd_hi*(n-1)/sqrt(n) is
+    # exhaustive (no dataset within SD tolerance can exceed it), so False
+    # here is a proof.  Budget-exhausted → None (undetermined), never FAIL.
+    representable = None
+    if valid_sums and scale == 1:
+        representable = False
+        checked = 0
+        for ts in valid_sums:
+            dev = sd_hi * (n - 1) / math.sqrt(n)
+            lo_b = math.floor(ts / n - dev)
+            hi_b = math.ceil(ts / n + dev)
+            memo = {}
+            for q in sumsq_targets.get(ts, []):
+                checked += 1
+                if checked > 200:
+                    representable = None
+                    break
+                exists = _integer_dataset_exists(n, ts, q, lo_b, hi_b, memo)
+                if exists is None:
+                    representable = None
+                elif exists:
+                    representable = True
+                    break
+            if representable is True or checked > 200:
+                break
+        if checked > 200 and representable is not True:
+            representable = None
+
+    if not valid_sums:
+        possible = False
+    elif scale != 1:
+        possible = True  # necessary conditions only (multi-item averages)
+    else:
+        possible = representable
 
     result = {
         'possible': possible,
@@ -1033,19 +1356,42 @@ def grimmer(mean: Union[str, float], sd: Union[str, float], n: int,
         'reported_sd': sd,
         'n': n,
         'implied_sum': implied_sum,
-        'sumsq_range': [round(lo_sumsq, 4), round(hi_sumsq, 4)],
-        'n_valid_sumsq': max(0, hi_int - lo_int + 1),
+        'candidate_sums': candidate_sums,
+        'valid_sums': valid_sums,
+        'per_sum': per_sum,
+        'n_valid_sumsq': n_valid_sumsq,
+        'representable': representable,
     }
-    if possible:
+    if possible is True:
+        if scale == 1:
+            result['detail'] = (
+                f"PASS: SD={sd} is achievable with mean={mean}, n={n} "
+                f"(an integer dataset realises one of the "
+                f"{n_valid_sumsq} sum-of-squares target(s))."
+            )
+        else:
+            result['detail'] = (
+                f"PASS: SD={sd} is consistent with mean={mean}, n={n} "
+                f"(necessary conditions: integer sum of squares + parity; "
+                f"not constructively verified for scale={scale})."
+            )
+    elif possible is None:
         result['detail'] = (
-            f"PASS: SD={sd} is achievable with mean={mean}, n={n}. "
-            f"{hi_int - lo_int + 1} valid sum-of-squares target(s)."
+            f"UNDETERMINED: SD={sd} with mean={mean}, n={n} passes the "
+            f"necessary conditions but exact verification exceeded the "
+            f"search budget — not evidence of error."
+        )
+    elif not valid_sums:
+        result['detail'] = (
+            f"FAIL: SD={sd} is impossible with mean={mean}, n={n}. "
+            f"No integer sum of squares (with matching parity) exists "
+            f"for any GRIM-consistent sum {candidate_sums}."
         )
     else:
         result['detail'] = (
             f"FAIL: SD={sd} is impossible with mean={mean}, n={n}. "
-            f"Required sum_sq in [{lo_sumsq:.2f}, {hi_sumsq:.2f}] — "
-            f"no integer in range."
+            f"Integer sum-of-squares targets exist for sum(s) {valid_sums}, "
+            f"but no integer dataset realises any of them."
         )
     return result
 
@@ -1072,6 +1418,9 @@ def check_anova_oneway(
     k = len(means)
     if k < 2:
         return {'detail': "SKIP: need at least 2 groups"}
+    if any(sd < 0 for sd in sds):
+        return {'consistent': False,
+                'detail': "FAIL: a negative SD is impossible"}
     if labels is None:
         labels = [f"Group {i+1}" for i in range(k)]
 
@@ -1089,7 +1438,15 @@ def check_anova_oneway(
     ms_within = ss_within / df_within if df_within > 0 else float('inf')
 
     if ms_within == 0:
-        return {'detail': "FAIL: within-group variance is 0"}
+        # Zero within-group variance is possible data (constant groups)
+        return {
+            'consistent': None,
+            'detail': (
+                "UNDETERMINED: degenerate: cannot recompute the test "
+                "statistic (zero within-group variance); not evidence "
+                "of error"
+            )
+        }
 
     f_calc = ms_between / ms_within
     p_calc = float(sp.f.sf(f_calc, df_between, df_within))
@@ -1160,22 +1517,43 @@ def check_chi_squared(
     # Expected frequencies
     expected = np.outer(row_totals, col_totals) / n_total
 
-    # Chi-squared
+    # Chi-squared (uncorrected Pearson)
     chi2_calc = float(np.sum((obs - expected)**2 / expected))
     df = (obs.shape[0] - 1) * (obs.shape[1] - 1)
     p_calc = float(sp.chi2.sf(chi2_calc, df))
 
+    # For 2x2 tables also compute the Yates continuity-corrected value —
+    # the SPSS default — and accept a reported match against either
+    chi2_yates = None
+    p_yates = None
+    if obs.shape == (2, 2):
+        chi2_yates = float(np.sum(
+            np.maximum(np.abs(obs - expected) - 0.5, 0)**2 / expected))
+        p_yates = float(sp.chi2.sf(chi2_yates, df))
+
     flags = []
+    chi2_matched = None
     if reported_chi2 is not None:
-        diff = abs(chi2_calc - reported_chi2)
-        if diff > max(0.1, 0.05 * reported_chi2):
+        def _chi2_close(calc):
+            return abs(calc - reported_chi2) <= max(0.1, 0.05 * reported_chi2)
+        if _chi2_close(chi2_calc):
+            chi2_matched = 'pearson'
+        elif chi2_yates is not None and _chi2_close(chi2_yates):
+            chi2_matched = 'yates'
+        else:
             flags.append(
-                f"chi2: calculated {chi2_calc:.3f}, reported {reported_chi2}"
+                f"chi2: calculated {chi2_calc:.3f} (Pearson)"
+                + (f" / {chi2_yates:.3f} (Yates)" if chi2_yates is not None
+                   else "")
+                + f", reported {reported_chi2}"
             )
 
     if reported_p is not None:
-        ratio = max(p_calc, 1e-20) / max(reported_p, 1e-20)
-        if not (0.1 < ratio < 10):
+        def _p_close(calc):
+            ratio = max(calc, 1e-20) / max(reported_p, 1e-20)
+            return 0.1 < ratio < 10
+        if not (_p_close(p_calc) or
+                (p_yates is not None and _p_close(p_yates))):
             flags.append(
                 f"p: calculated {p_calc:.2e}, reported {reported_p}"
             )
@@ -1183,7 +1561,10 @@ def check_chi_squared(
     result = {
         'consistent': len(flags) == 0,
         'chi2_calculated': round(chi2_calc, 4),
+        'chi2_yates': round(chi2_yates, 4) if chi2_yates is not None else None,
+        'chi2_matched': chi2_matched,
         'p_calculated': p_calc,
+        'p_yates': p_yates,
         'df': df,
         'flags': flags,
     }
@@ -1195,6 +1576,9 @@ def check_chi_squared(
         result['detail'] = (
             f"PASS: {label + ': ' if label else ''}"
             f"chi2({df}) = {chi2_calc:.3f}, p = {p_calc:.2e}"
+            + (f" (reported value matches the "
+               f"{'Yates-corrected' if chi2_matched == 'yates' else 'uncorrected Pearson'}"
+               f" statistic)" if chi2_matched else "")
         )
     return result
 
@@ -1268,33 +1652,48 @@ def check_sd_se_confusion(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def quick_sd_check(
-    sd: float, n: int, lo: float, hi: float, label: str = ""
+    sd: float, n: Optional[int], lo: float, hi: float, label: str = ""
 ) -> dict:
     """
     Heathers' 'quick SD check': is the reported SD plausible given the
     possible range of the data?
 
-    For bounded data, SD <= range / 2 always. For most real data,
-    SD << range / 2. If SD > range / 2, the data is impossible.
+    For bounded data, the *population* SD <= range / 2 (half the points
+    at each extreme).  Reported SDs are *sample* SDs, whose (n-1)
+    denominator inflates the bound to range * sqrt(floor(n/2)*ceil(n/2)
+    / (n*(n-1))) — e.g. [0, 0, 10] has sample SD 5.774 > 5.  The n-aware
+    bound is used when n is known; the population bound only when n is
+    None.
 
-    Also: for integer data, there's a minimum achievable SD > 0 for
-    any given n and sum — if the reported SD is below this, flag it.
+    Also: for most real data, SD << range / 2 — an SD near the bound
+    means heavily bimodal data or outliers, which is flagged softly.
 
     Ref: Heathers (2025) ch. "The 'quick' SD check"
     """
     data_range = hi - lo
-    max_possible_sd = data_range / 2  # theoretical max (half at each extreme)
+    if n is not None and n >= 2:
+        # Max sample SD: floor(n/2) points at one extreme, ceil(n/2) at the
+        # other, (n-1) denominator.  For even n this is (range/2)*sqrt(n/(n-1));
+        # for odd n the even-split form overestimates (n=3 on [0,10]: true max
+        # is [0,0,10] -> 5.7735, not 6.1237)
+        k_lo = n // 2
+        k_hi = n - k_lo
+        max_possible_sd = data_range * math.sqrt(k_lo * k_hi / (n * (n - 1)))
+    else:
+        max_possible_sd = data_range / 2  # population bound (n unknown)
 
     # More realistic upper bound: SD of a uniform distribution = range / sqrt(12)
     uniform_sd = data_range / math.sqrt(12)
 
     flags = []
-    if sd > max_possible_sd:
+    if sd > max_possible_sd + 1e-9:
         flags.append(
             f"SD ({sd}) exceeds theoretical maximum ({max_possible_sd:.2f}) "
-            f"for range [{lo}, {hi}] — IMPOSSIBLE"
+            f"for range [{lo}, {hi}]"
+            f"{'' if n is None else f' at n={n}'} — IMPOSSIBLE"
         )
-    elif sd > uniform_sd * 1.5:
+    # Softer flag, not short-circuited by the impossible one
+    if sd > uniform_sd * 1.5:
         flags.append(
             f"SD ({sd}) exceeds 1.5x uniform SD ({uniform_sd:.2f}) "
             f"— data must be heavily bimodal or contain outliers"
@@ -1519,12 +1918,15 @@ def carlisle_stouffer_fisher(
             'detail': f"SKIP: need >= 3 p-values for Carlisle test (got {k})"
         }
 
-    # Stouffer's method: convert p-values to z-scores and combine
+    # Stouffer's method: convert p-values to z-scores and combine.
+    # With z_i = Phi_inv(1 - p_i), HIGH p-values give NEGATIVE z-scores:
+    # combined Z << 0 means the p-values cluster high (too well-balanced,
+    # Carlisle's fabrication signature) and combined Z >> 0 means they
+    # cluster low (genuinely unbalanced baselines).
     z_scores = [float(sp.norm.ppf(1 - p)) for p in p_values]
     combined_z = sum(z_scores) / math.sqrt(k)
 
-    # Two-tailed: suspicious if combined Z is very high (too balanced)
-    # or very low (too unbalanced — less common but worth flagging)
+    # Two-tailed: suspicious in either direction
     p_combined = float(sp.norm.sf(abs(combined_z)) * 2)
 
     # Also check: are p-values suspiciously uniform?
@@ -1536,12 +1938,12 @@ def carlisle_stouffer_fisher(
     median_p = sorted(p_values)[k // 2]
 
     flags = []
-    if p_combined < 0.05 and combined_z > 0:
+    if p_combined < 0.05 and combined_z < 0:
         flags.append(
             f"Stouffer combined Z = {combined_z:.3f} (p = {p_combined:.4f}) — "
             f"baseline variables are suspiciously well-balanced"
         )
-    if p_combined < 0.05 and combined_z < 0:
+    if p_combined < 0.05 and combined_z > 0:
         flags.append(
             f"Stouffer combined Z = {combined_z:.3f} (p = {p_combined:.4f}) — "
             f"baseline variables are suspiciously unbalanced"

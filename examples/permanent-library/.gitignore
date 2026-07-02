@@ -1,0 +1,17 @@
+# Reproducible / large / binary — regenerable, so not tracked.
+# (git .gitignore has no inline comments: keep patterns on their own lines.)
+
+# Live SQLite catalog (churns; rebuild via restore.py).
+catalog.db
+# PDF store (re-pull by DOI).
+pdfs/
+# Extracted text (re-extract from PDFs).
+text/
+# Vectors (regenerable).
+embeddings.npy
+embeddings_meta.json
+
+# Tracked (the safety net): catalog.sql + catalog.jsonl are text dumps, so
+# `git diff` shows exactly what changed between snapshots.
+!catalog.sql
+!catalog.jsonl
