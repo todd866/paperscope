@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "label": "GRIMMER: impossible vs valid SD (mean passes GRIM first)",
+    "source": "synthetic",
+    "ground_truth": "synthetic: error planted by construction. For integer data with n=7 and mean 4.57 (which passes GRIM), the sum of squares is an integer whose parity is fixed by the sum, so only certain SDs are achievable. SD 2.00 admits no valid integer dataset (GRIMMER FAIL); SD 1.51 does (GRIMMER PASS). Both group means pass GRIM, so the SD is the sole planted defect.",
+    "notes": "Neutral, non-biological. Same variable, two groups at 2 dp so column dp inference is unambiguous; the flagged group's mean deliberately passes GRIM so the failure is genuinely a GRIMMER SD failure, not a GRIM mean failure."
+  },
+  "table": {
+    "meta": {"paper": "Reaction-time-index by condition (SYNTHETIC)", "table": "Table 2. Mean and SD of composite index by condition."},
+    "variables": [
+      {
+        "name": "Composite index",
+        "groups": [
+          {"name": "treatment", "n": 7, "mean": "4.57", "sd": "2.00"},
+          {"name": "control", "n": 7, "mean": "4.43", "sd": "1.51"}
+        ]
+      }
+    ]
+  },
+  "text": null,
+  "expected": {
+    "must_detect": [
+      {"check": "grimmer", "target_contains": "treatment", "min_verdict": "FAIL"}
+    ],
+    "must_pass": [
+      {"check": "grimmer", "target_contains": "control"},
+      {"check": "grim", "target_contains": "treatment"},
+      {"check": "grim", "target_contains": "control"}
+    ]
+  }
+}

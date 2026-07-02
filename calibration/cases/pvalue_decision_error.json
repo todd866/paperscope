@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "label": "p-recalculation: decision error vs consistent t-test (text mode)",
+    "source": "synthetic",
+    "ground_truth": "synthetic: error planted by construction. Two-tailed p for t(38) = 1.02 is ~0.31 (whole rounding interval sits well above alpha = .05), so reporting p = .003 is a decision error -- FAIL. Two-tailed p for t(30) = 2.50 is ~0.018, so p = .018 is consistent -- PASS.",
+    "notes": "Neutral, non-biological prose (a generic effect-of-X-on-Y study). One planted statistic-vs-p decision error alongside a correctly reported test guarding against over-flagging."
+  },
+  "table": null,
+  "text": "Results. Reaction times in the treatment condition were faster than in the control condition; this contrast reached significance, t(38) = 1.02, p = .003. A separate manipulation check confirmed the expected difference in perceived difficulty, t(30) = 2.50, p = .018. No other comparisons were examined.",
+  "expected": {
+    "must_detect": [
+      {"check": "p_recalculation", "target_contains": "1.02", "min_verdict": "FAIL"}
+    ],
+    "must_pass": [
+      {"check": "p_recalculation", "target_contains": "2.50"}
+    ]
+  }
+}

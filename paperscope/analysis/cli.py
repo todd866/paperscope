@@ -509,6 +509,89 @@ def _annotate_forensic(src_pdf, report: dict, out_pdf) -> int:
     return 0
 
 
+def run_forensic_calibrate(args) -> int:
+    """Run the forensic calibration battery and emit a sensitivity /
+    specificity report.
+
+    Case directories are the built-in public battery plus any dir named in
+    the ``PAPERSCOPE_CALIBRATION_DIR`` env var (colon-separated) plus any
+    ``--cases`` dirs.  Exit is always 0 (it is a report, not a gate) unless
+    ``--strict`` is passed, which returns 1 on any mismatch.
+    """
+    import json
+    import os
+
+    from .calibration import BUILTIN_CASES_DIR, calibrate
+
+    dirs = [str(BUILTIN_CASES_DIR)]
+    env = os.environ.get("PAPERSCOPE_CALIBRATION_DIR")
+    if env:
+        dirs.extend(d for d in env.split(":") if d)
+    for d in (args.cases or []):
+        dirs.append(str(d))
+    # De-duplicate while preserving order (a repeated dir must not double-count)
+    seen = set()
+    unique_dirs = []
+    for d in dirs:
+        if d not in seen:
+            seen.add(d)
+            unique_dirs.append(d)
+
+    report = calibrate(unique_dirs)
+
+    print(f"\n{'='*60}")
+    print("Forensic Calibration")
+    print(f"{'='*60}")
+    print("Case dirs:")
+    for d in unique_dirs:
+        print(f"  {d}")
+    print()
+    for case in report["cases"]:
+        status = "OK      " if case["ok"] else "MISMATCH"
+        print(f"  [{status}] {case['label']}")
+        if not case["ok"]:
+            for miss in case["misses"]:
+                print(f"      MISS   must_detect {miss['check']} "
+                      f"~'{miss['target_contains']}' "
+                      f"(wanted >= {miss['min_verdict']}, "
+                      f"best {miss['best_verdict']}, "
+                      f"{miss['matched']} matched)")
+            for fp in case["false_passes"]:
+                print(f"      FALSE-ACCUSE must_pass {fp['check']} "
+                      f"~'{fp['target_contains']}' "
+                      f"(best {fp['best_verdict']}, "
+                      f"{fp['matched']} matched)")
+            if case.get("error"):
+                print(f"      ERROR  {case['error']}")
+
+    print(f"\n{'-'*60}")
+    sens = report["sensitivity"]
+    spec = report["specificity"]
+    t = report["totals"]
+    print(f"Sensitivity (real errors caught): "
+          f"{'n/a' if sens is None else f'{sens:.0%}'} "
+          f"({t['detected']}/{t['detected'] + t['missed']} must-detect)")
+    print(f"Specificity (valid data left alone): "
+          f"{'n/a' if spec is None else f'{spec:.0%}'} "
+          f"({t['correctly_passed']}/"
+          f"{t['correctly_passed'] + t['falsely_flagged']} must-pass)")
+    print(f"{'='*60}")
+    print(report["summary"])
+
+    if args.output:
+        out_path = args.output.resolve()
+        out_path.write_text(json.dumps(report, indent=2, ensure_ascii=False),
+                            encoding="utf-8")
+        print(f"\nReport written to {out_path}")
+
+    if getattr(args, "strict", False) and (report["mismatches"]
+                                            or report["n_cases"] == 0):
+        # --strict is the CI gate: any mismatch, OR loading zero cases
+        # (an empty/mis-pointed --cases dir), is a failure.
+        return 1
+    return 0
+
+
 def _print_forensic_report(report: dict) -> None:
     """Console view of a forensic Report: findings grouped by verdict,
     worst news first, then the one-line summary."""

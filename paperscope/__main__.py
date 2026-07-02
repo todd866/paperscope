@@ -444,6 +444,35 @@ def main() -> int:
              "FAIL/FLAG findings highlighted on the source pages",
     )
 
+    # forensic-calibrate command
+    calib_parser = subparsers.add_parser(
+        "forensic-calibrate",
+        help="Run the forensic calibration battery (sensitivity + "
+             "specificity of the checks against known-answer cases)",
+    )
+    calib_parser.add_argument(
+        "--cases",
+        type=Path,
+        action="append",
+        default=None,
+        metavar="DIR",
+        help="Extra case directory (repeatable). Added on top of the "
+             "built-in calibration/cases/ and the PAPERSCOPE_CALIBRATION_DIR "
+             "env var (colon-separated)",
+    )
+    calib_parser.add_argument(
+        "--output", "-o",
+        type=Path,
+        default=None,
+        help="Write the full calibration report JSON to this path",
+    )
+    calib_parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit 1 on any case mismatch (default: always exit 0 -- it is "
+             "a report, not a gate)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "extract":
@@ -531,6 +560,7 @@ def main() -> int:
     elif args.command in {
         "analyze", "journal-fit", "abstract-check", "argument-graph",
         "revision-diff", "related", "critical-read", "annotate", "forensic",
+        "forensic-calibrate",
     }:
         # Analysis runners live in analysis/cli.py. Lazy import keeps the
         # CLI fast for non-analysis subcommands.
@@ -545,6 +575,7 @@ def main() -> int:
             "critical-read": analysis_cli.run_critical_read,
             "annotate": analysis_cli.run_annotate,
             "forensic": analysis_cli.run_forensic,
+            "forensic-calibrate": analysis_cli.run_forensic_calibrate,
         }[args.command]
         return runner(args)
 

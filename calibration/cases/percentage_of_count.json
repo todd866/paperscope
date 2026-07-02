@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "label": "GRIM-for-percentages: impossible vs valid percentage of a count",
+    "source": "synthetic",
+    "ground_truth": "synthetic: error planted by construction. A percentage of a discrete count must imply an integer numerator. 33.3% of 7 = 2.331 people -- impossible (nearest achievable 28.57% = 2/7 or 42.86% = 3/7). 42.9% of 7 = 3.003 rounds to the integer 3 and is valid.",
+    "notes": "Neutral, non-biological (survey respondents). One impossible percentage (must_detect) alongside a correctly-rounded one (must_pass) at the same n."
+  },
+  "table": {
+    "meta": {"paper": "Share of respondents selecting each option (SYNTHETIC)", "table": "Table 3. Response shares out of n = 7."},
+    "percentages": [
+      {"name": "chose option A", "group": "treatment", "n": 7, "percentage": 33.3, "dp": 1},
+      {"name": "chose option B", "group": "control", "n": 7, "percentage": 42.9, "dp": 1}
+    ]
+  },
+  "text": null,
+  "expected": {
+    "must_detect": [
+      {"check": "grim_percentage", "target_contains": "option A", "min_verdict": "FAIL"}
+    ],
+    "must_pass": [
+      {"check": "grim_percentage", "target_contains": "option B"}
+    ]
+  }
+}

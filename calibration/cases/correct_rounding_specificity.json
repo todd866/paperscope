@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "label": "Specificity guard: correctly-rounded values must all PASS (anti-false-accusation)",
+    "source": "synthetic",
+    "ground_truth": "synthetic: correct-by-construction. Every value here is internally consistent: mean 4.57 with n=7 passes GRIM (31.99 -> integer 32); SD 1.51 passes GRIMMER for that mean/n; 42.9% of 7 rounds to 3; and near-threshold p-values are correctly rounded from the printed statistics -- two-tailed p for F(1,60)=4.10 is ~.047 and for r(48)=0.28 is ~.049, both consistent within the rounding interval. Nothing must be flagged.",
+    "notes": "The critical case: a false accusation (branding valid data impossible) is the worst failure. Includes deliberately borderline-but-correct near-alpha p-values so the interval-safe recomputation is exercised without hardening. Neutral, non-biological throughout."
+  },
+  "table": {
+    "meta": {"paper": "Correctly reported measurements (SYNTHETIC control case)", "table": "Table 4. Consistent summary statistics."},
+    "variables": [
+      {
+        "name": "Composite score",
+        "groups": [
+          {"name": "full sample", "n": 7, "mean": "4.57", "sd": "1.51"}
+        ]
+      }
+    ],
+    "percentages": [
+      {"name": "completed the task", "group": "full sample", "n": 7, "percentage": 42.9, "dp": 1}
+    ]
+  },
+  "text": "The omnibus test was near threshold but reached significance, F(1, 60) = 4.10, p = .047. The association between the two indices was likewise near threshold, r(48) = 0.28, p = .049. Group means differed as expected, t(30) = 2.50, p = .018.",
+  "expected": {
+    "must_detect": [],
+    "must_pass": [
+      {"check": "grim", "target_contains": "full sample"},
+      {"check": "grimmer", "target_contains": "full sample"},
+      {"check": "grim_percentage", "target_contains": "completed the task"},
+      {"check": "p_recalculation", "target_contains": "4.10"},
+      {"check": "p_recalculation", "target_contains": "0.28"},
+      {"check": "p_recalculation", "target_contains": "2.50"}
+    ]
+  }
+}

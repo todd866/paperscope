@@ -72,6 +72,20 @@ python3 -m paperscope forensic paper.pdf --annotate annotated.pdf
 
 Verdicts: FAIL = arithmetically impossible as printed; FLAG = suspicious, not proven; UNDETERMINED = could not check (never bad news — a parsing problem must never harden into FAIL). JSON report written alongside console output. Worked demo: `examples/forensic/`.
 
+### Calibration (forensic regression gate)
+
+```bash
+# Sensitivity + specificity of the forensic checks against known-answer cases
+python3 -m paperscope forensic-calibrate
+
+# Extra case dirs (repeatable) + full report JSON; --strict exits 1 on mismatch
+python3 -m paperscope forensic-calibrate --cases my_cases/ -o calib.json --strict
+```
+
+The calibration harness (`paperscope/analysis/calibration.py`: `load_cases` / `run_case` / `calibrate`) is the **regression gate** for the forensic battery: it re-runs a set of known-answer *cases* on every change to the checks or the cases, measuring **both** sensitivity (real, arithmetically-verifiable errors are still caught) and specificity (valid data is never branded impossible — a false accusation is the worst failure). Each case is a JSON file at `calibration/cases/<slug>.json` with a `table` and/or `text` (either may be `null`) whose errors are planted by construction, plus an `expected` block: `must_detect` findings (with `min_verdict`, ordering `FAIL > FLAG > (PASS, UNDETERMINED)`) and `must_pass` findings (satisfied only by an exact PASS). The gate lives in `tests/test_calibration.py`; the CLI always exits 0 unless `--strict`.
+
+**Public / private split — same as the SR corpus.** The public repo ships **synthetic, neutral** cases only (surveys, generic measurements, abstract "effect of X on Y" studies — ground truth arithmetic, never medical). Set `PAPERSCOPE_CALIBRATION_DIR` (colon-separated) to a private dir to add domain-specific cases that run alongside the built-in battery without entering the public corpus. Case dirs used = built-in `calibration/cases/` + `PAPERSCOPE_CALIBRATION_DIR` + any `--cases`.
+
 ```python
 # Import individual checks
 from paperscope.analysis.forensic_stats import grim, grimmer, grim_percentage, sprite
@@ -130,7 +144,7 @@ Module README: `paperscope/systematic_review/README.md`. Design: `docs/systemati
 paperscope/
 ├── text/       # Shared text processing (LaTeX cleaning, chunking, parsing)
 ├── embed/      # Embedding infrastructure (sentence-transformers + TF-IDF fallback)
-├── analysis/   # 20 modules (embedding, critical read, annotate, forensic)
+├── analysis/   # 21 modules (embedding, critical read, annotate, forensic, calibration)
 │   │
 │   │  # Embedding-powered (your papers)
 │   ├── citation_alignment.py    # Do citations match the citing sentence?
@@ -159,8 +173,10 @@ paperscope/
 │   │                            # SD/SE confusion, Benford's, variance ratios
 │   ├── forensic_report.py      # Finding/Report contract, verdict mapping,
 │   │                            # table-mode runner (JSON table spec -> Report)
-│   └── reported_stats.py       # statcheck-style t/F/chi2/r/z extraction +
-│                                # interval-safe p recalculation (text mode)
+│   ├── reported_stats.py       # statcheck-style t/F/chi2/r/z extraction +
+│   │                            # interval-safe p recalculation (text mode)
+│   └── calibration.py          # forensic regression gate: known-answer cases
+│                                # measuring sensitivity + specificity of checks
 ├── bib/        # Bibliography management (extract, resolve, verify)
 ├── harvest/    # Paper discovery (OpenAlex, arXiv, bioRxiv)
 ├── ingest/     # PDF acquisition + text extraction
@@ -219,7 +235,7 @@ pip install -r requirements.txt
 python3 -m paperscope <command> [args]
 ```
 
-The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 20 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity). Each tool is a standalone module with a main function that returns structured results.
+The `text/` and `embed/` modules are the shared library. The `analysis/` module contains 21 modules organized in three groups: embedding-powered analysis (your papers), critical read (external papers), and forensic statistics (data integrity, including the `calibration.py` regression gate). Each tool is a standalone module with a main function that returns structured results.
 
 ### Bug fix workflow
 

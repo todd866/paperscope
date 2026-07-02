@@ -144,6 +144,45 @@ print(grim_percentage(percentage=53.2, n=25, dp=1))   # GRIM applied to percenta
 print(correlation_bound(0.10, 0.30, 0.05))            # impossible r (|r| > 1)
 ```
 
+### Calibration (forensic regression gate)
+
+```bash
+# Run the calibration battery: sensitivity + specificity of the checks
+python3 -m paperscope forensic-calibrate
+
+# Add your own case directories (repeatable); write the full report JSON
+python3 -m paperscope forensic-calibrate --cases my_cases/ -o calib.json
+
+# Fail the process on any mismatch (for CI); otherwise it always exits 0
+python3 -m paperscope forensic-calibrate --strict
+```
+
+The calibration harness measures **both** sides of the cardinal rule of a forensic tool: sensitivity (does it still catch real, arithmetically-verifiable errors?) and specificity (does it leave valid data alone — never a false accusation, the worst failure?). Each *case* is a known-answer scenario — a table spec and/or a chunk of prose whose errors are planted by construction — with an `expected` block asserting which checks **must fire** (`must_detect`) and which **must stay silent** (`must_pass`). Running the whole battery on every change to the checks or the cases is the **regression gate**: if a change stops catching a planted error or starts flagging valid data, a case flips to MISMATCH. The gate is wired into the test suite (`tests/test_calibration.py`), and the CLI is a report (always exit 0) unless `--strict` is passed.
+
+A case file is JSON at `calibration/cases/<slug>.json`:
+
+```json
+{
+  "meta": {"label": "...", "source": "synthetic",
+           "ground_truth": "why the expected findings are known",
+           "notes": "..."},
+  "table": { "<run_table_checks schema — see forensic_report.py>": "..." },
+  "text":  "<prose with reported t/F/chi2/r/z statistics>",
+  "expected": {
+    "must_detect": [{"check": "grim", "target_contains": "treatment", "min_verdict": "FAIL"}],
+    "must_pass":   [{"check": "grim", "target_contains": "control"}]
+  }
+}
+```
+
+Either `table` or `text` may be `null`. Verdict ordering for `min_verdict` is `FAIL > FLAG > (PASS, UNDETERMINED)`: a `must_detect` of `min_verdict` FLAG is satisfied by FAIL or FLAG; a `must_pass` is satisfied only by a matching finding that is exactly PASS.
+
+**Public / private split (same pattern as the systematic-review corpus).** The public repo ships **synthetic, neutral** cases only — surveys, generic measurements, abstract "effect of X on Y" studies whose ground truth is arithmetic, never medical. Point the `PAPERSCOPE_CALIBRATION_DIR` env var (colon-separated for several) at a private directory to add domain-specific cases; those run **alongside** the built-in battery without ever entering the public corpus:
+
+```bash
+PAPERSCOPE_CALIBRATION_DIR=/path/to/private/cases python3 -m paperscope forensic-calibrate
+```
+
 ### Bibliography pipeline
 
 ```bash
